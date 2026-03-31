@@ -26,15 +26,31 @@ class FunctionSpec:
 
 
 FUNCTION_SPECS: tuple[FunctionSpec, ...] = (
+    # 移动平均类
     FunctionSpec("MA", builtin.ma, 2, 2, aliases=("ma",)),
     FunctionSpec("EMA", builtin.ema, 2, 2, aliases=("ema",)),
     FunctionSpec("SMA", tdx_compat.tdx_sma, 2, 3, aliases=("sma", "TDX_SMA", "tdx_sma")),
+    # 极值类
     FunctionSpec("HHV", builtin.hhv, 2, 2, aliases=("hhv",)),
     FunctionSpec("LLV", builtin.llv, 2, 2, aliases=("llv",)),
+    # 引用类
     FunctionSpec("REF", builtin.ref, 1, 2, aliases=("ref",)),
+    # 数学类
     FunctionSpec("MAX", builtin.max_series, 2, 2, aliases=("max",)),
     FunctionSpec("MIN", builtin.min_series, 2, 2, aliases=("min",)),
     FunctionSpec("ABS", builtin.abs_series, 1, 1, aliases=("abs",)),
+    FunctionSpec("STD", builtin.std_series, 2, 2, aliases=("std",)),
+    # 逻辑类
+    FunctionSpec("IF", builtin.if_series, 3, 3, aliases=("if",)),
+    FunctionSpec("CROSS", builtin.cross, 2, 2, aliases=("cross",)),
+    FunctionSpec("COUNT", builtin.count, 2, 2, aliases=("count",)),
+    FunctionSpec("SUM", builtin.sum_series, 2, 2, aliases=("sum",)),
+    FunctionSpec("BETWEEN", builtin.between, 3, 3, aliases=("between",)),
+    FunctionSpec("RANGE", builtin.range_series, 3, 3, aliases=("range",)),
+    FunctionSpec("EVERY", builtin.every, 2, 2, aliases=("every",)),
+    FunctionSpec("EXIST", builtin.exist, 2, 2, aliases=("exist",)),
+    FunctionSpec("BARSLAST", builtin.barslast, 1, 1, aliases=("barslast",)),
+    # 复合指标
     FunctionSpec("KDJ", tdx_compat.kdj, 3, 3, return_kind="multi_series", aliases=("kdj",)),
     FunctionSpec("ZX_SHORT_TREND", tdx_compat.zx_short_trend, 1, 1, aliases=("zx_short_trend",)),
     FunctionSpec("ZX_LONG_SHORT", tdx_compat.zx_long_short, 1, 2, aliases=("zx_long_short",)),

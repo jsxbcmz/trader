@@ -24,26 +24,9 @@ def sample_daily_frame() -> pd.DataFrame:
 
 
 @pytest.fixture
-def ma_condition() -> dict:
-    return {
-        "kind": "comparison",
-        "operator": ">",
-        "left": {"kind": "field", "field": "CLOSE"},
-        "right": {
-            "kind": "function",
-            "name": "MA",
-            "args": [
-                {"kind": "field", "field": "CLOSE"},
-                {"kind": "constant", "value": 2},
-            ],
-        },
-    }
-
-
-@pytest.fixture
-def screening_request(ma_condition: dict) -> ScreeningRequest:
+def screening_request() -> ScreeningRequest:
     return ScreeningRequest(
-        condition=ma_condition,
+        tdx_source="选股:C > MA(C,5);",
         target_date="2026-03-27",
         time_mode=TIME_MODE_EXACT,
         include_debug=True,
@@ -91,9 +74,9 @@ def temp_root(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def fallback_request(ma_condition: dict) -> ScreeningRequest:
+def fallback_request() -> ScreeningRequest:
     return ScreeningRequest(
-        condition=ma_condition,
+        tdx_source="选股:C > MA(C,5);",
         target_date="2026-03-28",
         time_mode=TIME_MODE_ON_OR_BEFORE,
         include_debug=False,

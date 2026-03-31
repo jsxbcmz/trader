@@ -3,7 +3,6 @@ from __future__ import annotations
 from core.screening.service import ScreeningService
 
 
-
 def test_screening_service_main_flow(screening_request, temp_root):
     service = ScreeningService.from_root(temp_root)
     result = service.screen(screening_request)
@@ -17,7 +16,6 @@ def test_screening_service_main_flow(screening_request, temp_root):
     assert match_map["000001"].matched is True
     assert match_map["000001"].actual_date == "2026-03-27"
     assert match_map["000002"].matched is False
-
 
 
 def test_screening_service_summary_output(screening_request, temp_root):

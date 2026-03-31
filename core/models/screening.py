@@ -6,7 +6,7 @@ from typing import Any
 
 @dataclass(frozen=True, slots=True)
 class ScreeningRequest:
-    condition: Any
+    tdx_source: str  # 通达信选股条件代码
     target_date: str
     time_mode: str = "exact"
     symbols: tuple[str, ...] = field(default_factory=tuple)

@@ -6,9 +6,8 @@ from typing import Any
 
 from core.data.repository import StockRepository
 from core.data.time_index import locate_time_index
-from core.expression.builder import build_expression
 from core.expression.evaluator import EvaluationContext, evaluate_at_index
-from core.expression.validator import validate_expression
+from core.expression.parser import TdxLexer, TdxParser, TdxTranspiler, TdxTranspileError
 from core.models.screening import ScreeningError, ScreeningRequest, ScreeningResult
 from core.screening.error_policy import DEFAULT_ERROR_POLICY, normalize_error_policy
 from core.screening.result_models import SingleRunResult, build_debug_payload, stock_name_of
@@ -29,8 +28,16 @@ class ScreeningEngine:
 
     def run(self, request: ScreeningRequest) -> ScreeningResult:
         policy = normalize_error_policy(self.error_policy)
-        expression = build_expression(request.condition)
-        validate_expression(expression)
+
+        # 解析通达信条件代码
+        tdx_source = request.tdx_source
+        if not tdx_source or not tdx_source.strip():
+            raise ValueError("通达信条件代码不能为空")
+
+        try:
+            expression = self._parse_tdx_source(tdx_source)
+        except Exception as exc:
+            raise ValueError(f"通达信条件解析失败: {exc}") from exc
 
         pool = (
             self.stock_pool_manager.get_pool_by_symbols(request.symbols, request.stock_pool_name)
@@ -61,9 +68,20 @@ class ScreeningEngine:
             matched_count=matched_count,
         )
 
+    def _parse_tdx_source(self, source: str):
+        """解析通达信条件代码为内部表达式"""
+        lexer = TdxLexer(source)
+        tokens = lexer.tokenize()
+        parser = TdxParser(tokens)
+        program = parser.parse()
+        transpiler = TdxTranspiler(program)
+        return transpiler.transpile()
+
     def _run_single(self, symbol, stock, expression, request: ScreeningRequest) -> SingleRunResult:
+        """执行单只股票的选股判断"""
         df = self.repository.get_daily_frame(symbol)
         time_result = locate_time_index(df, request.target_date, request.time_mode)
+
         if not time_result.matched or time_result.index is None:
             return SingleRunResult(
                 symbol=symbol,

@@ -5,11 +5,10 @@ from core.models.screening import ScreeningRequest
 from core.screening.service import ScreeningService
 
 
-
-def test_screening_service_exact_time_mode_misses_non_trading_day(ma_condition, temp_root):
+def test_screening_service_exact_time_mode_misses_non_trading_day(temp_root):
     service = ScreeningService.from_root(temp_root)
     request = ScreeningRequest(
-        condition=ma_condition,
+        tdx_source="选股:C > MA(C,5);",
         target_date="2026-03-28",
         time_mode=TIME_MODE_EXACT,
         include_debug=False,
@@ -23,7 +22,6 @@ def test_screening_service_exact_time_mode_misses_non_trading_day(ma_condition, 
     assert all(item.actual_date == "" for item in result.matches)
     assert all(item.matched is False for item in result.matches)
     assert all("无交易数据" in item.reason for item in result.matches)
-
 
 
 def test_screening_service_on_or_before_time_mode_falls_back(fallback_request, temp_root):

@@ -4,28 +4,7 @@
       "id": "template-close-above-ma5",
       "name": "收盘价高于5日均线",
       "description": "当日收盘价高于 5 日均线。",
-      "condition": {
-        "kind": "comparison",
-        "operator": ">",
-        "left": {
-          "kind": "field",
-          "field": "CLOSE"
-        },
-        "right": {
-          "kind": "function",
-          "name": "MA",
-          "args": [
-            {
-              "kind": "field",
-              "field": "CLOSE"
-            },
-            {
-              "kind": "constant",
-              "value": 5
-            }
-          ]
-        }
-      },
+      "tdx_source": "选股:C > MA(C,5);",
       "default_time_mode": "exact",
       "stock_pool_name": "default",
       "include_debug": false,
@@ -36,28 +15,7 @@
       "id": "template-close-above-prev-close",
       "name": "收盘价高于昨日收盘",
       "description": "当日收盘价高于上一交易日收盘价。",
-      "condition": {
-        "kind": "comparison",
-        "operator": ">",
-        "left": {
-          "kind": "field",
-          "field": "CLOSE"
-        },
-        "right": {
-          "kind": "function",
-          "name": "REF",
-          "args": [
-            {
-              "kind": "field",
-              "field": "CLOSE"
-            },
-            {
-              "kind": "constant",
-              "value": 1
-            }
-          ]
-        }
-      },
+      "tdx_source": "选股:C > REF(C,1);",
       "default_time_mode": "exact",
       "stock_pool_name": "default",
       "include_debug": false,
@@ -68,28 +26,7 @@
       "id": "template-high-20day-breakout",
       "name": "最高价创20日新高",
       "description": "当日最高价大于等于 20 日最高价。",
-      "condition": {
-        "kind": "comparison",
-        "operator": ">=",
-        "left": {
-          "kind": "field",
-          "field": "HIGH"
-        },
-        "right": {
-          "kind": "function",
-          "name": "HHV",
-          "args": [
-            {
-              "kind": "field",
-              "field": "HIGH"
-            },
-            {
-              "kind": "constant",
-              "value": 20
-            }
-          ]
-        }
-      },
+      "tdx_source": "选股:H >= HHV(H,20);",
       "default_time_mode": "exact",
       "stock_pool_name": "default",
       "include_debug": false,
@@ -100,36 +37,7 @@
       "id": "template-volume-2x-prev",
       "name": "成交量大于昨日2倍",
       "description": "当日成交量大于昨日成交量的 2 倍。",
-      "condition": {
-        "kind": "comparison",
-        "operator": ">",
-        "left": {
-          "kind": "field",
-          "field": "VOLUME"
-        },
-        "right": {
-          "kind": "math",
-          "operator": "*",
-          "left": {
-            "kind": "function",
-            "name": "REF",
-            "args": [
-              {
-                "kind": "field",
-                "field": "VOLUME"
-              },
-              {
-                "kind": "constant",
-                "value": 1
-              }
-            ]
-          },
-          "right": {
-            "kind": "constant",
-            "value": 2
-          }
-        }
-      },
+      "tdx_source": "选股:V > REF(V,1) * 2;",
       "default_time_mode": "exact",
       "stock_pool_name": "default",
       "include_debug": false,

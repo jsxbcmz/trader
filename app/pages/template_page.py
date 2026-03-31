@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from PySide6 import QtCore, QtWidgets
@@ -58,12 +57,12 @@ class TemplatePage(QtWidgets.QWidget):
         self.timeModeLabel = QtWidgets.QLabel("-")
         self.descriptionLabel = QtWidgets.QLabel("-")
         self.descriptionLabel.setWordWrap(True)
-        self.conditionEdit = QtWidgets.QPlainTextEdit()
-        self.conditionEdit.setReadOnly(True)
+        self.tdxSourceEdit = QtWidgets.QPlainTextEdit()
+        self.tdxSourceEdit.setReadOnly(True)
         detail_layout.addRow("名称", self.nameLabel)
         detail_layout.addRow("默认时间模式", self.timeModeLabel)
         detail_layout.addRow("描述", self.descriptionLabel)
-        detail_layout.addRow("条件", self.conditionEdit)
+        detail_layout.addRow("条件代码", self.tdxSourceEdit)
 
         splitter.addWidget(self.table)
         splitter.addWidget(detail_widget)
@@ -191,12 +190,12 @@ class TemplatePage(QtWidgets.QWidget):
             self.nameLabel.setText("-")
             self.timeModeLabel.setText("-")
             self.descriptionLabel.setText("-")
-            self.conditionEdit.setPlainText("")
+            self.tdxSourceEdit.setPlainText("")
             return
         self.nameLabel.setText(template.name)
         self.timeModeLabel.setText(template.default_time_mode)
         self.descriptionLabel.setText(template.description or "-")
-        self.conditionEdit.setPlainText(json.dumps(template.condition, ensure_ascii=False, indent=2))
+        self.tdxSourceEdit.setPlainText(template.tdx_source or "")
 
     def _update_action_states(self, template: ScreeningTemplate | None):
         has_template = template is not None

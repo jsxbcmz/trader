@@ -9,7 +9,7 @@ class ScreeningTemplate:
     id: str
     name: str
     description: str = ""
-    condition: dict[str, Any] | None = None
+    tdx_source: str = ""  # 通达信选股条件代码
     default_time_mode: str = "exact"
     stock_pool_name: str = "default"
     include_debug: bool = False
@@ -21,7 +21,7 @@ class ScreeningTemplate:
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            "condition": self.condition or {},
+            "tdx_source": self.tdx_source,
             "default_time_mode": self.default_time_mode,
             "stock_pool_name": self.stock_pool_name,
             "include_debug": self.include_debug,
@@ -35,7 +35,7 @@ class ScreeningTemplate:
             id=str(payload.get("id", "") or "").strip(),
             name=str(payload.get("name", "") or "").strip(),
             description=str(payload.get("description", "") or "").strip(),
-            condition=dict(payload.get("condition") or {}),
+            tdx_source=str(payload.get("tdx_source", "") or "").strip(),
             default_time_mode=str(payload.get("default_time_mode", "exact") or "exact").strip() or "exact",
             stock_pool_name=str(payload.get("stock_pool_name", "default") or "default").strip() or "default",
             include_debug=bool(payload.get("include_debug", False)),

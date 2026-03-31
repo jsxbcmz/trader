@@ -6,8 +6,6 @@ from pathlib import Path
 from uuid import uuid4
 
 from core.data.time_index import TIME_MODE_EXACT, TIME_MODE_ON_OR_BEFORE
-from core.expression.builder import build_expression
-from core.expression.validator import validate_expression
 from core.models.screening import ScreeningRequest
 from core.models.template import ScreeningTemplate
 
@@ -42,7 +40,7 @@ class TemplateService:
         *,
         name: str,
         description: str,
-        condition: dict,
+        tdx_source: str,
         default_time_mode: str = TIME_MODE_EXACT,
         stock_pool_name: str = "default",
         include_debug: bool = False,
@@ -52,7 +50,7 @@ class TemplateService:
             id=f"custom-{uuid4().hex}",
             name=str(name or "").strip(),
             description=str(description or "").strip(),
-            condition=dict(condition or {}),
+            tdx_source=str(tdx_source or "").strip(),
             default_time_mode=str(default_time_mode or TIME_MODE_EXACT).strip() or TIME_MODE_EXACT,
             stock_pool_name=str(stock_pool_name or "default").strip() or "default",
             include_debug=bool(include_debug),
@@ -72,7 +70,7 @@ class TemplateService:
         *,
         name: str,
         description: str,
-        condition: dict,
+        tdx_source: str,
         default_time_mode: str = TIME_MODE_EXACT,
         stock_pool_name: str = "default",
         include_debug: bool = False,
@@ -86,7 +84,7 @@ class TemplateService:
                 template,
                 name=str(name or "").strip(),
                 description=str(description or "").strip(),
-                condition=dict(condition or {}),
+                tdx_source=str(tdx_source or "").strip(),
                 default_time_mode=str(default_time_mode or TIME_MODE_EXACT).strip() or TIME_MODE_EXACT,
                 stock_pool_name=str(stock_pool_name or "default").strip() or "default",
                 include_debug=bool(include_debug),
@@ -113,7 +111,7 @@ class TemplateService:
         return self.create_template(
             name=duplicate_name,
             description=source.description,
-            condition=source.condition,
+            tdx_source=source.tdx_source,
             default_time_mode=source.default_time_mode,
             stock_pool_name=source.stock_pool_name,
             include_debug=source.include_debug,
@@ -130,7 +128,7 @@ class TemplateService:
         if actual_time_mode not in VALID_TIME_MODES:
             raise ValueError("非法的时间模式")
         return ScreeningRequest(
-            condition=template.condition,
+            tdx_source=template.tdx_source,
             target_date=str(target_date or "").strip(),
             time_mode=actual_time_mode,
             stock_pool_name=template.stock_pool_name,
@@ -168,10 +166,8 @@ class TemplateService:
             raise ValueError("模板名称不能为空")
         if template.default_time_mode not in VALID_TIME_MODES:
             raise ValueError("模板默认时间模式非法")
-        if not isinstance(template.condition, dict) or not template.condition:
-            raise ValueError("模板条件不能为空")
-        expression = build_expression(template.condition)
-        validate_expression(expression)
+        if not template.tdx_source or not template.tdx_source.strip():
+            raise ValueError("通达信条件代码不能为空")
         return template
 
     def _ensure_unique_name(
