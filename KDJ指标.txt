@@ -1,0 +1,16 @@
+{KDJ_MIN_J选股 - 修正版（解决输出超限问题）}
+短线周期:=28;
+中线周期:=57;
+长线周期:=114;
+{所有中间指标改为赋值（:=），而非输出（:）}
+RSV:=(CLOSE-LLV(LOW,9))/(HHV(HIGH,9)-LLV(LOW,9))*100;
+K:SMA(RSV,3,1); {原K:SMA(...)改为K:=SMA(...)}
+D:SMA(K,3,1); {原D:SMA(...)改为D:=SMA(...)}
+J:3*K-2*D; {原J:3*K-2*D改为J:=3*K-2*D}
+{J值拐点条件}
+J拐点:=J<REF(J,1) AND J<REFX(J,1) AND J<55 AND J<D AND J<K AND K<D;
+{多周期MIN_J计算（同样改为赋值）}
+MIN_J短:=SUM(IF(J拐点=1,J,0),短线周期)/MAX(SUM(IF(J拐点=1,1,0),短线周期),1);
+MIN_J中:=SUM(IF(J拐点=1,J,0),中线周期)/MAX(SUM(IF(J拐点=1,1,0),中线周期),1);
+MIN_J长:=SUM(IF(J拐点=1,J,0),长线周期)/MAX(SUM(IF(J拐点=1,1,0),长线周期),1)+10;
+MIN_J:(MIN_J短+MIN_J中+MIN_J长)/3.0;
