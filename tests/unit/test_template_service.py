@@ -30,7 +30,6 @@ def test_create_template_persists_and_round_trips(template_service, temp_root, t
         name="自定义均线模板",
         description="测试模板",
         tdx_source=tdx_condition,
-        default_time_mode="exact",
     )
 
     assert created.id.startswith("custom-")
@@ -81,13 +80,11 @@ def test_build_screening_request_uses_template_defaults(template_service, tdx_co
         name="请求模板",
         description="",
         tdx_source=tdx_condition,
-        default_time_mode="on_or_before",
     )
 
     request = template_service.build_screening_request(created.id, "2026-03-27")
     assert request.tdx_source == tdx_condition
     assert request.target_date == "2026-03-27"
-    assert request.time_mode == "on_or_before"
 
 
 def test_duplicate_template_creates_editable_copy(template_service):
@@ -108,7 +105,6 @@ def test_default_template_can_be_updated(template_service):
         name="更新后的默认模板",
         description=template.description,
         tdx_source=template.tdx_source,
-        default_time_mode=template.default_time_mode,
         stock_pool_name=template.stock_pool_name,
         include_debug=template.include_debug,
     )

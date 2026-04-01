@@ -10,7 +10,6 @@ class ScreeningTemplate:
     name: str
     description: str = ""
     tdx_source: str = ""  # 通达信选股条件代码
-    default_time_mode: str = "exact"
     stock_pool_name: str = "default"
     include_debug: bool = False
     created_at: str = ""
@@ -22,7 +21,6 @@ class ScreeningTemplate:
             "name": self.name,
             "description": self.description,
             "tdx_source": self.tdx_source,
-            "default_time_mode": self.default_time_mode,
             "stock_pool_name": self.stock_pool_name,
             "include_debug": self.include_debug,
             "created_at": self.created_at,
@@ -36,7 +34,6 @@ class ScreeningTemplate:
             name=str(payload.get("name", "") or "").strip(),
             description=str(payload.get("description", "") or "").strip(),
             tdx_source=str(payload.get("tdx_source", "") or "").strip(),
-            default_time_mode=str(payload.get("default_time_mode", "exact") or "exact").strip() or "exact",
             stock_pool_name=str(payload.get("stock_pool_name", "default") or "default").strip() or "default",
             include_debug=bool(payload.get("include_debug", False)),
             created_at=str(payload.get("created_at", "") or "").strip(),

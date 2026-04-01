@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from PySide6 import QtWidgets
 
-from core.data.time_index import TIME_MODE_EXACT, TIME_MODE_ON_OR_BEFORE
 from core.models.template import ScreeningTemplate
 
 
@@ -15,7 +14,7 @@ class TemplateEditorDialog(QtWidgets.QDialog):
         super().__init__(parent)
         self._template = template
         self.setWindowTitle("编辑模板" if self._template is not None else "新建模板")
-        self.resize(640, 520)
+        self.resize(640, 480)
 
         layout = QtWidgets.QVBoxLayout(self)
 
@@ -24,18 +23,11 @@ class TemplateEditorDialog(QtWidgets.QDialog):
         self.nameEdit = QtWidgets.QLineEdit(template.name if template else "")
         self.descriptionEdit = QtWidgets.QPlainTextEdit(template.description if template else "")
         self.descriptionEdit.setMaximumHeight(100)
-        self.timeModeBox = QtWidgets.QComboBox()
-        self.timeModeBox.addItems([TIME_MODE_EXACT, TIME_MODE_ON_OR_BEFORE])
-        if template:
-            index = self.timeModeBox.findText(template.default_time_mode)
-            if index >= 0:
-                self.timeModeBox.setCurrentIndex(index)
         self.stockPoolEdit = QtWidgets.QLineEdit(template.stock_pool_name if template else "default")
         self.includeDebugCheck = QtWidgets.QCheckBox("执行时包含调试信息")
         self.includeDebugCheck.setChecked(template.include_debug if template else False)
         form_layout.addRow("名称", self.nameEdit)
         form_layout.addRow("描述", self.descriptionEdit)
-        form_layout.addRow("默认时间模式", self.timeModeBox)
         form_layout.addRow("股票池名称", self.stockPoolEdit)
         form_layout.addRow("", self.includeDebugCheck)
 
@@ -78,7 +70,6 @@ class TemplateEditorDialog(QtWidgets.QDialog):
             "name": self.nameEdit.text().strip(),
             "description": self.descriptionEdit.toPlainText().strip(),
             "tdx_source": self.tdxSourceEdit.toPlainText().strip(),
-            "default_time_mode": self.timeModeBox.currentText().strip() or TIME_MODE_EXACT,
             "stock_pool_name": self.stockPoolEdit.text().strip() or "default",
             "include_debug": self.includeDebugCheck.isChecked(),
         }

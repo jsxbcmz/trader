@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 import tempfile
 import pandas as pd
 
 
 DAILY_COLUMNS = ["date", "open", "close", "high", "low", "volume"]
+
+# 模块级别的数据缓存，减少重复磁盘IO
+_daily_data_cache: dict[str, pd.DataFrame] = {}
+_CACHE_MAX_SIZE = 200  # 最多缓存200只股票的数据
 
 
 def normalize_symbol(symbol: str) -> str:
@@ -81,7 +86,7 @@ def save_daily_csv(stock_daily_data_dir: Path, symbol: str, df: pd.DataFrame) ->
 
 
 def load_daily_csv(stock_daily_data_dir: Path, symbol: str) -> pd.DataFrame:
-    """Load daily OHLCV from per-stock CSV.
+    """Load daily OHLCV from per-stock CSV with caching.
 
     File name convention: {symbol}.csv where symbol is 6-digit.
     Directory convention: stock_daily_data/{symbol}.csv under project root.
@@ -90,8 +95,15 @@ def load_daily_csv(stock_daily_data_dir: Path, symbol: str) -> pd.DataFrame:
       date,open,close,high,low,volume
 
     Notes:
-      - User clarified: volume 实际为成交额（万元）。展示时可换算为“亿”：volume / 1e4
+      - User clarified: volume 实际为成交额（万元）。展示时可换算为"亿"：volume / 1e4
+      - 使用模块级别缓存减少重复磁盘IO
     """
+    # 使用路径和symbol作为缓存键
+    cache_key = f"{stock_daily_data_dir}:{symbol}"
+    
+    if cache_key in _daily_data_cache:
+        return _daily_data_cache[cache_key].copy()
+    
     fp = get_daily_csv_path(stock_daily_data_dir, symbol)
     if not fp.exists():
         raise FileNotFoundError(f"找不到日线文件: {fp}")
@@ -113,4 +125,18 @@ def load_daily_csv(stock_daily_data_dir: Path, symbol: str) -> pd.DataFrame:
         df[c] = pd.to_numeric(df[c], errors="coerce")
 
     df = df.dropna(subset=["open", "high", "low", "close"])  # keep rows with valid OHLC
-    return df
+    
+    # 缓存数据（控制缓存大小）
+    if len(_daily_data_cache) >= _CACHE_MAX_SIZE:
+        # 简单的LRU策略：清除一半旧数据
+        keys_to_remove = list(_daily_data_cache.keys())[:_CACHE_MAX_SIZE // 2]
+        for k in keys_to_remove:
+            del _daily_data_cache[k]
+    
+    _daily_data_cache[cache_key] = df
+    return df.copy()
+
+
+def clear_daily_data_cache():
+    """清除数据缓存"""
+    _daily_data_cache.clear()

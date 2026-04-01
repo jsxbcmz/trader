@@ -216,8 +216,8 @@ class TdxLexer:
         return ch.isalpha() or ch == "_" or "\u4e00" <= ch <= "\u9fff"
 
     def _is_identifier_char(self, ch: str) -> bool:
-        """检查是否是标识符字符"""
-        return self._is_identifier_start(ch) or ch.isdigit()
+        """检查是否是标识符字符（支持中文和%）"""
+        return self._is_identifier_start(ch) or ch.isdigit() or ch == "%"
 
     def _read_identifier(self) -> TdxToken:
         """读取标识符"""

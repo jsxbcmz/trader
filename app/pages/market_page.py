@@ -17,7 +17,7 @@ except ImportError:
 from ..data_loader import load_daily_csv, load_stock_list
 from ..history_updater import HistoryUpdater
 from ..tushare_client import TushareClient, TushareClientError
-from ..widgets import StockChartWidget, UpdateProgressDialog
+from ..widgets import ScreeningProgressDialog, StockChartWidget, UpdateProgressDialog
 
 
 class UpdateWorker(QtCore.QObject):
@@ -49,6 +49,29 @@ class UpdateWorker(QtCore.QObject):
         self._cancelled = True
 
 
+class ScreeningWorker(QtCore.QObject):
+    """选股后台任务"""
+    progressChanged = QtCore.Signal(dict)
+    finished = QtCore.Signal(dict)
+    errorOccurred = QtCore.Signal(str)
+
+    def __init__(self, screening_service: ScreeningService, request):
+        super().__init__()
+        self.screening_service = screening_service
+        self.request = request
+
+    @QtCore.Slot()
+    def run(self):
+        try:
+            payload = self.screening_service.screen_with_summary(
+                self.request,
+                progress_callback=lambda p: self.progressChanged.emit(p),
+            )
+            self.finished.emit(payload)
+        except Exception as exc:
+            self.errorOccurred.emit(str(exc))
+
+
 def build_name_initials(value) -> str:
     text = str(value or "").strip()
     if not text:
@@ -76,6 +99,9 @@ class MarketPage(QtWidgets.QWidget):
         self._update_thread = None
         self._update_worker = None
         self._progress_dialog = None
+        self._screening_thread = None
+        self._screening_worker = None
+        self._screening_progress_dialog = None
         self.screening_service = ScreeningService.from_root(self.root)
         self.template_service = TemplateService.from_root(self.root)
         self._screening_results = []
@@ -139,12 +165,9 @@ class MarketPage(QtWidgets.QWidget):
         self.screeningDateEdit = QtWidgets.QDateEdit(QtCore.QDate.currentDate())
         self.screeningDateEdit.setCalendarPopup(True)
         self.screeningDateEdit.setDisplayFormat("yyyy-MM-dd")
-        self.screeningModeBox = QtWidgets.QComboBox()
-        self.screeningModeBox.addItems(["exact", "on_or_before"])
         self.screeningRunBtn = QtWidgets.QPushButton("执行选股")
         screeningLayout.addRow("条件模板", self.screeningPresetBox)
         screeningLayout.addRow("目标日期", self.screeningDateEdit)
-        screeningLayout.addRow("时间模式", self.screeningModeBox)
         screeningLayout.addRow("", self.screeningRunBtn)
         leftLayout.addWidget(self.screeningGroup)
 
@@ -268,7 +291,6 @@ class MarketPage(QtWidgets.QWidget):
         return self.template_service.build_screening_request(
             template_id,
             target_date,
-            time_mode=self.screeningModeBox.currentText().strip() or "exact",
         )
 
     def populate_screening_results(self, result):
@@ -288,15 +310,62 @@ class MarketPage(QtWidgets.QWidget):
         self.screeningResultTable.resizeColumnsToContents()
 
     def run_screening(self):
+        if self._screening_thread is not None:
+            QtWidgets.QMessageBox.information(self, "提示", "已有选股任务正在进行中")
+            return
+
         try:
             request = self._build_screening_request()
-            payload = self.screening_service.screen_with_summary(request)
-            result = payload["result"]
-            self.populate_screening_results(result)
-            self._show_status_message(payload["summary"], 5000)
         except Exception as exc:
             QtWidgets.QMessageBox.warning(self, "选股失败", str(exc))
-            self._show_status_message(f"选股失败：{exc}", 5000)
+            return
+
+        self._set_update_controls_enabled(False)
+
+        # 创建并显示选股进度弹窗
+        self._screening_progress_dialog = ScreeningProgressDialog(
+            self.window() if isinstance(self.window(), QtWidgets.QWidget) else self
+        )
+        self._screening_progress_dialog.show()
+
+        self._screening_thread = QtCore.QThread(self)
+        self._screening_worker = ScreeningWorker(self.screening_service, request)
+        self._screening_worker.moveToThread(self._screening_thread)
+        self._screening_thread.started.connect(self._screening_worker.run)
+        self._screening_worker.progressChanged.connect(self._on_screening_progress)
+        self._screening_worker.finished.connect(self._on_screening_finished)
+        self._screening_worker.errorOccurred.connect(self._on_screening_error)
+        self._screening_worker.finished.connect(self._screening_thread.quit)
+        self._screening_worker.finished.connect(self._screening_worker.deleteLater)
+        self._screening_thread.finished.connect(self._screening_thread.deleteLater)
+        self._screening_thread.finished.connect(self._cleanup_screening_thread)
+        self._screening_thread.start()
+
+    def _on_screening_progress(self, payload: dict):
+        if self._screening_progress_dialog is not None:
+            self._screening_progress_dialog.update_progress(payload)
+
+    def _on_screening_finished(self, payload: dict):
+        result = payload["result"]
+        self.populate_screening_results(result)
+        self._show_status_message(payload["summary"], 5000)
+
+        # 关闭进度弹窗
+        if self._screening_progress_dialog is not None:
+            self._screening_progress_dialog.mark_finished(payload["summary"])
+
+    def _on_screening_error(self, message: str):
+        # 关闭进度弹窗
+        if self._screening_progress_dialog is not None:
+            self._screening_progress_dialog.mark_finished(f"选股失败：{message}")
+        QtWidgets.QMessageBox.warning(self, "选股失败", message)
+        self._show_status_message(f"选股失败：{message}", 5000)
+
+    def _cleanup_screening_thread(self):
+        self._screening_thread = None
+        self._screening_worker = None
+        self._screening_progress_dialog = None
+        self._set_update_controls_enabled(True)
 
     def on_screening_result_select(self):
         row = self.screeningResultTable.currentRow()

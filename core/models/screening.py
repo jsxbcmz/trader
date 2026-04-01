@@ -8,7 +8,6 @@ from typing import Any
 class ScreeningRequest:
     tdx_source: str  # 通达信选股条件代码
     target_date: str
-    time_mode: str = "exact"
     symbols: tuple[str, ...] = field(default_factory=tuple)
     stock_pool_name: str = "default"
     include_debug: bool = False

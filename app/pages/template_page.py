@@ -44,8 +44,8 @@ class TemplatePage(QtWidgets.QWidget):
         splitter = QtWidgets.QSplitter()
 
         self.table = QtWidgets.QTableWidget()
-        self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderLabels(["名称", "默认时间模式", "更新时间"])
+        self.table.setColumnCount(2)
+        self.table.setHorizontalHeaderLabels(["名称", "更新时间"])
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
@@ -54,13 +54,11 @@ class TemplatePage(QtWidgets.QWidget):
         detail_widget = QtWidgets.QWidget()
         detail_layout = QtWidgets.QFormLayout(detail_widget)
         self.nameLabel = QtWidgets.QLabel("-")
-        self.timeModeLabel = QtWidgets.QLabel("-")
         self.descriptionLabel = QtWidgets.QLabel("-")
         self.descriptionLabel.setWordWrap(True)
         self.tdxSourceEdit = QtWidgets.QPlainTextEdit()
         self.tdxSourceEdit.setReadOnly(True)
         detail_layout.addRow("名称", self.nameLabel)
-        detail_layout.addRow("默认时间模式", self.timeModeLabel)
         detail_layout.addRow("描述", self.descriptionLabel)
         detail_layout.addRow("条件代码", self.tdxSourceEdit)
 
@@ -91,7 +89,6 @@ class TemplatePage(QtWidgets.QWidget):
         for row, template in enumerate(self._templates):
             values = [
                 template.name,
-                template.default_time_mode,
                 template.updated_at or template.created_at or "-",
             ]
             for col, value in enumerate(values):
@@ -188,12 +185,10 @@ class TemplatePage(QtWidgets.QWidget):
     def _render_template_detail(self, template: ScreeningTemplate | None):
         if template is None:
             self.nameLabel.setText("-")
-            self.timeModeLabel.setText("-")
             self.descriptionLabel.setText("-")
             self.tdxSourceEdit.setPlainText("")
             return
         self.nameLabel.setText(template.name)
-        self.timeModeLabel.setText(template.default_time_mode)
         self.descriptionLabel.setText(template.description or "-")
         self.tdxSourceEdit.setPlainText(template.tdx_source or "")
 

@@ -5,7 +5,6 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from core.data.time_index import TIME_MODE_EXACT, TIME_MODE_ON_OR_BEFORE
 from core.models.screening import ScreeningRequest
 
 
@@ -28,7 +27,6 @@ def screening_request() -> ScreeningRequest:
     return ScreeningRequest(
         tdx_source="选股:C > MA(C,5);",
         target_date="2026-03-27",
-        time_mode=TIME_MODE_EXACT,
         include_debug=True,
     )
 
@@ -71,13 +69,3 @@ def temp_root(tmp_path: Path) -> Path:
     daily_two.to_csv(root / "stock_daily_data" / "000002.csv", index=False, encoding="utf-8-sig")
 
     return root
-
-
-@pytest.fixture
-def fallback_request() -> ScreeningRequest:
-    return ScreeningRequest(
-        tdx_source="选股:C > MA(C,5);",
-        target_date="2026-03-28",
-        time_mode=TIME_MODE_ON_OR_BEFORE,
-        include_debug=False,
-    )

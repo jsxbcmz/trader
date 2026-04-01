@@ -1,25 +1,58 @@
 # StockViewer Quick Memory Card
 
-更新时间：2026-03-29
+更新时间：2026-03-31
 
-- 项目类型：PySide6 + pyqtgraph 的本地股票日线查看器（桌面 GUI）
-- 主要结构：左侧股票搜索/行业筛选/表格，右侧四联图（K线主图 + 成交额 + 砖型差值 + KDJ）
-- 核心文件：
-  - `app/main.py`：主窗口、筛选、选股、状态栏、恢复上次选股
-  - `app/widgets.py`：四联图、十字线、tooltip、价格标签、指标标签、范围联动
-  - `app/data_loader.py`：股票列表与日线 CSV 加载
-- 入口：`python -m run` 或 `python run.py`
-- 数据约定：
-  - `stocklist.csv` 需要 `ts_code, symbol, name, area, industry`
-  - `stock_daily_data/{symbol}.csv` 需要 `date, open, close, high, low, volume`
-  - `symbol` 补齐 6 位，`date` 转 datetime 并升序
-  - `volume` 在本项目中实际表示成交额（万元），展示通常换算为亿
-- 主交互链路：`apply_filter -> on_select -> chart.set_daily -> onHover -> MainWindow.on_hover`
-- hover 是交互核心：十字线、浮窗、价格标签、状态栏、指标标签都围绕 `_on_mouse_moved()` 联动
-- 图表稳定性铁律：切换股票时不要重建 `PlotWidget`，只更新数据、日期映射和可视范围
-- 防重入标志：重点关注 `_loading_plot`、`_updating_range`
-- 改动定位规则：
-  - 改筛选/表格/状态栏 -> `main.py`
-  - 改图表/十字线/tooltip/价格标签/缩放/指标 -> `widgets.py`
-  - 改 CSV 兼容/字段清洗 -> `data_loader.py`
-- 非必要不优先看：`build/`, `dist/`
+## 项目定位
+PySide6 + pyqtgraph 本地股票日线查看器，支持通达信选股条件智能选股。
+
+## 模块速查
+
+### 应用层 (app/)
+| 模块 | 核心文件 | 职责 |
+|------|----------|------|
+| 入口 | `main.py` | 创建 QApplication |
+| 主窗口 | `main_window.py` | 页面切换、菜单、状态栏 |
+| 看盘页 | `pages/market_page.py` | 股票列表、图表、选股执行 |
+| 模板页 | `pages/template_page.py` | 模板 CRUD |
+| 设置页 | `pages/settings_page.py` | Token、图表配置 |
+| 图表 | `widgets.py` | 四联图、hover联动 |
+| 数据 | `data_loader.py` | CSV 加载 |
+
+### 核心层 (core/)
+| 模块 | 核心文件 | 职责 |
+|------|----------|------|
+| 表达式 | `expression/evaluator.py` | 通达信条件解析求值 |
+| 指标 | `indicators/builtin.py` | MA/EMA/REF/CROSS 等指标 |
+| 选股 | `screening/engine.py` | 选股执行引擎 |
+| 模板 | `templates/service.py` | 模板管理服务 |
+| 数据 | `data/repository.py` | 日线数据访问 |
+
+## 核心链路
+
+```
+图表查看：搜索 → on_select → chart.set_daily → onHover → 状态栏
+选股执行：模板 → ScreeningEngine → 遍历股票池 → 表达式求值 → 结果
+```
+
+## 修改定位
+
+| 改什么 | 看哪里 |
+|--------|--------|
+| 筛选/表格/状态栏 | `app/pages/market_page.py` |
+| 图表/十字线/tooltip | `app/widgets.py` |
+| 通达信条件解析 | `core/expression/` |
+| 技术指标计算 | `core/indicators/` |
+| 选股逻辑 | `core/screening/engine.py` |
+| 模板管理 | `core/templates/service.py` |
+
+## 数据约定
+
+- `volume` = 成交额（万元），展示换算为亿
+- `symbol` 补齐 6 位
+- X 轴范围：30~150 天
+
+## 稳定性原则
+
+1. 切股时不重建 PlotWidget
+2. 防重入：`_loading_plot`、`_updating_range`
+3. hover 联动是交互核心

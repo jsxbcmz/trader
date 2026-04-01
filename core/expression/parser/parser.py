@@ -168,6 +168,10 @@ class TdxParser:
             if self._check(TdxTokenKind.ASSIGN):
                 self._advance()
                 value = self._parse_expression()
+                # 通达信允许赋值语句后跟样式修饰符（如 COLORRED），忽略它
+                if self._check(TdxTokenKind.COMMA):
+                    self._advance()
+                    self._parse_style()
                 self._consume_semicolon()
                 return TdxAssignment(name, value)
 

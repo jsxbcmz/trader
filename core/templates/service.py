@@ -5,14 +5,11 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
-from core.data.time_index import TIME_MODE_EXACT, TIME_MODE_ON_OR_BEFORE
 from core.models.screening import ScreeningRequest
 from core.models.template import ScreeningTemplate
 
 from .builtin import DEFAULT_TEMPLATES
 from .repository import TemplateRepository
-
-VALID_TIME_MODES = {TIME_MODE_EXACT, TIME_MODE_ON_OR_BEFORE}
 
 
 class TemplateService:
@@ -41,7 +38,6 @@ class TemplateService:
         name: str,
         description: str,
         tdx_source: str,
-        default_time_mode: str = TIME_MODE_EXACT,
         stock_pool_name: str = "default",
         include_debug: bool = False,
     ) -> ScreeningTemplate:
@@ -51,7 +47,6 @@ class TemplateService:
             name=str(name or "").strip(),
             description=str(description or "").strip(),
             tdx_source=str(tdx_source or "").strip(),
-            default_time_mode=str(default_time_mode or TIME_MODE_EXACT).strip() or TIME_MODE_EXACT,
             stock_pool_name=str(stock_pool_name or "default").strip() or "default",
             include_debug=bool(include_debug),
             created_at=now,
@@ -71,7 +66,6 @@ class TemplateService:
         name: str,
         description: str,
         tdx_source: str,
-        default_time_mode: str = TIME_MODE_EXACT,
         stock_pool_name: str = "default",
         include_debug: bool = False,
     ) -> ScreeningTemplate:
@@ -85,7 +79,6 @@ class TemplateService:
                 name=str(name or "").strip(),
                 description=str(description or "").strip(),
                 tdx_source=str(tdx_source or "").strip(),
-                default_time_mode=str(default_time_mode or TIME_MODE_EXACT).strip() or TIME_MODE_EXACT,
                 stock_pool_name=str(stock_pool_name or "default").strip() or "default",
                 include_debug=bool(include_debug),
                 updated_at=self._now_iso(),
@@ -112,7 +105,6 @@ class TemplateService:
             name=duplicate_name,
             description=source.description,
             tdx_source=source.tdx_source,
-            default_time_mode=source.default_time_mode,
             stock_pool_name=source.stock_pool_name,
             include_debug=source.include_debug,
         )
@@ -121,16 +113,11 @@ class TemplateService:
         self,
         template_id: str,
         target_date: str,
-        time_mode: str | None = None,
     ) -> ScreeningRequest:
         template = self.get_template(template_id)
-        actual_time_mode = str(time_mode or template.default_time_mode or TIME_MODE_EXACT).strip() or TIME_MODE_EXACT
-        if actual_time_mode not in VALID_TIME_MODES:
-            raise ValueError("非法的时间模式")
         return ScreeningRequest(
             tdx_source=template.tdx_source,
             target_date=str(target_date or "").strip(),
-            time_mode=actual_time_mode,
             stock_pool_name=template.stock_pool_name,
             include_debug=template.include_debug,
         )
@@ -164,8 +151,6 @@ class TemplateService:
             raise ValueError("模板 ID 不能为空")
         if not template.name:
             raise ValueError("模板名称不能为空")
-        if template.default_time_mode not in VALID_TIME_MODES:
-            raise ValueError("模板默认时间模式非法")
         if not template.tdx_source or not template.tdx_source.strip():
             raise ValueError("通达信条件代码不能为空")
         return template

@@ -2,7 +2,7 @@
 
 from .lexer import TdxLexer, TdxToken, TdxTokenKind
 from .parser import TdxParser, TdxProgram
-from .transpiler import TdxTranspiler, transpile_tdx_source
+from .transpiler import TdxTranspiler, TdxTranspileError, transpile_tdx_source
 
 __all__ = [
     "TdxLexer",
@@ -11,5 +11,6 @@ __all__ = [
     "TdxParser",
     "TdxProgram",
     "TdxTranspiler",
+    "TdxTranspileError",
     "transpile_tdx_source",
 ]

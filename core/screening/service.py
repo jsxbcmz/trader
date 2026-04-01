@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -16,11 +17,19 @@ class ScreeningService:
     def from_root(cls, root: Path) -> "ScreeningService":
         return cls(engine=ScreeningEngine.from_root(root))
 
-    def screen(self, request: ScreeningRequest) -> ScreeningResult:
-        return self.engine.run(request)
+    def screen(
+        self,
+        request: ScreeningRequest,
+        progress_callback: Callable[[dict], None] | None = None,
+    ) -> ScreeningResult:
+        return self.engine.run(request, progress_callback=progress_callback)
 
-    def screen_with_summary(self, request: ScreeningRequest) -> dict:
-        result = self.screen(request)
+    def screen_with_summary(
+        self,
+        request: ScreeningRequest,
+        progress_callback: Callable[[dict], None] | None = None,
+    ) -> dict:
+        result = self.screen(request, progress_callback=progress_callback)
         return {
             "result": result,
             "summary": format_screening_summary(result),
