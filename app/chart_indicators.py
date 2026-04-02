@@ -122,7 +122,7 @@ def compute_brick_indicator(high: np.ndarray, low: np.ndarray, close: np.ndarray
     var2a = tdx_sma(var1a, 4, 1) + 100.0
     var3a = (close - llv4) / safe_span * 100.0
     var4a = tdx_sma(var3a, 6, 1)
-    var5a = var4a + 100.0
+    var5a = tdx_sma(var4a, 6, 1) + 100.0
     var6a = var5a - var2a
     brick = np.where(np.isfinite(var6a) & (var6a > 4.0), var6a - 4.0, 0.0)
 

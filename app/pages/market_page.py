@@ -69,7 +69,7 @@ class ScreeningWorker(QtCore.QObject):
     @QtCore.Slot()
     def run(self):
         try:
-            payload = self.screening_service.screen_with_summary(
+            payload = self.screening_service.screen_with_cache(
                 self.request,
                 progress_callback=lambda p: self.progressChanged.emit(p),
                 cancelled_fn=lambda: self._cancelled,
@@ -175,8 +175,8 @@ class MarketPage(QtWidgets.QWidget):
         leftLayout.addWidget(self.screeningGroup)
 
         self.screeningResultTable = QtWidgets.QTableWidget()
-        self.screeningResultTable.setColumnCount(6)
-        self.screeningResultTable.setHorizontalHeaderLabels(["代码", "名称", "请求日期", "实际日期", "命中", "说明"])
+        self.screeningResultTable.setColumnCount(2)
+        self.screeningResultTable.setHorizontalHeaderLabels(["代码", "名称"])
         self.screeningResultTable.horizontalHeader().setStretchLastSection(True)
         self.screeningResultTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.screeningResultTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -296,16 +296,8 @@ class MarketPage(QtWidgets.QWidget):
         self._screening_results = [match for match in result.matches if match.matched]
         self.screeningResultTable.setRowCount(len(self._screening_results))
         for row, item in enumerate(self._screening_results):
-            values = [
-                item.symbol,
-                item.name,
-                item.requested_date,
-                item.actual_date,
-                "是",
-                item.reason,
-            ]
-            for col, value in enumerate(values):
-                self.screeningResultTable.setItem(row, col, QtWidgets.QTableWidgetItem(str(value or "")))
+            self.screeningResultTable.setItem(row, 0, QtWidgets.QTableWidgetItem(str(item.symbol)))
+            self.screeningResultTable.setItem(row, 1, QtWidgets.QTableWidgetItem(str(item.name or "")))
         self.screeningResultTable.resizeColumnsToContents()
 
     def run_screening(self):
@@ -362,9 +354,9 @@ class MarketPage(QtWidgets.QWidget):
         # 关闭进度弹窗
         if self._screening_progress_dialog is not None:
             if was_cancelled:
-                self._screening_progress_dialog.accept()
-            else:
                 self._screening_progress_dialog.mark_finished(summary)
+            else:
+                self._screening_progress_dialog.accept()
 
     def _on_screening_error(self, message: str):
         # 关闭进度弹窗
@@ -532,7 +524,7 @@ class MarketPage(QtWidgets.QWidget):
     def _on_update_finished(self, payload: dict):
         summary = payload["summary"]
         if self._progress_dialog is not None:
-            self._progress_dialog.mark_finished()
+            self._progress_dialog.accept()
         self._show_status_message(
             f"批量更新完成 | 成功 {summary.success} | 跳过 {summary.skipped} | 失败 {summary.failed}",
             8000,

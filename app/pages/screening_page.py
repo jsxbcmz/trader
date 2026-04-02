@@ -566,9 +566,9 @@ class ScreeningPage(QtWidgets.QWidget):
         # 关闭进度弹窗
         if self._screening_progress_dialog is not None:
             if was_cancelled:
-                self._screening_progress_dialog.accept()
-            else:
                 self._screening_progress_dialog.mark_finished(summary)
+            else:
+                self._screening_progress_dialog.accept()
 
         # 展示结果
         if self._screening_matches:
@@ -871,6 +871,10 @@ class ScreeningPage(QtWidgets.QWidget):
         except ValueError as exc:
             QtWidgets.QMessageBox.warning(self, "卖出失败", str(exc))
             return
+
+        sell_amount = close_price * quantity
+        self._available_capital += sell_amount
+        self.available_capital_label.setText(f"¥ {self._available_capital:,.2f}")
 
         self._refresh_holding_table()
         self._refresh_trade_summary()

@@ -13,6 +13,7 @@ env/
 build/
 dist/
 stock_daily_data/
+screening_cache/
 *.spec
 
 # IDE files
