@@ -21,15 +21,17 @@ class ScreeningService:
         self,
         request: ScreeningRequest,
         progress_callback: Callable[[dict], None] | None = None,
+        cancelled_fn: Callable[[], bool] | None = None,
     ) -> ScreeningResult:
-        return self.engine.run(request, progress_callback=progress_callback)
+        return self.engine.run(request, progress_callback=progress_callback, cancelled_fn=cancelled_fn)
 
     def screen_with_summary(
         self,
         request: ScreeningRequest,
         progress_callback: Callable[[dict], None] | None = None,
+        cancelled_fn: Callable[[], bool] | None = None,
     ) -> dict:
-        result = self.screen(request, progress_callback=progress_callback)
+        result = self.screen(request, progress_callback=progress_callback, cancelled_fn=cancelled_fn)
         return {
             "result": result,
             "summary": format_screening_summary(result),

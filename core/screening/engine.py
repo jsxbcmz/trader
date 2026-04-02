@@ -97,6 +97,7 @@ class ScreeningEngine:
         self,
         request: ScreeningRequest,
         progress_callback: Callable[[dict], None] | None = None,
+        cancelled_fn: Callable[[], bool] | None = None,
     ) -> ScreeningResult:
         policy = normalize_error_policy(self.error_policy)
 
@@ -189,6 +190,12 @@ class ScreeningEngine:
                         "matched": matched_count,
                         "errors": len(errors),
                     })
+
+                # 检查是否被取消，取消时取消剩余任务并返回已有结果
+                if cancelled_fn is not None and cancelled_fn():
+                    for pending_future in futures:
+                        pending_future.cancel()
+                    break
 
         return ScreeningResult(
             request=request,

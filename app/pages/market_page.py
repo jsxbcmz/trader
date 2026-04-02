@@ -59,6 +59,10 @@ class ScreeningWorker(QtCore.QObject):
         super().__init__()
         self.screening_service = screening_service
         self.request = request
+        self._cancelled = False
+
+    def cancel(self):
+        self._cancelled = True
 
     @QtCore.Slot()
     def run(self):
@@ -66,6 +70,7 @@ class ScreeningWorker(QtCore.QObject):
             payload = self.screening_service.screen_with_summary(
                 self.request,
                 progress_callback=lambda p: self.progressChanged.emit(p),
+                cancelled_fn=lambda: self._cancelled,
             )
             self.finished.emit(payload)
         except Exception as exc:
@@ -205,7 +210,6 @@ class MarketPage(QtWidgets.QWidget):
         self.search.textChanged.connect(self.apply_filter)
         self.industryBox.currentTextChanged.connect(self.apply_filter)
         self.table.itemSelectionChanged.connect(self.on_select)
-        self.table.itemDoubleClicked.connect(lambda _: self.on_select())
         self.screeningRunBtn.clicked.connect(self.run_screening)
         self.screeningResultTable.itemSelectionChanged.connect(self.on_screening_result_select)
         self.settingsToggleBtn.clicked.connect(self._toggle_settings_panel)
@@ -294,7 +298,8 @@ class MarketPage(QtWidgets.QWidget):
         )
 
     def populate_screening_results(self, result):
-        self._screening_results = list(result.matches)
+        # 只显示命中的股票
+        self._screening_results = [match for match in result.matches if match.matched]
         self.screeningResultTable.setRowCount(len(self._screening_results))
         for row, item in enumerate(self._screening_results):
             values = [
@@ -302,7 +307,7 @@ class MarketPage(QtWidgets.QWidget):
                 item.name,
                 item.requested_date,
                 item.actual_date,
-                "是" if item.matched else "否",
+                "是",
                 item.reason,
             ]
             for col, value in enumerate(values):
@@ -326,6 +331,7 @@ class MarketPage(QtWidgets.QWidget):
         self._screening_progress_dialog = ScreeningProgressDialog(
             self.window() if isinstance(self.window(), QtWidgets.QWidget) else self
         )
+        self._screening_progress_dialog.stopRequested.connect(self._on_screening_stop_requested)
         self._screening_progress_dialog.show()
 
         self._screening_thread = QtCore.QThread(self)
@@ -341,18 +347,33 @@ class MarketPage(QtWidgets.QWidget):
         self._screening_thread.finished.connect(self._cleanup_screening_thread)
         self._screening_thread.start()
 
+    def _on_screening_stop_requested(self):
+        if self._screening_worker is not None:
+            self._screening_worker.cancel()
+
     def _on_screening_progress(self, payload: dict):
         if self._screening_progress_dialog is not None:
             self._screening_progress_dialog.update_progress(payload)
 
     def _on_screening_finished(self, payload: dict):
         result = payload["result"]
+        was_cancelled = self._screening_worker is not None and self._screening_worker._cancelled
+
         self.populate_screening_results(result)
-        self._show_status_message(payload["summary"], 5000)
+
+        if was_cancelled:
+            summary = f"选股已停止：已处理部分中命中 {result.matched_count} 只"
+        else:
+            summary = payload["summary"]
+
+        self._show_status_message(summary, 5000)
 
         # 关闭进度弹窗
         if self._screening_progress_dialog is not None:
-            self._screening_progress_dialog.mark_finished(payload["summary"])
+            if was_cancelled:
+                self._screening_progress_dialog.accept()
+            else:
+                self._screening_progress_dialog.mark_finished(summary)
 
     def _on_screening_error(self, message: str):
         # 关闭进度弹窗
@@ -372,7 +393,11 @@ class MarketPage(QtWidgets.QWidget):
         if row < 0 or row >= len(self._screening_results):
             return
         symbol = self._screening_results[row].symbol
-        self._select_symbol_in_table(symbol)
+        # 清除全部股票列表的选中状态，避免两个表同时高亮
+        self.table.blockSignals(True)
+        self.table.clearSelection()
+        self.table.blockSignals(False)
+        self._load_symbol(symbol)
 
     def _ensure_token(self) -> str | None:
         token = self._get_runtime_token()
@@ -446,8 +471,15 @@ class MarketPage(QtWidgets.QWidget):
         if symbol_item is None:
             return
         symbol = symbol_item.text()
-        self._last_selected_symbol = str(symbol).zfill(6)
+        # 清除选股结果列表的选中状态，避免两个表同时高亮
+        self.screeningResultTable.blockSignals(True)
+        self.screeningResultTable.clearSelection()
+        self.screeningResultTable.blockSignals(False)
+        self._load_symbol(symbol)
 
+    def _load_symbol(self, symbol: str):
+        """统一的股票选中与图表加载入口"""
+        self._last_selected_symbol = str(symbol).zfill(6)
         try:
             df_daily = load_daily_csv(self.stock_daily_data_dir, symbol)
             self.chart.set_daily(df_daily)

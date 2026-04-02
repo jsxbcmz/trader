@@ -110,6 +110,8 @@ class UpdateProgressDialog(QtWidgets.QDialog):
 class ScreeningProgressDialog(QtWidgets.QDialog):
     """选股进度弹窗"""
 
+    stopRequested = QtCore.Signal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("选股进度")
@@ -121,17 +123,30 @@ class ScreeningProgressDialog(QtWidgets.QDialog):
         self.progressBar.setTextVisible(True)
         self.currentLabel = QtWidgets.QLabel("当前股票：-")
         self.statsLabel = QtWidgets.QLabel("已处理: 0  命中: 0  错误: 0")
+
+        self.stopButton = QtWidgets.QPushButton("停止")
         self.closeButton = QtWidgets.QPushButton("关闭")
         self.closeButton.setEnabled(False)
+
+        btnLayout = QtWidgets.QHBoxLayout()
+        btnLayout.addStretch(1)
+        btnLayout.addWidget(self.stopButton)
+        btnLayout.addWidget(self.closeButton)
 
         layout.addWidget(self.progressLabel)
         layout.addWidget(self.progressBar)
         layout.addWidget(self.currentLabel)
         layout.addWidget(self.statsLabel)
         layout.addStretch(1)
-        layout.addWidget(self.closeButton)
+        layout.addLayout(btnLayout)
 
+        self.stopButton.clicked.connect(self._on_stop_clicked)
         self.closeButton.clicked.connect(self.accept)
+
+    def _on_stop_clicked(self):
+        self.stopButton.setEnabled(False)
+        self.progressLabel.setText("正在停止，请稍候...")
+        self.stopRequested.emit()
 
     def update_progress(self, payload: dict):
         current = int(payload.get("current", 0) or 0)
@@ -147,6 +162,7 @@ class ScreeningProgressDialog(QtWidgets.QDialog):
         self.statsLabel.setText(f"已处理: {current}  命中: {matched}  错误: {errors}")
 
     def mark_finished(self, summary: str = ""):
+        self.stopButton.setEnabled(False)
         self.closeButton.setEnabled(True)
         if summary:
             self.progressLabel.setText(summary)

@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .pages import MarketPage, SettingsPage, TemplatePage
+from .pages import MarketPage, ScreeningPage, SettingsPage, TemplatePage
 from .services import AppSettings, SettingsService
 
 
@@ -55,10 +55,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.marketPage = MarketPage(self.root, settings_service=self.settingsService)
         self.templatePage = TemplatePage(self.root)
         self.settingsPage = SettingsPage(self.settingsService)
+        self.screeningPage = ScreeningPage(self.root)
 
         self.pageStack.addWidget(self.marketPage)
         self.pageStack.addWidget(self.templatePage)
         self.pageStack.addWidget(self.settingsPage)
+        self.pageStack.addWidget(self.screeningPage)
 
         layout.addWidget(self.pageStack, 1)
 
@@ -74,6 +76,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openMarketAction = view_menu.addAction("打开看盘页")
         self.openTemplateAction = view_menu.addAction("打开模板页")
         self.openSettingsAction = view_menu.addAction("打开设置页")
+        self.openScreeningAction = view_menu.addAction("打开选股页")
 
         data_menu = menu_bar.addMenu("数据")
         self.updateAllAction = data_menu.addAction("更新全部股票")
@@ -89,12 +92,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.marketPage.updateRunningChanged.connect(self._on_update_running_changed)
         self.templatePage.statusMessageRequested.connect(self._show_status_message)
         self.templatePage.templatesChanged.connect(self.marketPage.reload_templates)
+        self.templatePage.templatesChanged.connect(self.screeningPage.reload_templates)
+        self.screeningPage.statusMessageRequested.connect(self._show_status_message)
         self.settingsPage.settingsSaveRequested.connect(self._save_settings_from_page)
         self.settingsPage.updateAllRequested.connect(self._request_update_all)
         self.exitAction.triggered.connect(self.close)
         self.openMarketAction.triggered.connect(lambda: self.switch_page(0))
         self.openTemplateAction.triggered.connect(lambda: self.switch_page(1))
         self.openSettingsAction.triggered.connect(lambda: self.switch_page(2))
+        self.openScreeningAction.triggered.connect(lambda: self.switch_page(3))
         self.updateAllAction.triggered.connect(self._request_update_all)
         self.newTemplateAction.triggered.connect(self._open_new_template_dialog)
         self.aboutAction.triggered.connect(self._show_about_dialog)
