@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
 from core.models.screening import ScreeningRequest
 from core.models.template import ScreeningTemplate
+from core.utils import clean_string, now_iso
 
 from .builtin import DEFAULT_TEMPLATES
 from .repository import TemplateRepository
@@ -41,13 +41,13 @@ class TemplateService:
         stock_pool_name: str = "default",
         include_debug: bool = False,
     ) -> ScreeningTemplate:
-        now = self._now_iso()
+        now = now_iso()
         template = ScreeningTemplate(
             id=f"custom-{uuid4().hex}",
-            name=str(name or "").strip(),
-            description=str(description or "").strip(),
-            tdx_source=str(tdx_source or "").strip(),
-            stock_pool_name=str(stock_pool_name or "default").strip() or "default",
+            name=clean_string(name),
+            description=clean_string(description),
+            tdx_source=clean_string(tdx_source),
+            stock_pool_name=clean_string(stock_pool_name, "default") or "default",
             include_debug=bool(include_debug),
             created_at=now,
             updated_at=now,
@@ -76,12 +76,12 @@ class TemplateService:
                 continue
             updated = replace(
                 template,
-                name=str(name or "").strip(),
-                description=str(description or "").strip(),
-                tdx_source=str(tdx_source or "").strip(),
-                stock_pool_name=str(stock_pool_name or "default").strip() or "default",
+                name=clean_string(name),
+                description=clean_string(description),
+                tdx_source=clean_string(tdx_source),
+                stock_pool_name=clean_string(stock_pool_name, "default") or "default",
                 include_debug=bool(include_debug),
-                updated_at=self._now_iso(),
+                updated_at=now_iso(),
             )
             validated = self._validate_template(updated)
             self._ensure_unique_name(validated.name, templates, exclude_id=validated.id)
@@ -120,6 +120,8 @@ class TemplateService:
             target_date=str(target_date or "").strip(),
             stock_pool_name=template.stock_pool_name,
             include_debug=template.include_debug,
+            template_id=template.id,
+            template_name=template.name,
         )
 
     def _load_templates(self) -> list[ScreeningTemplate]:
@@ -161,12 +163,9 @@ class TemplateService:
         templates: list[ScreeningTemplate],
         exclude_id: str | None = None,
     ) -> None:
-        key = str(name or "").strip().casefold()
+        key = clean_string(name).casefold()
         for template in templates:
             if exclude_id and template.id == exclude_id:
                 continue
             if template.name.casefold() == key:
                 raise ValueError("模板名称已存在")
-
-    def _now_iso(self) -> str:
-        return datetime.now().isoformat(timespec="seconds")

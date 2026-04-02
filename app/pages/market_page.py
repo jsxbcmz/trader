@@ -4,7 +4,9 @@ from pathlib import Path
 
 from PySide6 import QtCore, QtWidgets
 
+from app.components import SettingsFormWidget
 from app.services import AppSettings, SettingsService
+from app.utils import start_worker
 from core.screening.service import ScreeningService
 from core.templates import TemplateService
 
@@ -137,20 +139,16 @@ class MarketPage(QtWidgets.QWidget):
         leftLayout.addLayout(actionLayout)
 
         self.settingsGroup = QtWidgets.QGroupBox("配置")
-        settingsLayout = QtWidgets.QFormLayout(self.settingsGroup)
-        self.tokenEdit = QtWidgets.QLineEdit(self._tushare_token)
-        self.tokenEdit.setPlaceholderText("请输入 Tushare Token")
-        self.minDaysSpin = QtWidgets.QSpinBox()
-        self.minDaysSpin.setRange(1, 10000)
-        self.minDaysSpin.setValue(self._chart_min_visible_days)
-        self.maxDaysSpin = QtWidgets.QSpinBox()
-        self.maxDaysSpin.setRange(2, 10000)
-        self.maxDaysSpin.setValue(self._chart_max_visible_days)
+        settings_inner = QtWidgets.QVBoxLayout(self.settingsGroup)
+        self.settingsForm = SettingsFormWidget()
+        self.settingsForm.set_values(
+            self._tushare_token,
+            self._chart_min_visible_days,
+            self._chart_max_visible_days,
+        )
         self.saveSettingsBtn = QtWidgets.QPushButton("保存配置")
-        settingsLayout.addRow("Tushare Token", self.tokenEdit)
-        settingsLayout.addRow("最小可见天数", self.minDaysSpin)
-        settingsLayout.addRow("最大可见天数", self.maxDaysSpin)
-        settingsLayout.addRow("", self.saveSettingsBtn)
+        settings_inner.addWidget(self.settingsForm)
+        settings_inner.addWidget(self.saveSettingsBtn)
         self.settingsGroup.setVisible(False)
         leftLayout.addWidget(self.settingsGroup)
 
@@ -243,12 +241,12 @@ class MarketPage(QtWidgets.QWidget):
         self._chart_min_visible_days = app_settings.min_visible_days
         self._chart_max_visible_days = app_settings.max_visible_days
         self.chart.set_visible_day_limits(self._chart_min_visible_days, self._chart_max_visible_days)
-        if hasattr(self, "tokenEdit"):
-            self.tokenEdit.setText(self._tushare_token)
-        if hasattr(self, "minDaysSpin"):
-            self.minDaysSpin.setValue(self._chart_min_visible_days)
-        if hasattr(self, "maxDaysSpin"):
-            self.maxDaysSpin.setValue(self._chart_max_visible_days)
+        if hasattr(self, "settingsForm"):
+            self.settingsForm.set_values(
+                self._tushare_token,
+                self._chart_min_visible_days,
+                self._chart_max_visible_days,
+            )
 
     def _toggle_settings_panel(self):
         visible = not self.settingsGroup.isVisible()
@@ -256,15 +254,11 @@ class MarketPage(QtWidgets.QWidget):
         self.settingsToggleBtn.setText("收起设置" if visible else "展开设置")
 
     def _save_settings_from_panel(self):
-        token = self.tokenEdit.text().strip()
-        min_days = self.minDaysSpin.value()
-        max_days = self.maxDaysSpin.value()
-
         try:
             app_settings = self.settings_service.normalize_settings(
-                token=token,
-                min_days=min_days,
-                max_days=max_days,
+                token=self.settingsForm.get_token(),
+                min_days=self.settingsForm.get_min_days(),
+                max_days=self.settingsForm.get_max_days(),
                 last_selected_symbol=self._last_selected_symbol,
             )
         except ValueError as exc:
@@ -334,18 +328,15 @@ class MarketPage(QtWidgets.QWidget):
         self._screening_progress_dialog.stopRequested.connect(self._on_screening_stop_requested)
         self._screening_progress_dialog.show()
 
-        self._screening_thread = QtCore.QThread(self)
         self._screening_worker = ScreeningWorker(self.screening_service, request)
-        self._screening_worker.moveToThread(self._screening_thread)
-        self._screening_thread.started.connect(self._screening_worker.run)
-        self._screening_worker.progressChanged.connect(self._on_screening_progress)
-        self._screening_worker.finished.connect(self._on_screening_finished)
-        self._screening_worker.errorOccurred.connect(self._on_screening_error)
-        self._screening_worker.finished.connect(self._screening_thread.quit)
-        self._screening_worker.finished.connect(self._screening_worker.deleteLater)
-        self._screening_thread.finished.connect(self._screening_thread.deleteLater)
-        self._screening_thread.finished.connect(self._cleanup_screening_thread)
-        self._screening_thread.start()
+        self._screening_thread = start_worker(
+            self,
+            self._screening_worker,
+            on_progress=self._on_screening_progress,
+            on_finished=self._on_screening_finished,
+            on_error=self._on_screening_error,
+            on_cleanup=self._cleanup_screening_thread,
+        )
 
     def _on_screening_stop_requested(self):
         if self._screening_worker is not None:
@@ -503,22 +494,19 @@ class MarketPage(QtWidgets.QWidget):
         self._progress_dialog.show()
         self._set_update_controls_enabled(False)
 
-        self._update_thread = QtCore.QThread(self)
         self._update_worker = UpdateWorker(
             self.stocklist_csv,
             self.stock_daily_data_dir,
             token=token,
         )
-        self._update_worker.moveToThread(self._update_thread)
-        self._update_thread.started.connect(self._update_worker.run)
-        self._update_worker.progressChanged.connect(self._on_update_progress)
-        self._update_worker.finished.connect(self._on_update_finished)
-        self._update_worker.errorOccurred.connect(self._on_update_error)
-        self._update_worker.finished.connect(self._update_thread.quit)
-        self._update_worker.finished.connect(self._update_worker.deleteLater)
-        self._update_thread.finished.connect(self._update_thread.deleteLater)
-        self._update_thread.finished.connect(self._cleanup_update_thread)
-        self._update_thread.start()
+        self._update_thread = start_worker(
+            self,
+            self._update_worker,
+            on_progress=self._on_update_progress,
+            on_finished=self._on_update_finished,
+            on_error=self._on_update_error,
+            on_cleanup=self._cleanup_update_thread,
+        )
 
     def _cancel_update(self):
         if self._update_worker is not None:

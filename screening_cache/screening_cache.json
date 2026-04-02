@@ -1,0 +1,323 @@
+[
+  {
+    "target_date": "2024-10-30",
+    "template_id": "template-volume-2x-prev",
+    "template_name": "砖形图",
+    "tdx_source_hash": "3a885b82d786a0f9719992e4907767ad7954262c972343cf0110015702609a87",
+    "stock_pool_name": "default",
+    "status": "interrupted",
+    "total": 3055,
+    "processed_count": 795,
+    "matched_symbols": [
+      {
+        "symbol": "000850",
+        "name": "华茂股份"
+      },
+      {
+        "symbol": "001337",
+        "name": "四川黄金"
+      },
+      {
+        "symbol": "002262",
+        "name": "恩华药业"
+      }
+    ],
+    "error_count": 0,
+    "created_at": "2026-04-02T20:33:13",
+    "updated_at": "2026-04-02T20:33:13"
+  },
+  {
+    "target_date": "2021-11-16",
+    "template_id": "template-volume-2x-prev",
+    "template_name": "砖形图",
+    "tdx_source_hash": "3a885b82d786a0f9719992e4907767ad7954262c972343cf0110015702609a87",
+    "stock_pool_name": "default",
+    "status": "interrupted",
+    "total": 3055,
+    "processed_count": 1909,
+    "matched_symbols": [
+      {
+        "symbol": "600025",
+        "name": "华能水电"
+      },
+      {
+        "symbol": "600032",
+        "name": "浙江新能"
+      },
+      {
+        "symbol": "600333",
+        "name": "长春燃气"
+      },
+      {
+        "symbol": "600506",
+        "name": "统一股份"
+      }
+    ],
+    "error_count": 0,
+    "created_at": "2026-04-02T20:39:45",
+    "updated_at": "2026-04-02T20:39:45"
+  },
+  {
+    "target_date": "2021-11-05",
+    "template_id": "template-volume-2x-prev",
+    "template_name": "砖形图",
+    "tdx_source_hash": "3a885b82d786a0f9719992e4907767ad7954262c972343cf0110015702609a87",
+    "stock_pool_name": "default",
+    "status": "interrupted",
+    "total": 3055,
+    "processed_count": 974,
+    "matched_symbols": [
+      {
+        "symbol": "000755",
+        "name": "山西高速"
+      },
+      {
+        "symbol": "002368",
+        "name": "太极股份"
+      },
+      {
+        "symbol": "002448",
+        "name": "中原内配"
+      }
+    ],
+    "error_count": 0,
+    "created_at": "2026-04-02T20:46:39",
+    "updated_at": "2026-04-02T20:46:39"
+  },
+  {
+    "target_date": "2022-11-30",
+    "template_id": "template-volume-2x-prev",
+    "template_name": "砖形图",
+    "tdx_source_hash": "3a885b82d786a0f9719992e4907767ad7954262c972343cf0110015702609a87",
+    "stock_pool_name": "default",
+    "status": "interrupted",
+    "total": 3055,
+    "processed_count": 770,
+    "matched_symbols": [
+      {
+        "symbol": "000570",
+        "name": "苏常柴A"
+      },
+      {
+        "symbol": "000831",
+        "name": "中国稀土"
+      },
+      {
+        "symbol": "002121",
+        "name": "科陆电子"
+      },
+      {
+        "symbol": "002140",
+        "name": "东华科技"
+      },
+      {
+        "symbol": "002180",
+        "name": "纳思达"
+      },
+      {
+        "symbol": "002209",
+        "name": "达意隆"
+      },
+      {
+        "symbol": "002234",
+        "name": "民和股份"
+      },
+      {
+        "symbol": "002254",
+        "name": "泰和新材"
+      }
+    ],
+    "error_count": 0,
+    "created_at": "2026-04-02T20:55:50",
+    "updated_at": "2026-04-02T20:55:50"
+  },
+  {
+    "target_date": "2023-08-14",
+    "template_id": "template-volume-2x-prev",
+    "template_name": "砖形图",
+    "tdx_source_hash": "3a885b82d786a0f9719992e4907767ad7954262c972343cf0110015702609a87",
+    "stock_pool_name": "default",
+    "status": "interrupted",
+    "total": 3055,
+    "processed_count": 453,
+    "matched_symbols": [
+      {
+        "symbol": "000036",
+        "name": "华联控股"
+      },
+      {
+        "symbol": "000417",
+        "name": "合百集团"
+      },
+      {
+        "symbol": "000544",
+        "name": "中原环保"
+      },
+      {
+        "symbol": "000548",
+        "name": "湖南投资"
+      },
+      {
+        "symbol": "000570",
+        "name": "苏常柴A"
+      },
+      {
+        "symbol": "000610",
+        "name": "西安旅游"
+      },
+      {
+        "symbol": "000630",
+        "name": "铜陵有色"
+      },
+      {
+        "symbol": "000650",
+        "name": "仁和药业"
+      },
+      {
+        "symbol": "000797",
+        "name": "中国武夷"
+      }
+    ],
+    "error_count": 0,
+    "created_at": "2026-04-02T20:59:56",
+    "updated_at": "2026-04-02T20:59:56"
+  },
+  {
+    "target_date": "2022-11-15",
+    "template_id": "template-volume-2x-prev",
+    "template_name": "砖形图",
+    "tdx_source_hash": "3a885b82d786a0f9719992e4907767ad7954262c972343cf0110015702609a87",
+    "stock_pool_name": "default",
+    "status": "interrupted",
+    "total": 3055,
+    "processed_count": 635,
+    "matched_symbols": [
+      {
+        "symbol": "000158",
+        "name": "常山北明"
+      },
+      {
+        "symbol": "000963",
+        "name": "华东医药"
+      },
+      {
+        "symbol": "002017",
+        "name": "东信和平"
+      }
+    ],
+    "error_count": 0,
+    "created_at": "2026-04-02T21:02:12",
+    "updated_at": "2026-04-02T21:02:12"
+  },
+  {
+    "target_date": "2025-02-11",
+    "template_id": "template-volume-2x-prev",
+    "template_name": "砖形图",
+    "tdx_source_hash": "3a885b82d786a0f9719992e4907767ad7954262c972343cf0110015702609a87",
+    "stock_pool_name": "default",
+    "status": "completed",
+    "total": 3055,
+    "processed_count": 3055,
+    "matched_symbols": [
+      {
+        "symbol": "000811",
+        "name": "冰轮环境"
+      },
+      {
+        "symbol": "000882",
+        "name": "华联股份"
+      },
+      {
+        "symbol": "000915",
+        "name": "华特达因"
+      },
+      {
+        "symbol": "001226",
+        "name": "拓山重工"
+      },
+      {
+        "symbol": "001332",
+        "name": "锡装股份"
+      },
+      {
+        "symbol": "002003",
+        "name": "伟星股份"
+      },
+      {
+        "symbol": "002233",
+        "name": "塔牌集团"
+      },
+      {
+        "symbol": "002258",
+        "name": "利尔化学"
+      },
+      {
+        "symbol": "002274",
+        "name": "华昌化工"
+      },
+      {
+        "symbol": "002311",
+        "name": "海大集团"
+      },
+      {
+        "symbol": "002668",
+        "name": "TCL智家"
+      },
+      {
+        "symbol": "002705",
+        "name": "新宝股份"
+      },
+      {
+        "symbol": "002807",
+        "name": "江阴银行"
+      },
+      {
+        "symbol": "600066",
+        "name": "宇通客车"
+      },
+      {
+        "symbol": "600398",
+        "name": "海澜之家"
+      },
+      {
+        "symbol": "600989",
+        "name": "宝丰能源"
+      },
+      {
+        "symbol": "601163",
+        "name": "三角轮胎"
+      },
+      {
+        "symbol": "601169",
+        "name": "北京银行"
+      },
+      {
+        "symbol": "601298",
+        "name": "青岛港"
+      },
+      {
+        "symbol": "601288",
+        "name": "农业银行"
+      },
+      {
+        "symbol": "601717",
+        "name": "中创智领"
+      },
+      {
+        "symbol": "601838",
+        "name": "成都银行"
+      },
+      {
+        "symbol": "601988",
+        "name": "中国银行"
+      },
+      {
+        "symbol": "603733",
+        "name": "仙鹤股份"
+      }
+    ],
+    "error_count": 0,
+    "created_at": "2026-04-02T21:37:21",
+    "updated_at": "2026-04-02T21:37:21"
+  }
+]

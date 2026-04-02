@@ -1,10 +1,70 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import pyqtgraph as pg
 from PySide6 import QtCore, QtWidgets
 
 from .chart_primitives import BrickDeltaItem, CandlestickItem, DateAxisItem
 from .chart_interaction import StockChartViewBox
+
+
+@dataclass(slots=True)
+class PlotBundle:
+    """四联图的 PlotWidget、Axis、ViewBox 集合。"""
+    price_axis: DateAxisItem
+    vol_axis: DateAxisItem
+    brick_axis: DateAxisItem
+    kdj_axis: DateAxisItem
+    price_viewbox: StockChartViewBox
+    vol_viewbox: StockChartViewBox
+    brick_viewbox: StockChartViewBox
+    kdj_viewbox: StockChartViewBox
+    price_plot: pg.PlotWidget
+    vol_plot: pg.PlotWidget
+    brick_plot: pg.PlotWidget
+    kdj_plot: pg.PlotWidget
+
+
+@dataclass(slots=True)
+class PriceItems:
+    """K 线面板的图形项集合。"""
+    candle_item: CandlestickItem
+    zx_short_trend: pg.PlotDataItem
+    zx_long_short: pg.PlotDataItem
+    v_line: pg.InfiniteLine
+    h_line: pg.InfiniteLine
+    info_text: pg.TextItem
+    y_value_text: pg.TextItem
+    indicator_label: QtWidgets.QLabel
+
+
+@dataclass(slots=True)
+class VolumeItems:
+    """成交额面板的图形项集合。"""
+    vol_v_line: pg.InfiniteLine
+
+
+@dataclass(slots=True)
+class BrickItems:
+    """砖型差值面板的图形项集合。"""
+    brick_delta_item: BrickDeltaItem
+    brick_zero_line: pg.InfiniteLine
+    brick_v_line: pg.InfiniteLine
+    brick_delta_label: QtWidgets.QLabel
+
+
+@dataclass(slots=True)
+class KdjItems:
+    """KDJ 面板的图形项集合。"""
+    kdj_k_curve: pg.PlotDataItem
+    kdj_d_curve: pg.PlotDataItem
+    kdj_j_curve: pg.PlotDataItem
+    kdj_low_line: pg.InfiniteLine
+    kdj_mid_line: pg.InfiniteLine
+    kdj_high_line: pg.InfiniteLine
+    kdj_v_line: pg.InfiniteLine
+    kdj_label: QtWidgets.QLabel
 
 
 def configure_plot_widget(plot: pg.PlotWidget):
@@ -13,7 +73,7 @@ def configure_plot_widget(plot: pg.PlotWidget):
     plot.setMouseEnabled(x=True, y=False)
 
 
-def create_plot_bundle(owner):
+def create_plot_bundle(owner) -> PlotBundle:
     price_axis = DateAxisItem([], orientation="bottom")
     vol_axis = DateAxisItem([], orientation="bottom")
     brick_axis = DateAxisItem([], orientation="bottom")
@@ -36,21 +96,20 @@ def create_plot_bundle(owner):
     brick_plot.setXLink(price_plot)
     kdj_plot.setXLink(price_plot)
 
-    return {
-        "priceAxis": price_axis,
-        "volAxis": vol_axis,
-        "brickAxis": brick_axis,
-        "kdjAxis": kdj_axis,
-        "priceViewBox": price_viewbox,
-        "volViewBox": vol_viewbox,
-        "brickViewBox": brick_viewbox,
-        "kdjViewBox": kdj_viewbox,
-        "pricePlot": price_plot,
-        "volPlot": vol_plot,
-        "brickPlot": brick_plot,
-        "kdjPlot": kdj_plot,
-    }
-
+    return PlotBundle(
+        price_axis=price_axis,
+        vol_axis=vol_axis,
+        brick_axis=brick_axis,
+        kdj_axis=kdj_axis,
+        price_viewbox=price_viewbox,
+        vol_viewbox=vol_viewbox,
+        brick_viewbox=brick_viewbox,
+        kdj_viewbox=kdj_viewbox,
+        price_plot=price_plot,
+        vol_plot=vol_plot,
+        brick_plot=brick_plot,
+        kdj_plot=kdj_plot,
+    )
 
 def create_chart_layout(owner, price_plot, vol_plot, brick_plot, kdj_plot):
     chart_container = QtWidgets.QWidget()
@@ -69,7 +128,7 @@ def create_chart_layout(owner, price_plot, vol_plot, brick_plot, kdj_plot):
     return chart_container, chart_layout, layout
 
 
-def create_price_items(price_plot):
+def create_price_items(price_plot) -> PriceItems:
     candle_item = CandlestickItem()
     price_plot.addItem(candle_item)
     zx_short_trend = price_plot.plot(
@@ -102,26 +161,26 @@ def create_price_items(price_plot):
     indicator_label.move(40, 2)
     indicator_label.hide()
 
-    return {
-        "candleItem": candle_item,
-        "zx_short_trend": zx_short_trend,
-        "zx_long_short": zx_long_short,
-        "vLine": v_line,
-        "hLine": h_line,
-        "infoText": info_text,
-        "yValueText": y_value_text,
-        "indicatorLabel": indicator_label,
-    }
+    return PriceItems(
+        candle_item=candle_item,
+        zx_short_trend=zx_short_trend,
+        zx_long_short=zx_long_short,
+        v_line=v_line,
+        h_line=h_line,
+        info_text=info_text,
+        y_value_text=y_value_text,
+        indicator_label=indicator_label,
+    )
 
 
-def create_volume_items(vol_plot):
+def create_volume_items(vol_plot) -> VolumeItems:
     vol_v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen((200, 200, 200), width=1))
     vol_plot.addItem(vol_v_line, ignoreBounds=True)
     vol_v_line.hide()
-    return {"volVLine": vol_v_line}
+    return VolumeItems(vol_v_line=vol_v_line)
 
 
-def create_brick_items(brick_plot):
+def create_brick_items(brick_plot) -> BrickItems:
     brick_delta_item = BrickDeltaItem()
     brick_plot.addItem(brick_delta_item)
 
@@ -137,15 +196,15 @@ def create_brick_items(brick_plot):
     brick_delta_label.move(40, 2)
     brick_delta_label.hide()
 
-    return {
-        "brickDeltaItem": brick_delta_item,
-        "brickZeroLine": brick_zero_line,
-        "brickVLine": brick_v_line,
-        "brickDeltaLabel": brick_delta_label,
-    }
+    return BrickItems(
+        brick_delta_item=brick_delta_item,
+        brick_zero_line=brick_zero_line,
+        brick_v_line=brick_v_line,
+        brick_delta_label=brick_delta_label,
+    )
 
 
-def create_kdj_items(kdj_plot):
+def create_kdj_items(kdj_plot) -> KdjItems:
     kdj_k_curve = kdj_plot.plot(
         pen=pg.mkPen((255, 255, 255), width=1.5),
         name="K",
@@ -179,13 +238,13 @@ def create_kdj_items(kdj_plot):
     kdj_label.move(40, 2)
     kdj_label.hide()
 
-    return {
-        "kdjKCurve": kdj_k_curve,
-        "kdjDCurve": kdj_d_curve,
-        "kdjJCurve": kdj_j_curve,
-        "kdjLowLine": kdj_low_line,
-        "kdjMidLine": kdj_mid_line,
-        "kdjHighLine": kdj_high_line,
-        "kdjVLine": kdj_v_line,
-        "kdjLabel": kdj_label,
-    }
+    return KdjItems(
+        kdj_k_curve=kdj_k_curve,
+        kdj_d_curve=kdj_d_curve,
+        kdj_j_curve=kdj_j_curve,
+        kdj_low_line=kdj_low_line,
+        kdj_mid_line=kdj_mid_line,
+        kdj_high_line=kdj_high_line,
+        kdj_v_line=kdj_v_line,
+        kdj_label=kdj_label,
+    )

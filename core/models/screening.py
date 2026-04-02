@@ -11,6 +11,8 @@ class ScreeningRequest:
     symbols: tuple[str, ...] = field(default_factory=tuple)
     stock_pool_name: str = "default"
     include_debug: bool = False
+    template_id: str = ""      # 模板 ID，用于缓存键
+    template_name: str = ""    # 模板名称，用于缓存记录展示
 
 
 @dataclass(frozen=True, slots=True)

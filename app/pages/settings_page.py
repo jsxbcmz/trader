@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from PySide6 import QtCore, QtWidgets
 
+from app.components import SettingsFormWidget
 from app.services import AppSettings, SettingsService
 
 
@@ -27,22 +28,8 @@ class SettingsPage(QtWidgets.QWidget):
         description.setStyleSheet("color: #666;")
         layout.addWidget(description)
 
-        api_group = QtWidgets.QGroupBox("数据接口")
-        api_form = QtWidgets.QFormLayout(api_group)
-        self.tokenEdit = QtWidgets.QLineEdit()
-        self.tokenEdit.setPlaceholderText("请输入 Tushare Token")
-        api_form.addRow("Tushare Token", self.tokenEdit)
-        layout.addWidget(api_group)
-
-        chart_group = QtWidgets.QGroupBox("图表显示")
-        chart_form = QtWidgets.QFormLayout(chart_group)
-        self.minDaysSpin = QtWidgets.QSpinBox()
-        self.minDaysSpin.setRange(1, 10000)
-        self.maxDaysSpin = QtWidgets.QSpinBox()
-        self.maxDaysSpin.setRange(2, 10000)
-        chart_form.addRow("最小可见天数", self.minDaysSpin)
-        chart_form.addRow("最大可见天数", self.maxDaysSpin)
-        layout.addWidget(chart_group)
+        self.settingsForm = SettingsFormWidget()
+        layout.addWidget(self.settingsForm)
 
         update_group = QtWidgets.QGroupBox("数据更新")
         update_layout = QtWidgets.QVBoxLayout(update_group)
@@ -63,9 +50,11 @@ class SettingsPage(QtWidgets.QWidget):
         self.updateAllBtn.clicked.connect(self.updateAllRequested.emit)
 
     def set_settings(self, app_settings: AppSettings):
-        self.tokenEdit.setText(app_settings.tushare_token)
-        self.minDaysSpin.setValue(app_settings.min_visible_days)
-        self.maxDaysSpin.setValue(app_settings.max_visible_days)
+        self.settingsForm.set_values(
+            app_settings.tushare_token,
+            app_settings.min_visible_days,
+            app_settings.max_visible_days,
+        )
 
     def set_update_enabled(self, enabled: bool):
         self.updateAllBtn.setEnabled(enabled)
@@ -73,9 +62,9 @@ class SettingsPage(QtWidgets.QWidget):
     def _emit_save_request(self):
         try:
             app_settings = self.settings_service.normalize_settings(
-                token=self.tokenEdit.text().strip(),
-                min_days=self.minDaysSpin.value(),
-                max_days=self.maxDaysSpin.value(),
+                token=self.settingsForm.get_token(),
+                min_days=self.settingsForm.get_min_days(),
+                max_days=self.settingsForm.get_max_days(),
             )
         except ValueError as exc:
             QtWidgets.QMessageBox.warning(self, "配置无效", str(exc))

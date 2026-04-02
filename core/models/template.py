@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from core.utils import clean_string
+
 
 @dataclass(frozen=True, slots=True)
 class ScreeningTemplate:
@@ -30,12 +32,12 @@ class ScreeningTemplate:
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "ScreeningTemplate":
         return cls(
-            id=str(payload.get("id", "") or "").strip(),
-            name=str(payload.get("name", "") or "").strip(),
-            description=str(payload.get("description", "") or "").strip(),
-            tdx_source=str(payload.get("tdx_source", "") or "").strip(),
-            stock_pool_name=str(payload.get("stock_pool_name", "default") or "default").strip() or "default",
+            id=clean_string(payload.get("id")),
+            name=clean_string(payload.get("name")),
+            description=clean_string(payload.get("description")),
+            tdx_source=clean_string(payload.get("tdx_source")),
+            stock_pool_name=clean_string(payload.get("stock_pool_name"), "default") or "default",
             include_debug=bool(payload.get("include_debug", False)),
-            created_at=str(payload.get("created_at", "") or "").strip(),
-            updated_at=str(payload.get("updated_at", "") or "").strip(),
+            created_at=clean_string(payload.get("created_at")),
+            updated_at=clean_string(payload.get("updated_at")),
         )

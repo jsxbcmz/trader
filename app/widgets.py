@@ -205,18 +205,18 @@ class StockChartWidget(QtWidgets.QWidget):
         self._max_visible_days = self.DEFAULT_MAX_VISIBLE_DAYS
 
         bundle = create_plot_bundle(self)
-        self.priceAxis = bundle["priceAxis"]
-        self.volAxis = bundle["volAxis"]
-        self.brickAxis = bundle["brickAxis"]
-        self.kdjAxis = bundle["kdjAxis"]
-        self.priceViewBox = bundle["priceViewBox"]
-        self.volViewBox = bundle["volViewBox"]
-        self.brickViewBox = bundle["brickViewBox"]
-        self.kdjViewBox = bundle["kdjViewBox"]
-        self.pricePlot = bundle["pricePlot"]
-        self.volPlot = bundle["volPlot"]
-        self.brickPlot = bundle["brickPlot"]
-        self.kdjPlot = bundle["kdjPlot"]
+        self.priceAxis = bundle.price_axis
+        self.volAxis = bundle.vol_axis
+        self.brickAxis = bundle.brick_axis
+        self.kdjAxis = bundle.kdj_axis
+        self.priceViewBox = bundle.price_viewbox
+        self.volViewBox = bundle.vol_viewbox
+        self.brickViewBox = bundle.brick_viewbox
+        self.kdjViewBox = bundle.kdj_viewbox
+        self.pricePlot = bundle.price_plot
+        self.volPlot = bundle.vol_plot
+        self.brickPlot = bundle.brick_plot
+        self.kdjPlot = bundle.kdj_plot
 
         self.chartContainer, self.chartLayout, layout = create_chart_layout(
             self,
@@ -227,33 +227,33 @@ class StockChartWidget(QtWidgets.QWidget):
         )
 
         price_items = create_price_items(self.pricePlot)
-        self.candleItem = price_items["candleItem"]
-        self.zx_short_trend = price_items["zx_short_trend"]
-        self.zx_long_short = price_items["zx_long_short"]
-        self.vLine = price_items["vLine"]
-        self.hLine = price_items["hLine"]
-        self.infoText = price_items["infoText"]
-        self.yValueText = price_items["yValueText"]
-        self.indicatorLabel = price_items["indicatorLabel"]
+        self.candleItem = price_items.candle_item
+        self.zx_short_trend = price_items.zx_short_trend
+        self.zx_long_short = price_items.zx_long_short
+        self.vLine = price_items.v_line
+        self.hLine = price_items.h_line
+        self.infoText = price_items.info_text
+        self.yValueText = price_items.y_value_text
+        self.indicatorLabel = price_items.indicator_label
 
         volume_items = create_volume_items(self.volPlot)
-        self.volVLine = volume_items["volVLine"]
+        self.volVLine = volume_items.vol_v_line
 
         brick_items = create_brick_items(self.brickPlot)
-        self.brickDeltaItem = brick_items["brickDeltaItem"]
-        self.brickZeroLine = brick_items["brickZeroLine"]
-        self.brickVLine = brick_items["brickVLine"]
-        self.brickDeltaLabel = brick_items["brickDeltaLabel"]
+        self.brickDeltaItem = brick_items.brick_delta_item
+        self.brickZeroLine = brick_items.brick_zero_line
+        self.brickVLine = brick_items.brick_v_line
+        self.brickDeltaLabel = brick_items.brick_delta_label
 
         kdj_items = create_kdj_items(self.kdjPlot)
-        self.kdjKCurve = kdj_items["kdjKCurve"]
-        self.kdjDCurve = kdj_items["kdjDCurve"]
-        self.kdjJCurve = kdj_items["kdjJCurve"]
-        self.kdjLowLine = kdj_items["kdjLowLine"]
-        self.kdjMidLine = kdj_items["kdjMidLine"]
-        self.kdjHighLine = kdj_items["kdjHighLine"]
-        self.kdjVLine = kdj_items["kdjVLine"]
-        self.kdjLabel = kdj_items["kdjLabel"]
+        self.kdjKCurve = kdj_items.kdj_k_curve
+        self.kdjDCurve = kdj_items.kdj_d_curve
+        self.kdjJCurve = kdj_items.kdj_j_curve
+        self.kdjLowLine = kdj_items.kdj_low_line
+        self.kdjMidLine = kdj_items.kdj_mid_line
+        self.kdjHighLine = kdj_items.kdj_high_line
+        self.kdjVLine = kdj_items.kdj_v_line
+        self.kdjLabel = kdj_items.kdj_label
 
         self._proxy = pg.SignalProxy(
             self.pricePlot.scene().sigMouseMoved,
