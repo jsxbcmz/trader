@@ -13,6 +13,7 @@ from .chart_indicators import (
 )
 from .chart_interaction import window_width_for_days
 from .chart_layout import (
+    FIXED_Y_AXIS_WIDTH,
     create_brick_items,
     create_chart_layout,
     create_kdj_items,
@@ -198,6 +199,7 @@ class StockChartWidget(QtWidgets.QWidget):
         self._last_visible_range_indices: tuple[int, int] | None = None
         self._low_values = np.array([])
         self._high_values = np.array([])
+        self._amount_yi_values = np.array([])
         self._last_y_text: str | None = None
         self._item_half_width = CandlestickItem.BODY_WIDTH / 2
         self._right_view_padding = 1.5
@@ -218,13 +220,17 @@ class StockChartWidget(QtWidgets.QWidget):
         self.brickPlot = bundle.brick_plot
         self.kdjPlot = bundle.kdj_plot
 
-        self.chartContainer, self.chartLayout, layout = create_chart_layout(
+        self.chartContainer, self.chartLayout, layout, date_bar_items = create_chart_layout(
             self,
             self.pricePlot,
             self.volPlot,
             self.brickPlot,
             self.kdjPlot,
         )
+        self.dateBar = date_bar_items.date_bar
+        self.leftDateLabel = date_bar_items.left_date_label
+        self.rightDateLabel = date_bar_items.right_date_label
+        self.crosshairDateLabel = date_bar_items.crosshair_date_label
 
         price_items = create_price_items(self.pricePlot)
         self.candleItem = price_items.candle_item
@@ -235,6 +241,9 @@ class StockChartWidget(QtWidgets.QWidget):
         self.infoText = price_items.info_text
         self.yValueText = price_items.y_value_text
         self.indicatorLabel = price_items.indicator_label
+        self.stockInfoLabel = price_items.stock_info_label
+        self._price_guide_lines = price_items.price_guide_lines
+        self._price_guide_labels = price_items.price_guide_labels
 
         volume_items = create_volume_items(self.volPlot)
         self.volVLine = volume_items.vol_v_line
@@ -429,6 +438,30 @@ class StockChartWidget(QtWidgets.QWidget):
         self.volVLine.setPos(x)
         self.brickVLine.setPos(x)
         self.kdjVLine.setPos(x)
+        self._update_crosshair_date(int(round(x)))
+
+    def _update_crosshair_date(self, idx: int):
+        """Update the crosshair date label position and text in the bottom date bar."""
+        if not self._dates or idx < 0 or idx >= len(self._dates):
+            self.crosshairDateLabel.hide()
+            return
+
+        date_str = self._dates[idx]
+        self.crosshairDateLabel.setText(date_str)
+        self.crosshairDateLabel.adjustSize()
+        self.crosshairDateLabel.show()
+
+        view_box = self.kdjPlot.getViewBox()
+        scene_point = view_box.mapViewToScene(QtCore.QPointF(float(idx), 0))
+        widget_point = self.kdjPlot.mapFromScene(scene_point)
+        global_point = self.kdjPlot.mapToGlobal(widget_point)
+        local_point = self.dateBar.mapFromGlobal(global_point)
+
+        label_width = self.crosshairDateLabel.sizeHint().width()
+        target_x = local_point.x() - label_width / 2
+        bar_width = self.dateBar.width()
+        target_x = max(FIXED_Y_AXIS_WIDTH, min(target_x, bar_width - label_width))
+        self.crosshairDateLabel.move(int(target_x), 2)
 
     def _window_width_for_days(self, days: int, include_right_padding: bool):
         return window_width_for_days(days, self._item_half_width, self._right_view_padding, include_right_padding)
@@ -495,6 +528,7 @@ class StockChartWidget(QtWidgets.QWidget):
         self.volPlot.clear()
         self.volPlot.addItem(self.volVLine, ignoreBounds=True)
         self.volVLine.show()
+        self._amount_yi_values = amount_yi
 
         up_mask = c >= o
         down_mask = ~up_mask
@@ -519,8 +553,6 @@ class StockChartWidget(QtWidgets.QWidget):
                 )
             )
 
-        self.volPlot.setLabel("left", "成交额(亿)")
-        self.volPlot.enableAutoRange(axis="y", enable=True)
 
     def _update_brick_panel(self, x, h, l, c):
         self.brickPlot.clear()
@@ -545,7 +577,6 @@ class StockChartWidget(QtWidgets.QWidget):
         )
         self.brickDeltaItem.setData(brick_segment_data)
 
-        self.brickPlot.setLabel("left", "砖型图")
 
         if len(brick_values) > 0:
             segment_starts = np.where(np.isfinite(prev_brick), prev_brick, 0.0)
@@ -561,9 +592,9 @@ class StockChartWidget(QtWidgets.QWidget):
         brick_max = float(np.max(finite_highs)) if len(finite_highs) > 0 else 0.0
         if np.isfinite(brick_min) and np.isfinite(brick_max):
             if brick_max <= brick_min:
-                pad = max(abs(brick_max) * 0.03, 0.1)
+                pad = max(abs(brick_max) * 0.01, 0.05)
             else:
-                pad = max((brick_max - brick_min) * 0.06, 0.1)
+                pad = (brick_max - brick_min) * 0.02
             self.brickPlot.setYRange(brick_min - pad, brick_max + pad, padding=0)
         else:
             self.brickPlot.enableAutoRange(axis="y", enable=True)
@@ -592,7 +623,6 @@ class StockChartWidget(QtWidgets.QWidget):
         self.kdjDCurve.setData(x, self._kdj_d_values)
         self.kdjJCurve.setData(x, self._kdj_j_values)
 
-        self.kdjPlot.setLabel("left", "KDJ")
 
         kdj_stack = np.concatenate([
             self._kdj_k_values[np.isfinite(self._kdj_k_values)],
@@ -682,6 +712,76 @@ class StockChartWidget(QtWidgets.QWidget):
 
         ymin, ymax = y_range
         self.pricePlot.setYRange(ymin, ymax, padding=0)
+        self._update_price_guide_lines(ymin, ymax)
+
+        if len(self._amount_yi_values) > 0:
+            visible_amount = self._amount_yi_values[left:right + 1]
+            finite_amount = visible_amount[np.isfinite(visible_amount)]
+            if len(finite_amount) > 0:
+                vol_max = float(np.max(finite_amount))
+                vol_pad = vol_max * 0.02
+                self.volPlot.setYRange(0, vol_max + vol_pad, padding=0)
+
+        if len(self._brick_values) > 0:
+            visible_brick = self._brick_values[left:right + 1]
+            finite_brick = visible_brick[np.isfinite(visible_brick)]
+            if len(finite_brick) > 0:
+                prev_brick = np.full_like(visible_brick, np.nan)
+                if left > 0:
+                    prev_brick[0] = self._brick_values[left - 1]
+                if len(visible_brick) > 1:
+                    prev_brick[1:] = visible_brick[:-1]
+                starts = np.where(np.isfinite(prev_brick), prev_brick, 0.0)
+                brick_lows = np.minimum(starts, visible_brick)
+                brick_highs = np.maximum(starts, visible_brick)
+                finite_lows = brick_lows[np.isfinite(brick_lows)]
+                finite_highs = brick_highs[np.isfinite(brick_highs)]
+                if len(finite_lows) > 0 and len(finite_highs) > 0:
+                    brick_min = float(np.min(finite_lows))
+                    brick_max = float(np.max(finite_highs))
+                    brick_pad = max((brick_max - brick_min) * 0.08, 0.1)
+                    self.brickPlot.setYRange(brick_min - brick_pad, brick_max + brick_pad, padding=0)
+
+        if len(self._dates) > 0:
+            left_date = self._dates[left] if left < len(self._dates) else ""
+            right_date = self._dates[min(right, len(self._dates) - 1)]
+            self.leftDateLabel.setText(left_date)
+            self.rightDateLabel.setText(right_date)
+
+    def _update_price_guide_lines(self, ymin: float, ymax: float):
+        """Place evenly-spaced horizontal dashed guide lines across the visible price range."""
+        num_guides = len(self._price_guide_lines)
+        price_range = ymax - ymin
+        if price_range <= 0 or not np.isfinite(price_range):
+            for line in self._price_guide_lines:
+                line.hide()
+            for label in self._price_guide_labels:
+                label.hide()
+            return
+
+        step = price_range / (num_guides + 1)
+        view_range = self.pricePlot.getViewBox().viewRange()
+        x_left = view_range[0][0]
+
+        for i in range(num_guides):
+            price = ymin + step * (i + 1)
+            self._price_guide_lines[i].setPos(price)
+            self._price_guide_lines[i].show()
+
+            price_text = f"{price:.2f}"
+            self._price_guide_labels[i].setText(price_text)
+            self._price_guide_labels[i].setPos(x_left, price)
+            self._price_guide_labels[i].show()
+
+    def set_stock_info(self, symbol: str, name: str = ""):
+        """Display stock symbol and name in the top-left corner of the price chart."""
+        if name:
+            text = f"{name}  {symbol}"
+        else:
+            text = symbol
+        self.stockInfoLabel.setText(text)
+        self.stockInfoLabel.adjustSize()
+        self.stockInfoLabel.show()
 
     def set_daily(self, df):
         """df columns: date, open, high, low, close, volume(万元成交额)"""

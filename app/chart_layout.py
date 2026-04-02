@@ -37,6 +37,9 @@ class PriceItems:
     info_text: pg.TextItem
     y_value_text: pg.TextItem
     indicator_label: QtWidgets.QLabel
+    stock_info_label: QtWidgets.QLabel
+    price_guide_lines: list[pg.InfiniteLine]
+    price_guide_labels: list[pg.TextItem]
 
 
 @dataclass(slots=True)
@@ -67,9 +70,21 @@ class KdjItems:
     kdj_label: QtWidgets.QLabel
 
 
+@dataclass(slots=True)
+class DateBarItems:
+    """底部时间标注栏的组件集合。"""
+    date_bar: QtWidgets.QWidget
+    left_date_label: QtWidgets.QLabel
+    right_date_label: QtWidgets.QLabel
+    crosshair_date_label: QtWidgets.QLabel
+
+
+FIXED_Y_AXIS_WIDTH = 50
+
+
 def configure_plot_widget(plot: pg.PlotWidget):
     plot.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
-    plot.showGrid(x=True, y=True, alpha=0.25)
+    plot.showGrid(x=True, y=False, alpha=0.25)
     plot.setMouseEnabled(x=True, y=False)
 
 
@@ -91,6 +106,12 @@ def create_plot_bundle(owner) -> PlotBundle:
 
     for plot in (price_plot, vol_plot, brick_plot, kdj_plot):
         configure_plot_widget(plot)
+        plot.getAxis("bottom").setStyle(showValues=False)
+        plot.getAxis("bottom").setHeight(0)
+        left_axis = plot.getAxis("left")
+        left_axis.setStyle(showValues=False)
+        left_axis.setTicks([])
+        left_axis.setWidth(0)
 
     price_plot.setXLink(vol_plot)
     brick_plot.setXLink(price_plot)
@@ -116,16 +137,72 @@ def create_chart_layout(owner, price_plot, vol_plot, brick_plot, kdj_plot):
     chart_layout = QtWidgets.QVBoxLayout(chart_container)
     chart_layout.setContentsMargins(0, 0, 16, 0)
     chart_layout.setSpacing(0)
+
     chart_layout.addWidget(price_plot, 3)
+
+    sep1 = QtWidgets.QWidget()
+    sep1.setFixedHeight(1)
+    sep1.setStyleSheet("background-color: #4a4a4a;")
+    chart_layout.addWidget(sep1, 0)
     chart_layout.addWidget(vol_plot, 1)
+
+    sep2 = QtWidgets.QWidget()
+    sep2.setFixedHeight(1)
+    sep2.setStyleSheet("background-color: #4a4a4a;")
+    chart_layout.addWidget(sep2, 0)
     chart_layout.addWidget(brick_plot, 1)
+
+    sep3 = QtWidgets.QWidget()
+    sep3.setFixedHeight(1)
+    sep3.setStyleSheet("background-color: #4a4a4a;")
+    chart_layout.addWidget(sep3, 0)
     chart_layout.addWidget(kdj_plot, 1)
+
+    date_bar_items = _create_date_bar()
+    chart_layout.addWidget(date_bar_items.date_bar, 0)
 
     layout = QtWidgets.QVBoxLayout(owner)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.addWidget(chart_container)
 
-    return chart_container, chart_layout, layout
+    return chart_container, chart_layout, layout, date_bar_items
+
+
+def _create_date_bar() -> DateBarItems:
+    """创建底部时间标注栏。"""
+    date_bar = QtWidgets.QWidget()
+    date_bar_layout = QtWidgets.QHBoxLayout(date_bar)
+    date_bar_layout.setContentsMargins(FIXED_Y_AXIS_WIDTH, 2, 0, 2)
+    date_bar_layout.setSpacing(0)
+
+    label_style = "color: #999; font-size: 11px; background: transparent;"
+
+    left_date_label = QtWidgets.QLabel("")
+    left_date_label.setStyleSheet(label_style)
+
+    right_date_label = QtWidgets.QLabel("")
+    right_date_label.setStyleSheet(label_style)
+    right_date_label.setAlignment(QtCore.Qt.AlignRight)
+
+    date_bar_layout.addWidget(left_date_label)
+    date_bar_layout.addStretch(1)
+    date_bar_layout.addWidget(right_date_label)
+
+    date_bar.setFixedHeight(22)
+
+    crosshair_date_label = QtWidgets.QLabel(date_bar)
+    crosshair_date_label.setStyleSheet(
+        "color: white; background: rgba(60, 60, 60, 0.9); "
+        "border-radius: 3px; padding: 1px 6px; font-size: 11px;"
+    )
+    crosshair_date_label.hide()
+
+    return DateBarItems(
+        date_bar=date_bar,
+        left_date_label=left_date_label,
+        right_date_label=right_date_label,
+        crosshair_date_label=crosshair_date_label,
+    )
 
 
 def create_price_items(price_plot) -> PriceItems:
@@ -155,11 +232,36 @@ def create_price_items(price_plot) -> PriceItems:
     price_plot.addItem(y_value_text)
     y_value_text.hide()
 
+    stock_info_label = QtWidgets.QLabel(price_plot)
+    stock_info_label.setStyleSheet(
+        "color: rgba(255, 255, 255, 0.5); background: transparent; "
+        "border: none; padding: 0px; margin: 0px; font-size: 13px; font-weight: bold;"
+    )
+    stock_info_label.move(8, 4)
+    stock_info_label.hide()
+
     indicator_label = QtWidgets.QLabel(price_plot)
     indicator_label.setStyleSheet("color: white; background: transparent; border: none; padding: 0px; margin: 0px;")
     indicator_label.setTextFormat(QtCore.Qt.RichText)
-    indicator_label.move(40, 2)
+    indicator_label.move(8, 24)
     indicator_label.hide()
+
+    num_price_guides = 4
+    price_guide_lines: list[pg.InfiniteLine] = []
+    price_guide_labels: list[pg.TextItem] = []
+    guide_pen = pg.mkPen((255, 255, 255, 40), width=1, style=QtCore.Qt.DashLine)
+    for _ in range(num_price_guides):
+        guide_line = pg.InfiniteLine(angle=0, movable=False, pen=guide_pen)
+        guide_line.setZValue(-10)
+        price_plot.addItem(guide_line, ignoreBounds=True)
+        guide_line.hide()
+        price_guide_lines.append(guide_line)
+
+        guide_label = pg.TextItem(anchor=(0, 0.5), color=(180, 180, 180, 160))
+        guide_label.setZValue(-10)
+        price_plot.addItem(guide_label, ignoreBounds=True)
+        guide_label.hide()
+        price_guide_labels.append(guide_label)
 
     return PriceItems(
         candle_item=candle_item,
@@ -170,6 +272,9 @@ def create_price_items(price_plot) -> PriceItems:
         info_text=info_text,
         y_value_text=y_value_text,
         indicator_label=indicator_label,
+        stock_info_label=stock_info_label,
+        price_guide_lines=price_guide_lines,
+        price_guide_labels=price_guide_labels,
     )
 
 
@@ -184,7 +289,7 @@ def create_brick_items(brick_plot) -> BrickItems:
     brick_delta_item = BrickDeltaItem()
     brick_plot.addItem(brick_delta_item)
 
-    brick_zero_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen((120, 120, 120), width=1))
+    brick_zero_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen((120, 120, 120, 0), width=0))
     brick_plot.addItem(brick_zero_line, ignoreBounds=True)
     brick_v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen((200, 200, 200), width=1))
     brick_plot.addItem(brick_v_line, ignoreBounds=True)

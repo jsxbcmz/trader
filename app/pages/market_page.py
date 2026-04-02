@@ -463,12 +463,26 @@ class MarketPage(QtWidgets.QWidget):
     def _load_symbol(self, symbol: str):
         """统一的股票选中与图表加载入口"""
         self._last_selected_symbol = str(symbol).zfill(6)
+
+        stock_name = self._find_stock_name(symbol)
+        self.chart.set_stock_info(self._last_selected_symbol, stock_name)
+
         try:
             df_daily = load_daily_csv(self.stock_daily_data_dir, symbol)
             self.chart.set_daily(df_daily)
             self._show_status_message(f"{symbol}  共 {len(df_daily)} 条日线", 2000)
         except Exception:
             self._show_status_message(f"{symbol} 暂无本地日线，可先执行更新", 3000)
+
+    def _find_stock_name(self, symbol: str) -> str:
+        """从股票列表表格中查找股票名称。"""
+        target = str(symbol).zfill(6)
+        for row in range(self.table.rowCount()):
+            item = self.table.item(row, 0)
+            if item and item.text() == target:
+                name_item = self.table.item(row, 1)
+                return name_item.text() if name_item else ""
+        return ""
 
     def start_update_all(self, token: str | None = None):
         actual_token = str(token or "").strip() or self._ensure_token()
