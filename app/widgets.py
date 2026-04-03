@@ -819,6 +819,7 @@ class StockChartWidget(QtWidgets.QWidget):
 
         c = float(row["close"])
         amount_yi = float(row.get("volume", np.nan)) / 1e4
+        turnover_rate = float(row.get("turnover_rate", np.nan))
 
         if idx > 0:
             preclose = float(self._df.iloc[idx - 1]["close"])
@@ -826,7 +827,7 @@ class StockChartWidget(QtWidgets.QWidget):
         else:
             pct = float("nan")
 
-        text = build_info_box_html(ds, c, pct, amount_yi)
+        text = build_info_box_html(ds, c, pct, amount_yi, turnover_rate)
 
         vb = self.pricePlot.getViewBox()
         (x0, x1), (y0, y1) = vb.viewRange()

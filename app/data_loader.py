@@ -6,7 +6,7 @@ import tempfile
 import pandas as pd
 
 
-DAILY_COLUMNS = ["date", "open", "close", "high", "low", "volume"]
+DAILY_COLUMNS = ["date", "open", "close", "high", "low", "volume", "turnover_rate"]
 
 # 模块级别的数据缓存，减少重复磁盘IO
 _daily_data_cache: dict[str, pd.DataFrame] = {}
@@ -45,13 +45,18 @@ def normalize_daily_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     if df is None or df.empty:
         return pd.DataFrame(columns=DAILY_COLUMNS)
 
+    # turnover_rate 是新增字段，旧数据可能没有，兼容处理
+    if "turnover_rate" not in df.columns:
+        df = df.copy()
+        df["turnover_rate"] = None
+
     miss = set(DAILY_COLUMNS) - set(df.columns)
     if miss:
         raise ValueError(f"日线数据缺少字段: {sorted(miss)}")
 
     result = df[DAILY_COLUMNS].copy()
     result["date"] = pd.to_datetime(result["date"], errors="coerce")
-    for c in ["open", "close", "high", "low", "volume"]:
+    for c in ["open", "close", "high", "low", "volume", "turnover_rate"]:
         result[c] = pd.to_numeric(result[c], errors="coerce")
 
     result = result.dropna(subset=["date", "open", "close", "high", "low"])
@@ -115,13 +120,16 @@ def load_daily_csv(stock_daily_data_dir: Path, symbol: str) -> pd.DataFrame:
     if miss:
         raise ValueError(f"{fp.name} 缺少字段: {sorted(miss)}")
 
+    # 兼容旧数据：没有 turnover_rate 列时补 NaN
+    if "turnover_rate" not in df.columns:
+        df["turnover_rate"] = None
+
     df["date"] = pd.to_datetime(df["date"])
     df = df.sort_values("date").reset_index(drop=True)
 
-    # Standardize to date,open,high,low,close,volume
-    df = df[["date", "open", "high", "low", "close", "volume"]].copy()
+    df = df[["date", "open", "high", "low", "close", "volume", "turnover_rate"]].copy()
 
-    for c in ["open", "high", "low", "close", "volume"]:
+    for c in ["open", "high", "low", "close", "volume", "turnover_rate"]:
         df[c] = pd.to_numeric(df[c], errors="coerce")
 
     df = df.dropna(subset=["open", "high", "low", "close"])  # keep rows with valid OHLC

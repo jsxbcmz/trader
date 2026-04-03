@@ -57,7 +57,7 @@ def format_tooltip_value(value, nd=2):
     return f"{value:.{nd}f}"
 
 
-def build_info_box_html(ds: str, close_value: float, pct: float, amount_yi: float):
+def build_info_box_html(ds: str, close_value: float, pct: float, amount_yi: float, turnover_rate: float = float("nan")):
     if pct == pct:
         if pct > 0:
             accent_color = "#ff4d4f"
@@ -83,5 +83,6 @@ def build_info_box_html(ds: str, close_value: float, pct: float, amount_yi: floa
         f"<div style='color: white;'>收盘价 {format_tooltip_value(close_value)}</div>"
         f"<div style='color: {accent_color};'>涨跌幅 {format_tooltip_value(pct, 2)}%</div>"
         f"<div style='color: white;'>成交额 {format_tooltip_value(amount_yi, 4)} 亿</div>"
+        f"<div style='color: white;'>换手率 {format_tooltip_value(turnover_rate, 2)}%</div>"
         f"</div>"
     )

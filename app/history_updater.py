@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from collections import deque
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
@@ -8,7 +9,6 @@ from typing import Callable
 
 import pandas as pd
 
-from .akshare_client import AkshareClient, AkshareClientError
 from .data_loader import (
     get_last_trade_date,
     load_raw_daily_csv,
@@ -17,6 +17,7 @@ from .data_loader import (
     normalize_symbol,
     save_daily_csv,
 )
+from .tushare_client import TushareClient, TushareClientError
 
 
 @dataclass
@@ -40,60 +41,92 @@ class BatchUpdateSummary:
     elapsed_seconds: float
 
 
+class RateLimiter:
+    def __init__(self, max_calls: int = 450, period_seconds: int = 60):
+        self.max_calls = max_calls
+        self.period_seconds = period_seconds
+        self._calls: deque[float] = deque()
+
+    def acquire(self):
+        now = time.monotonic()
+        while self._calls and now - self._calls[0] >= self.period_seconds:
+            self._calls.popleft()
+
+        if len(self._calls) < self.max_calls:
+            self._calls.append(now)
+            return
+
+        sleep_for = self.period_seconds - (now - self._calls[0])
+        if sleep_for > 0:
+            time.sleep(sleep_for)
+
+        now = time.monotonic()
+        while self._calls and now - self._calls[0] >= self.period_seconds:
+            self._calls.popleft()
+        self._calls.append(now)
+
+
 class HistoryUpdater:
     def __init__(
         self,
         stocklist_csv: Path,
         stock_daily_data_dir: Path,
-        client: AkshareClient | None = None,
+        client: TushareClient | None = None,
         default_start_date: str = "20100101",
     ):
         self.stocklist_csv = stocklist_csv
         self.stock_daily_data_dir = stock_daily_data_dir
-        self.client = client or AkshareClient()
+        self.client = client or TushareClient.from_env()
         self.default_start_date = default_start_date
+        self.rate_limiter = RateLimiter()
         self.df_list = load_stock_list(stocklist_csv)
         self.stock_map = {
             normalize_symbol(row["symbol"]): {
+                "ts_code": str(row.get("ts_code", "") or "").strip(),
                 "name": str(row.get("name", "") or "").strip(),
             }
             for _, row in self.df_list.iterrows()
         }
 
-    def _map_remote_to_local(self, df_remote: pd.DataFrame) -> pd.DataFrame:
+    def _map_tushare_daily_to_local(self, df_remote: pd.DataFrame, df_basic: pd.DataFrame | None = None) -> pd.DataFrame:
         if df_remote is None or df_remote.empty:
-            return pd.DataFrame(columns=["date", "open", "close", "high", "low", "volume"])
+            return pd.DataFrame(columns=["date", "open", "close", "high", "low", "volume", "turnover_rate"])
 
-        # AKShare stock_zh_a_hist 返回的列名为中文
-        col_map = {
-            "日期": "date",
-            "开盘": "open",
-            "收盘": "close",
-            "最高": "high",
-            "最低": "low",
-            "成交额": "volume",
-        }
-        missing = set(col_map.keys()) - set(df_remote.columns)
-        if missing:
-            raise ValueError(f"AKShare 返回数据缺少字段: {sorted(missing)}")
+        required = {"trade_date", "open", "close", "high", "low", "amount"}
+        miss = required - set(df_remote.columns)
+        if miss:
+            raise ValueError(f"Tushare 返回数据缺少字段: {sorted(miss)}")
 
         result = pd.DataFrame(
             {
-                "date": pd.to_datetime(df_remote["日期"], errors="coerce"),
-                "open": pd.to_numeric(df_remote["开盘"], errors="coerce"),
-                "close": pd.to_numeric(df_remote["收盘"], errors="coerce"),
-                "high": pd.to_numeric(df_remote["最高"], errors="coerce"),
-                "low": pd.to_numeric(df_remote["最低"], errors="coerce"),
-                "volume": pd.to_numeric(df_remote["成交额"], errors="coerce"),
+                "trade_date": df_remote["trade_date"],
+                "date": pd.to_datetime(df_remote["trade_date"], format="%Y%m%d", errors="coerce"),
+                "open": pd.to_numeric(df_remote["open"], errors="coerce"),
+                "close": pd.to_numeric(df_remote["close"], errors="coerce"),
+                "high": pd.to_numeric(df_remote["high"], errors="coerce"),
+                "low": pd.to_numeric(df_remote["low"], errors="coerce"),
+                "volume": pd.to_numeric(df_remote["amount"], errors="coerce"),
             }
         )
+
+        # 合并 daily_basic 的换手率
+        if df_basic is not None and not df_basic.empty and "turnover_rate" in df_basic.columns:
+            result = result.merge(
+                df_basic[["trade_date", "turnover_rate"]],
+                on="trade_date",
+                how="left",
+            )
+        else:
+            result["turnover_rate"] = None
+
+        result = result.drop(columns=["trade_date"])
         return normalize_daily_dataframe(result)
 
     def _get_symbol_meta(self, symbol: str) -> dict:
         key = normalize_symbol(symbol)
         meta = self.stock_map.get(key)
-        if not meta:
-            raise ValueError(f"股票 {key} 在 stocklist.csv 中未找到")
+        if not meta or not meta.get("ts_code"):
+            raise ValueError(f"股票 {key} 在 stocklist.csv 中缺少 ts_code 映射")
         return {"symbol": key, **meta}
 
     def update_symbol(self, symbol: str, end_date: str | None = None, full_refresh: bool = False) -> UpdateResult:
@@ -116,18 +149,25 @@ class HistoryUpdater:
             if start_date > end_date:
                 return UpdateResult(symbol, meta["name"], "skipped", 0, 0, "本地数据已是最新", time.perf_counter() - start_ts)
 
-            remote_df = self.client.fetch_daily(symbol, start_date=start_date, end_date=end_date)
+            self.rate_limiter.acquire()
+            remote_df = self.client.fetch_daily(meta["ts_code"], start_date=start_date, end_date=end_date)
             if remote_df.empty:
                 return UpdateResult(symbol, meta["name"], "skipped", 0, 0, "接口未返回新数据", time.perf_counter() - start_ts)
 
-            mapped_df = self._map_remote_to_local(remote_df)
+            self.rate_limiter.acquire()
+            try:
+                basic_df = self.client.fetch_daily_basic(meta["ts_code"], start_date=start_date, end_date=end_date)
+            except TushareClientError:
+                basic_df = pd.DataFrame()
+
+            mapped_df = self._map_tushare_daily_to_local(remote_df, basic_df)
             combined = pd.concat([local_df, mapped_df], ignore_index=True, sort=False)
             normalized = normalize_daily_dataframe(combined)
             before_count = len(normalize_daily_dataframe(local_df)) if not local_df.empty else 0
             save_daily_csv(self.stock_daily_data_dir, symbol, normalized)
             written = max(0, len(normalized) - before_count)
             return UpdateResult(symbol, meta["name"], "updated", len(mapped_df), written, "更新成功", time.perf_counter() - start_ts)
-        except AkshareClientError as exc:
+        except TushareClientError as exc:
             return UpdateResult(symbol, meta["name"], "failed", 0, 0, str(exc), time.perf_counter() - start_ts)
         except Exception as exc:
             return UpdateResult(symbol, meta["name"], "failed", 0, 0, f"更新失败: {exc}", time.perf_counter() - start_ts)

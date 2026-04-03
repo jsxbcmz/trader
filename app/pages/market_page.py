@@ -4,7 +4,6 @@ from pathlib import Path
 
 from PySide6 import QtCore, QtWidgets
 
-from app.components import SettingsFormWidget
 from app.services import AppSettings, SettingsService
 from app.utils import start_worker
 from core.screening.service import ScreeningService
@@ -18,7 +17,7 @@ except ImportError:
 
 from ..data_loader import load_daily_csv, load_stock_list
 from ..history_updater import HistoryUpdater
-from ..akshare_client import AkshareClientError
+from ..tushare_client import TushareClient, TushareClientError
 from ..widgets import ScreeningProgressDialog, StockChartWidget, UpdateProgressDialog
 
 
@@ -27,22 +26,24 @@ class UpdateWorker(QtCore.QObject):
     finished = QtCore.Signal(dict)
     errorOccurred = QtCore.Signal(str)
 
-    def __init__(self, stocklist_csv: Path, stock_daily_data_dir: Path):
+    def __init__(self, stocklist_csv: Path, stock_daily_data_dir: Path, token: str | None = None):
         super().__init__()
         self.stocklist_csv = stocklist_csv
         self.stock_daily_data_dir = stock_daily_data_dir
+        self.token = token
         self._cancelled = False
 
     @QtCore.Slot()
     def run(self):
         try:
-            updater = HistoryUpdater(self.stocklist_csv, self.stock_daily_data_dir)
+            client = TushareClient(token=self.token) if self.token else TushareClient.from_env()
+            updater = HistoryUpdater(self.stocklist_csv, self.stock_daily_data_dir, client=client)
             results, summary = updater.update_all_symbols(
                 progress_callback=lambda payload: self.progressChanged.emit(payload),
                 stop_checker=lambda: self._cancelled,
             )
             self.finished.emit({"results": results, "summary": summary})
-        except Exception as exc:
+        except (TushareClientError, Exception) as exc:
             self.errorOccurred.emit(str(exc))
 
     def cancel(self):
@@ -98,6 +99,7 @@ class MarketPage(QtWidgets.QWidget):
         self.stock_daily_data_dir = self.root / "stock_daily_data"
         app_settings = self.settings_service.load()
         self._last_selected_symbol = app_settings.last_selected_symbol
+        self._tushare_token = app_settings.tushare_token
         self._chart_min_visible_days = app_settings.min_visible_days
         self._chart_max_visible_days = app_settings.max_visible_days
         self._update_thread = None
@@ -136,15 +138,20 @@ class MarketPage(QtWidgets.QWidget):
         leftLayout.addLayout(actionLayout)
 
         self.settingsGroup = QtWidgets.QGroupBox("配置")
-        settings_inner = QtWidgets.QVBoxLayout(self.settingsGroup)
-        self.settingsForm = SettingsFormWidget()
-        self.settingsForm.set_values(
-            self._chart_min_visible_days,
-            self._chart_max_visible_days,
-        )
+        settingsLayout = QtWidgets.QFormLayout(self.settingsGroup)
+        self.tokenEdit = QtWidgets.QLineEdit(self._tushare_token)
+        self.tokenEdit.setPlaceholderText("请输入 Tushare Token")
+        self.minDaysSpin = QtWidgets.QSpinBox()
+        self.minDaysSpin.setRange(1, 10000)
+        self.minDaysSpin.setValue(self._chart_min_visible_days)
+        self.maxDaysSpin = QtWidgets.QSpinBox()
+        self.maxDaysSpin.setRange(2, 10000)
+        self.maxDaysSpin.setValue(self._chart_max_visible_days)
         self.saveSettingsBtn = QtWidgets.QPushButton("保存配置")
-        settings_inner.addWidget(self.settingsForm)
-        settings_inner.addWidget(self.saveSettingsBtn)
+        settingsLayout.addRow("Tushare Token", self.tokenEdit)
+        settingsLayout.addRow("最小可见天数", self.minDaysSpin)
+        settingsLayout.addRow("最大可见天数", self.maxDaysSpin)
+        settingsLayout.addRow("", self.saveSettingsBtn)
         self.settingsGroup.setVisible(False)
         leftLayout.addWidget(self.settingsGroup)
 
@@ -233,14 +240,16 @@ class MarketPage(QtWidgets.QWidget):
         self.statusMessageRequested.emit(message, timeout)
 
     def apply_settings(self, app_settings: AppSettings):
+        self._tushare_token = app_settings.tushare_token
         self._chart_min_visible_days = app_settings.min_visible_days
         self._chart_max_visible_days = app_settings.max_visible_days
         self.chart.set_visible_day_limits(self._chart_min_visible_days, self._chart_max_visible_days)
-        if hasattr(self, "settingsForm"):
-            self.settingsForm.set_values(
-                self._chart_min_visible_days,
-                self._chart_max_visible_days,
-            )
+        if hasattr(self, "tokenEdit"):
+            self.tokenEdit.setText(self._tushare_token)
+        if hasattr(self, "minDaysSpin"):
+            self.minDaysSpin.setValue(self._chart_min_visible_days)
+        if hasattr(self, "maxDaysSpin"):
+            self.maxDaysSpin.setValue(self._chart_max_visible_days)
 
     def _toggle_settings_panel(self):
         visible = not self.settingsGroup.isVisible()
@@ -248,10 +257,15 @@ class MarketPage(QtWidgets.QWidget):
         self.settingsToggleBtn.setText("收起设置" if visible else "展开设置")
 
     def _save_settings_from_panel(self):
+        token = self.tokenEdit.text().strip()
+        min_days = self.minDaysSpin.value()
+        max_days = self.maxDaysSpin.value()
+
         try:
             app_settings = self.settings_service.normalize_settings(
-                min_days=self.settingsForm.get_min_days(),
-                max_days=self.settingsForm.get_max_days(),
+                token=token,
+                min_days=min_days,
+                max_days=max_days,
                 last_selected_symbol=self._last_selected_symbol,
             )
         except ValueError as exc:
@@ -474,6 +488,7 @@ class MarketPage(QtWidgets.QWidget):
         self._update_worker = UpdateWorker(
             self.stocklist_csv,
             self.stock_daily_data_dir,
+            token=self._tushare_token,
         )
         self._update_thread = start_worker(
             self,
