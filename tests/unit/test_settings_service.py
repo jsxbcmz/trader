@@ -29,7 +29,6 @@ def test_save_and_load_round_trip():
 
     saved = service.save(
         AppSettings(
-            tushare_token="  token-123  ",
             min_visible_days=45,
             max_visible_days=160,
             last_selected_symbol="123",
@@ -37,7 +36,6 @@ def test_save_and_load_round_trip():
     )
     loaded = service.load()
 
-    assert saved.tushare_token == "token-123"
     assert saved.last_selected_symbol == "000123"
     assert loaded == saved
 
@@ -48,7 +46,7 @@ def test_invalid_chart_limits_are_rejected():
     service = SettingsService(settings)
 
     try:
-        service.validate_settings("token", 20, 20)
+        service.validate_settings(20, 20)
     except ValueError as exc:
         assert "最大可见天数必须大于最小可见天数" in str(exc)
     else:

@@ -23,7 +23,7 @@ class SettingsPage(QtWidgets.QWidget):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(16)
 
-        description = QtWidgets.QLabel("在这里维护接口 Token、图表显示参数，并触发批量更新股票数据。")
+        description = QtWidgets.QLabel("在这里维护图表显示参数，并触发批量更新股票数据。")
         description.setWordWrap(True)
         description.setStyleSheet("color: #666;")
         layout.addWidget(description)
@@ -51,7 +51,6 @@ class SettingsPage(QtWidgets.QWidget):
 
     def set_settings(self, app_settings: AppSettings):
         self.settingsForm.set_values(
-            app_settings.tushare_token,
             app_settings.min_visible_days,
             app_settings.max_visible_days,
         )
@@ -62,7 +61,6 @@ class SettingsPage(QtWidgets.QWidget):
     def _emit_save_request(self):
         try:
             app_settings = self.settings_service.normalize_settings(
-                token=self.settingsForm.get_token(),
                 min_days=self.settingsForm.get_min_days(),
                 max_days=self.settingsForm.get_max_days(),
             )

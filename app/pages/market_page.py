@@ -18,7 +18,7 @@ except ImportError:
 
 from ..data_loader import load_daily_csv, load_stock_list
 from ..history_updater import HistoryUpdater
-from ..tushare_client import TushareClient, TushareClientError
+from ..akshare_client import AkshareClientError
 from ..widgets import ScreeningProgressDialog, StockChartWidget, UpdateProgressDialog
 
 
@@ -27,24 +27,22 @@ class UpdateWorker(QtCore.QObject):
     finished = QtCore.Signal(dict)
     errorOccurred = QtCore.Signal(str)
 
-    def __init__(self, stocklist_csv: Path, stock_daily_data_dir: Path, token: str | None = None):
+    def __init__(self, stocklist_csv: Path, stock_daily_data_dir: Path):
         super().__init__()
         self.stocklist_csv = stocklist_csv
         self.stock_daily_data_dir = stock_daily_data_dir
-        self.token = token
         self._cancelled = False
 
     @QtCore.Slot()
     def run(self):
         try:
-            client = TushareClient(token=self.token) if self.token else TushareClient.from_env()
-            updater = HistoryUpdater(self.stocklist_csv, self.stock_daily_data_dir, client=client)
+            updater = HistoryUpdater(self.stocklist_csv, self.stock_daily_data_dir)
             results, summary = updater.update_all_symbols(
                 progress_callback=lambda payload: self.progressChanged.emit(payload),
                 stop_checker=lambda: self._cancelled,
             )
             self.finished.emit({"results": results, "summary": summary})
-        except (TushareClientError, Exception) as exc:
+        except Exception as exc:
             self.errorOccurred.emit(str(exc))
 
     def cancel(self):
@@ -100,7 +98,6 @@ class MarketPage(QtWidgets.QWidget):
         self.stock_daily_data_dir = self.root / "stock_daily_data"
         app_settings = self.settings_service.load()
         self._last_selected_symbol = app_settings.last_selected_symbol
-        self._tushare_token = app_settings.tushare_token
         self._chart_min_visible_days = app_settings.min_visible_days
         self._chart_max_visible_days = app_settings.max_visible_days
         self._update_thread = None
@@ -142,7 +139,6 @@ class MarketPage(QtWidgets.QWidget):
         settings_inner = QtWidgets.QVBoxLayout(self.settingsGroup)
         self.settingsForm = SettingsFormWidget()
         self.settingsForm.set_values(
-            self._tushare_token,
             self._chart_min_visible_days,
             self._chart_max_visible_days,
         )
@@ -237,13 +233,11 @@ class MarketPage(QtWidgets.QWidget):
         self.statusMessageRequested.emit(message, timeout)
 
     def apply_settings(self, app_settings: AppSettings):
-        self._tushare_token = app_settings.tushare_token
         self._chart_min_visible_days = app_settings.min_visible_days
         self._chart_max_visible_days = app_settings.max_visible_days
         self.chart.set_visible_day_limits(self._chart_min_visible_days, self._chart_max_visible_days)
         if hasattr(self, "settingsForm"):
             self.settingsForm.set_values(
-                self._tushare_token,
                 self._chart_min_visible_days,
                 self._chart_max_visible_days,
             )
@@ -256,7 +250,6 @@ class MarketPage(QtWidgets.QWidget):
     def _save_settings_from_panel(self):
         try:
             app_settings = self.settings_service.normalize_settings(
-                token=self.settingsForm.get_token(),
                 min_days=self.settingsForm.get_min_days(),
                 max_days=self.settingsForm.get_max_days(),
                 last_selected_symbol=self._last_selected_symbol,
@@ -268,12 +261,6 @@ class MarketPage(QtWidgets.QWidget):
         saved_settings = self.settings_service.save(app_settings)
         self.apply_settings(saved_settings)
         self._show_status_message("设置已保存", 3000)
-
-    def _get_runtime_token(self) -> str | None:
-        token = str(self._tushare_token or "").strip()
-        if token:
-            return token
-        return None
 
     def _set_update_controls_enabled(self, enabled: bool):
         self.updateAllBtn.setEnabled(enabled)
@@ -292,7 +279,6 @@ class MarketPage(QtWidgets.QWidget):
         )
 
     def populate_screening_results(self, result):
-        # 只显示命中的股票
         self._screening_results = [match for match in result.matches if match.matched]
         self.screeningResultTable.setRowCount(len(self._screening_results))
         for row, item in enumerate(self._screening_results):
@@ -313,7 +299,6 @@ class MarketPage(QtWidgets.QWidget):
 
         self._set_update_controls_enabled(False)
 
-        # 创建并显示选股进度弹窗
         self._screening_progress_dialog = ScreeningProgressDialog(
             self.window() if isinstance(self.window(), QtWidgets.QWidget) else self
         )
@@ -351,7 +336,6 @@ class MarketPage(QtWidgets.QWidget):
 
         self._show_status_message(summary, 5000)
 
-        # 关闭进度弹窗
         if self._screening_progress_dialog is not None:
             if was_cancelled:
                 self._screening_progress_dialog.mark_finished(summary)
@@ -359,7 +343,6 @@ class MarketPage(QtWidgets.QWidget):
                 self._screening_progress_dialog.accept()
 
     def _on_screening_error(self, message: str):
-        # 关闭进度弹窗
         if self._screening_progress_dialog is not None:
             self._screening_progress_dialog.mark_finished(f"选股失败：{message}")
         QtWidgets.QMessageBox.warning(self, "选股失败", message)
@@ -376,18 +359,10 @@ class MarketPage(QtWidgets.QWidget):
         if row < 0 or row >= len(self._screening_results):
             return
         symbol = self._screening_results[row].symbol
-        # 清除全部股票列表的选中状态，避免两个表同时高亮
         self.table.blockSignals(True)
         self.table.clearSelection()
         self.table.blockSignals(False)
         self._load_symbol(symbol)
-
-    def _ensure_token(self) -> str | None:
-        token = self._get_runtime_token()
-        if token:
-            return token
-        QtWidgets.QMessageBox.warning(self, "缺少 Token", "未配置 Tushare Token，无法更新历史数据。")
-        return None
 
     def _select_symbol_in_table(self, symbol: str) -> bool:
         target = str(symbol or "").strip()
@@ -454,7 +429,6 @@ class MarketPage(QtWidgets.QWidget):
         if symbol_item is None:
             return
         symbol = symbol_item.text()
-        # 清除选股结果列表的选中状态，避免两个表同时高亮
         self.screeningResultTable.blockSignals(True)
         self.screeningResultTable.clearSelection()
         self.screeningResultTable.blockSignals(False)
@@ -484,13 +458,10 @@ class MarketPage(QtWidgets.QWidget):
                 return name_item.text() if name_item else ""
         return ""
 
-    def start_update_all(self, token: str | None = None):
-        actual_token = str(token or "").strip() or self._ensure_token()
-        if not actual_token:
-            return
-        self._start_update(token=actual_token)
+    def start_update_all(self):
+        self._start_update()
 
-    def _start_update(self, token: str):
+    def _start_update(self):
         if self._update_thread is not None:
             QtWidgets.QMessageBox.information(self, "提示", "已有更新任务正在进行中")
             return
@@ -503,7 +474,6 @@ class MarketPage(QtWidgets.QWidget):
         self._update_worker = UpdateWorker(
             self.stocklist_csv,
             self.stock_daily_data_dir,
-            token=token,
         )
         self._update_thread = start_worker(
             self,
