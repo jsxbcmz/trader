@@ -106,6 +106,9 @@ def create_plot_bundle(owner) -> PlotBundle:
 
     for plot in (price_plot, vol_plot, brick_plot, kdj_plot):
         configure_plot_widget(plot)
+        # Hide the "A" auto-range button shown on hover
+        plot_item = plot.getPlotItem()
+        plot_item.hideButtons()
         plot.getAxis("bottom").setStyle(showValues=False)
         plot.getAxis("bottom").setHeight(0)
         left_axis = plot.getAxis("left")

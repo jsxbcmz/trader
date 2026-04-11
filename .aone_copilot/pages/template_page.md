@@ -1,0 +1,1 @@
+../../.claude/pages/template_page.md

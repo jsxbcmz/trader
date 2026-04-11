@@ -213,9 +213,13 @@ class ScreeningPage(QtWidgets.QWidget):
         self.holding_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         left_layout.addWidget(self.holding_table, 1)
 
-        # 返回按钮
+        # 底部按钮行：返回配置 + 重置
+        bottom_row = QtWidgets.QHBoxLayout()
         self.back_btn = QtWidgets.QPushButton("返回配置")
-        left_layout.addWidget(self.back_btn)
+        self.reset_btn = QtWidgets.QPushButton("🔄 重置")
+        bottom_row.addWidget(self.back_btn)
+        bottom_row.addWidget(self.reset_btn)
+        left_layout.addLayout(bottom_row)
 
         return left
 
@@ -397,6 +401,7 @@ class ScreeningPage(QtWidgets.QWidget):
         self.result_table.itemSelectionChanged.connect(self._on_stock_selected)
         self.holding_table.itemSelectionChanged.connect(self._on_holding_selected)
         self.back_btn.clicked.connect(self._on_back_to_config)
+        self.reset_btn.clicked.connect(self._on_reset)
 
     # ── 配置态操作 ────────────────────────────────────────────
 
@@ -1085,6 +1090,60 @@ class ScreeningPage(QtWidgets.QWidget):
         for item in self._trade_marker_items:
             self.chart.pricePlot.removeItem(item)
         self._trade_marker_items.clear()
+
+    def _on_reset(self):
+        """重置模拟交易状态，回到刚进入选股结果时的初始状态"""
+        if self._simulator.holdings:
+            reply = QtWidgets.QMessageBox.question(
+                self,
+                "确认重置",
+                "当前有未结算的模拟交易，重置将清空所有持仓和交易记录。\n确认重置？",
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            )
+            if reply != QtWidgets.QMessageBox.Yes:
+                return
+
+        # 重置模拟交易引擎
+        self._simulator.reset()
+        self._clear_trade_markers()
+
+        # 重置状态字段：日期回到选股目标日期
+        self._is_at_open = False
+        self._current_sim_date = self._target_date
+        self._current_symbol = ""
+        self._current_stock_name = ""
+        self._current_df = None
+
+        # 恢复初始资金
+        self._available_capital = float(self._initial_capital)
+
+        # 重置 UI 控件
+        self.next_day_btn.setText("▶ 下一天")
+        self.next_day_btn.setEnabled(False)
+        self.holding_table.setRowCount(0)
+        self.buy_open_btn.setEnabled(False)
+        self.buy_close_btn.setEnabled(False)
+        self.sell_btn.setEnabled(False)
+
+        # 交易面板切回初始配置态
+        self.trade_setup_widget.setVisible(True)
+        self.trade_ops_widget.setVisible(False)
+        self.initial_capital_input.setValue(self._initial_capital)
+
+        # 重置汇总信息
+        self.available_capital_label.setText(f"¥ {self._available_capital:,.2f}")
+        self.total_cost_label.setText("¥ 0.00")
+        self.total_value_label.setText("¥ 0.00")
+        self.total_pnl_label.setText("0.00%")
+        self.total_pnl_label.setStyleSheet("")
+        self.sim_date_label.setText("--")
+        self.sim_price_label.setText("--")
+
+        # 重新选中第一只股票，触发图表加载回到选股日期
+        if self.result_table.rowCount() > 0:
+            self.result_table.selectRow(0)
+
+        self.statusMessageRequested.emit("已重置到初始状态", 3000)
 
     def _on_back_to_config(self):
         """返回配置态，有持仓时提示确认"""

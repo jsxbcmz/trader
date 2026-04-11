@@ -1,0 +1,1 @@
+../../.claude/modules/trade_simulator.md

@@ -13,6 +13,7 @@ from ..dialogs import TemplateEditorDialog
 class TemplatePage(QtWidgets.QWidget):
     statusMessageRequested = QtCore.Signal(str, int)
     templatesChanged = QtCore.Signal()
+    backtestRequested = QtCore.Signal(str)  # 发射模板 ID，请求跳转回测页
 
     def __init__(self, root: Path, parent: QtWidgets.QWidget | None = None):
         super().__init__(parent)
@@ -37,6 +38,9 @@ class TemplatePage(QtWidgets.QWidget):
         action_layout.addWidget(self.editBtn)
         action_layout.addWidget(self.duplicateBtn)
         action_layout.addWidget(self.deleteBtn)
+        action_layout.addWidget(self._make_separator())
+        self.backtestBtn = QtWidgets.QPushButton("回测")
+        action_layout.addWidget(self.backtestBtn)
         action_layout.addStretch(1)
         action_layout.addWidget(self.refreshBtn)
         layout.addLayout(action_layout)
@@ -75,6 +79,7 @@ class TemplatePage(QtWidgets.QWidget):
         self.editBtn.clicked.connect(self.open_edit_dialog)
         self.duplicateBtn.clicked.connect(self.duplicate_selected_template)
         self.deleteBtn.clicked.connect(self.delete_selected_template)
+        self.backtestBtn.clicked.connect(self._on_backtest_clicked)
         self.refreshBtn.clicked.connect(self.refresh_templates)
         self.table.itemSelectionChanged.connect(self._on_selection_changed)
         self.table.itemDoubleClicked.connect(lambda *_: self.open_edit_dialog())
@@ -192,9 +197,22 @@ class TemplatePage(QtWidgets.QWidget):
         self.descriptionLabel.setText(template.description or "-")
         self.tdxSourceEdit.setPlainText(template.tdx_source or "")
 
+    def _on_backtest_clicked(self):
+        template = self.get_selected_template()
+        if template is None:
+            return
+        self.backtestRequested.emit(template.id)
+
+    def _make_separator(self) -> QtWidgets.QFrame:
+        sep = QtWidgets.QFrame()
+        sep.setFrameShape(QtWidgets.QFrame.VLine)
+        sep.setFrameShadow(QtWidgets.QFrame.Sunken)
+        return sep
+
     def _update_action_states(self, template: ScreeningTemplate | None):
         has_template = template is not None
         self.editBtn.setEnabled(has_template)
         self.deleteBtn.setEnabled(has_template)
         self.duplicateBtn.setEnabled(has_template)
+        self.backtestBtn.setEnabled(has_template)
 
