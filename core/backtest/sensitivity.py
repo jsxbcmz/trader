@@ -1,4 +1,9 @@
-"""参数敏感性分析：网格搜索不同卖出策略参数组合，输出参数-收益矩阵。"""
+"""参数敏感性分析：网格搜索不同策略参数组合，输出参数-收益矩阵。
+
+支持两类参数维度：
+- sell_strategy_params：卖出策略参数（如止盈阈值、卖出比例）
+- buy_scorer_params：买入评分权重（如砖大柱短、趋势线权重）
+"""
 
 from __future__ import annotations
 
@@ -9,6 +14,21 @@ from dataclasses import dataclass, field
 from core.backtest.engine import BacktestEngine
 from core.backtest.metrics import calculate_metrics
 from core.backtest.models import BacktestConfig, BacktestResult
+
+# 买入评分器参数名集合，用于判断参数归属
+_SCORER_PARAM_NAMES = frozenset({
+    "weight_big_brick_small_body",
+    "weight_near_trend",
+    "weight_first_red",
+    "weight_bear_exhaustion",
+    "veto_lookback",
+    "veto_volume_ratio",
+    "veto_avg_window",
+    "veto_brick_low_ratio",
+    "veto_body_high_ratio",
+    "veto_choppy_window",
+    "veto_choppy_threshold",
+})
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,6 +91,9 @@ def run_sensitivity_analysis(
 
     cells: list[list[SensitivityCell]] = []
 
+    # ── 第一阶段：预计算信号表（只算一次，所有参数组合共享）──
+    signal_table = engine.precompute_signals(base_config, progress_callback)
+
     for row_val in row_values:
         row_cells: list[SensitivityCell] = []
 
@@ -87,16 +110,23 @@ def run_sensitivity_analysis(
 
             current_run += 1
 
-            # 构建当前参数组合的配置
+            # 构建当前参数组合的配置（自动判断参数归属）
             config = copy.copy(base_config)
-            params = dict(config.sell_strategy_params) if config.sell_strategy_params else {}
-            params[row_param_name] = row_val
-            params[col_param_name] = col_val
-            config.sell_strategy_params = params
+            sell_params = dict(config.sell_strategy_params) if config.sell_strategy_params else {}
+            scorer_params = dict(config.buy_scorer_params) if config.buy_scorer_params else {}
 
-            # 运行回测
+            for param_name, param_val in [(row_param_name, row_val), (col_param_name, col_val)]:
+                if param_name in _SCORER_PARAM_NAMES:
+                    scorer_params[param_name] = param_val
+                else:
+                    sell_params[param_name] = param_val
+
+            config.sell_strategy_params = sell_params
+            config.buy_scorer_params = scorer_params
+
+            # ── 第二阶段：使用预计算信号表运行交易模拟 ──
             try:
-                result = engine.run(config)
+                result = engine.run_with_signals(config, signal_table)
                 result.metrics = calculate_metrics(result)
                 metrics = result.metrics
             except Exception:

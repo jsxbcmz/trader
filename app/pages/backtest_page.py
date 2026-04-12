@@ -20,7 +20,16 @@ from core.backtest.report import export_snapshots_csv, export_trades_csv, genera
 from core.backtest.sell_strategy import SELL_STRATEGY_REGISTRY
 from core.templates import TemplateService
 
+from ..data_loader import load_daily_csv
 from ..utils import start_worker
+from ..widgets import StockChartWidget
+
+
+class _WanYuanAxisItem(pg.AxisItem):
+    """Y 轴刻度以"万元"为单位显示，避免科学记数法。"""
+
+    def tickStrings(self, values, scale, spacing):
+        return [f"{v / 10000:.1f}" for v in values]
 
 
 # ── 回测后台 Worker ──────────────────────────────────────────
@@ -106,23 +115,277 @@ class BacktestProgressDialog(QtWidgets.QDialog):
     def update_progress(self, payload: dict):
         current = int(payload.get("current", 0))
         total = max(int(payload.get("total", 1)), 1)
-        date = payload.get("date", "")
-        total_assets = payload.get("total_assets", 0)
-        trades_today = payload.get("trades_today", 0)
+        phase = payload.get("phase", "simulate")
 
         self.progressBar.setMaximum(total)
         self.progressBar.setValue(min(current, total))
-        self.progressLabel.setText(f"回测进度：{current} / {total} 个交易日")
-        self.dateLabel.setText(f"当前日期：{date or '-'}")
-        self.statsLabel.setText(
-            f"总资产：{total_assets:,.0f}  今日交易：{trades_today}"
-        )
+
+        if phase == "precompute":
+            if payload.get("cache_hit"):
+                self.progressLabel.setText("信号缓存命中，跳过预计算")
+            else:
+                self.progressLabel.setText(f"信号预计算：{current} / {total} 只股票")
+            self.dateLabel.setText("")
+            self.statsLabel.setText("")
+        else:
+            date = payload.get("date", "")
+            total_assets = payload.get("total_assets", 0)
+            trades_today = payload.get("trades_today", 0)
+            self.progressLabel.setText(f"回测进度：{current} / {total} 个交易日")
+            self.dateLabel.setText(f"当前日期：{date or '-'}")
+            self.statsLabel.setText(
+                f"总资产：{total_assets:,.0f}  今日交易：{trades_today}"
+            )
 
     def mark_finished(self, summary: str = ""):
         self.stopButton.setEnabled(False)
         self.closeButton.setEnabled(True)
         if summary:
             self.progressLabel.setText(summary)
+
+
+# ── 交易详情弹窗 ──────────────────────────────────────────
+
+
+class TradeDetailDialog(QtWidgets.QDialog):
+    """点击交易明细中的股票后弹出的图表弹窗。
+
+    展示 K 线主图 + 成交量 + 砖型图 + KDJ 四个子图，
+    并在主图上用 B▲ / S▼ 标记该股票的所有买卖点。
+    """
+
+    def __init__(
+        self,
+        symbol: str,
+        stock_name: str,
+        trades: list,
+        stock_daily_data_dir: Path,
+        focus_date: str = "",
+        parent: QtWidgets.QWidget | None = None,
+    ):
+        super().__init__(parent)
+        self.setWindowTitle(f"{symbol} {stock_name} — 交易详情")
+        self.resize(1400, 720)
+        self.setModal(True)
+
+        self._symbol = symbol
+        self._stock_name = stock_name
+        self._trades = trades
+        self._stock_daily_data_dir = stock_daily_data_dir
+        self._focus_date = focus_date
+        self._marker_items: list[pg.TextItem] = []
+        self._df = None  # 保存 DataFrame 供点击跳转使用
+
+        self._setup_ui()
+        self._load_chart_data()
+
+    def _setup_ui(self):
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(8, 8, 8, 8)
+
+        # ── 左右分栏：图表 + 交易记录 ──
+        content_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+
+        # 左侧：图表
+        self.chart = StockChartWidget()
+        self.chart.set_stock_info(self._symbol, self._stock_name)
+        content_splitter.addWidget(self.chart)
+
+        # 右侧：交易记录面板
+        right_panel = QtWidgets.QWidget()
+        right_layout = QtWidgets.QVBoxLayout(right_panel)
+        right_layout.setContentsMargins(4, 0, 0, 0)
+
+        trades_label = QtWidgets.QLabel("交易记录")
+        trades_label_font = QtGui.QFont()
+        trades_label_font.setBold(True)
+        trades_label.setFont(trades_label_font)
+        right_layout.addWidget(trades_label)
+
+        self.detail_table = QtWidgets.QTableWidget()
+        self.detail_table.setColumnCount(5)
+        self.detail_table.setHorizontalHeaderLabels([
+            "交易日期", "方向", "成交价", "数量", "金额",
+        ])
+        self.detail_table.horizontalHeader().setStretchLastSection(True)
+        self.detail_table.verticalHeader().setVisible(False)
+        self.detail_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.detail_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self._fill_detail_table()
+        self.detail_table.cellClicked.connect(self._on_detail_row_clicked)
+        right_layout.addWidget(self.detail_table)
+
+        content_splitter.addWidget(right_panel)
+
+        # 设置右侧面板固定最小宽度，图表自适应拉伸
+        right_panel.setMinimumWidth(360)
+        content_splitter.setStretchFactor(0, 1)
+        content_splitter.setStretchFactor(1, 0)
+        layout.addWidget(content_splitter, stretch=1)
+
+        close_button = QtWidgets.QPushButton("关闭")
+        close_button.setFixedWidth(100)
+        close_button.clicked.connect(self.accept)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        button_layout.addStretch()
+        button_layout.addWidget(close_button)
+        layout.addLayout(button_layout)
+
+    def _fill_detail_table(self):
+        """填充交易记录详情表格"""
+        self.detail_table.setRowCount(len(self._trades))
+        for i, trade in enumerate(self._trades):
+            self.detail_table.setItem(
+                i, 0, QtWidgets.QTableWidgetItem(trade.trade_date),
+            )
+
+            direction_text = "买入" if trade.action == "BUY" else "卖出"
+            direction_item = QtWidgets.QTableWidgetItem(direction_text)
+            if trade.action == "BUY":
+                direction_item.setForeground(QtGui.QColor("#FF4444"))
+            else:
+                direction_item.setForeground(QtGui.QColor("#00CC00"))
+            self.detail_table.setItem(i, 1, direction_item)
+
+            self.detail_table.setItem(
+                i, 2, QtWidgets.QTableWidgetItem(f"{trade.price:.2f}"),
+            )
+            self.detail_table.setItem(
+                i, 3, QtWidgets.QTableWidgetItem(f"{trade.quantity:,}"),
+            )
+            self.detail_table.setItem(
+                i, 4, QtWidgets.QTableWidgetItem(f"{trade.amount:,.2f}"),
+            )
+        self.detail_table.resizeColumnsToContents()
+
+    def _load_chart_data(self):
+        try:
+            df_daily = load_daily_csv(self._stock_daily_data_dir, self._symbol)
+            if df_daily.empty:
+                return
+            self._df = df_daily
+            self.chart.set_daily(df_daily)
+            self._draw_trade_markers(df_daily)
+            self._center_on_focus_date(df_daily)
+        except Exception:
+            pass
+
+    def _on_detail_row_clicked(self, row: int, _column: int):
+        """点击交易记录行，跳转图表到该交易日期"""
+        if self._df is None:
+            return
+        date_item = self.detail_table.item(row, 0)
+        if not date_item:
+            return
+        self._focus_date = date_item.text()
+        self._center_on_focus_date(self._df)
+
+    def _center_on_focus_date(self, df: "pd.DataFrame"):
+        """将图表可视范围定位到 focus_date 为中心"""
+        if not self._focus_date:
+            return
+
+        date_strings = [
+            d.strftime("%Y-%m-%d") if hasattr(d, "strftime") else str(d)[:10]
+            for d in df["date"]
+        ]
+        date_to_index = {ds: i for i, ds in enumerate(date_strings)}
+        center_index = date_to_index.get(self._focus_date[:10])
+        if center_index is None:
+            return
+
+        visible_bars = 100
+        half_window = visible_bars // 2
+        half_width = self.chart._item_half_width
+        right_padding = self.chart._right_view_padding
+
+        x_left = max(self.chart._x_min, center_index - half_window - half_width)
+        x_right = min(self.chart._x_max, center_index + half_window + half_width + right_padding)
+
+        self.chart.pricePlot.setXRange(x_left, x_right, padding=0)
+
+    def _draw_trade_markers(self, df: "pd.DataFrame"):
+        """在 K 线主图上标记买卖点"""
+        for marker_item in self._marker_items:
+            self.chart.pricePlot.removeItem(marker_item)
+        self._marker_items.clear()
+
+        date_strings = [
+            d.strftime("%Y-%m-%d") if hasattr(d, "strftime") else str(d)[:10]
+            for d in df["date"]
+        ]
+        date_to_index: dict[str, int] = {ds: i for i, ds in enumerate(date_strings)}
+
+        # 获取趋势线数据用于避让
+        short_trend = getattr(self.chart, "_short_trend_values", np.array([]))
+        long_short = getattr(self.chart, "_long_short_values", np.array([]))
+
+        high_values = df["high"].values.astype(float)
+        low_values = df["low"].values.astype(float)
+        total_bars = len(df)
+
+        for trade in self._trades:
+            trade_date = trade.trade_date[:10]
+            x_pos = date_to_index.get(trade_date)
+            if x_pos is None:
+                continue
+
+            row = df.iloc[x_pos]
+            bar_high = float(row["high"])
+            bar_low = float(row["low"])
+
+            # 用标记附近的局部价格范围计算偏移，避免全局范围过大导致标记超出可视区域
+            local_window = 30
+            window_left = max(0, x_pos - local_window)
+            window_right = min(total_bars, x_pos + local_window + 1)
+            local_price_range = float(
+                np.max(high_values[window_left:window_right])
+                - np.min(low_values[window_left:window_right])
+            )
+            if local_price_range <= 0:
+                local_price_range = 1.0
+            marker_offset = local_price_range * 0.02
+
+            # 综合柱子和趋势线，计算该位置实际占用区域的上下边界
+            local_top = bar_high
+            local_bottom = bar_low
+            if x_pos < len(short_trend):
+                local_top = max(local_top, float(short_trend[x_pos]))
+                local_bottom = min(local_bottom, float(short_trend[x_pos]))
+            if x_pos < len(long_short):
+                local_top = max(local_top, float(long_short[x_pos]))
+                local_bottom = min(local_bottom, float(long_short[x_pos]))
+
+            # 用局部窗口的高低点判断标记放置方向
+            local_high = float(np.max(high_values[window_left:window_right]))
+            local_low = float(np.min(low_values[window_left:window_right]))
+
+            color = "#FF4444" if trade.action == "BUY" else "#00CC00"
+            letter = "B" if trade.action == "BUY" else "S"
+
+            # 比较上方和下方的空间，选择更宽裕的一侧
+            space_above = local_high - local_top
+            space_below = local_bottom - local_low
+            place_below = space_below >= space_above
+
+            if place_below:
+                # 标记放在下方：三角在上（靠近柱子），字母在下（远离柱子）
+                text = f"▲\n{letter}"
+                y_pos = local_bottom - marker_offset
+                anchor = (0.5, 0)
+            else:
+                # 标记放在上方：三角在下（靠近柱子），字母在上（远离柱子）
+                text = f"{letter}\n▼"
+                y_pos = local_top + marker_offset
+                anchor = (0.5, 1)
+
+            marker = pg.TextItem(text=text, color=color, anchor=anchor)
+            font = QtGui.QFont("Arial", 8, QtGui.QFont.Weight.Bold)
+            marker.setFont(font)
+            marker.setPos(x_pos, y_pos)
+            self.chart.pricePlot.addItem(marker)
+            self._marker_items.append(marker)
 
 
 # ── 回测页面 ──────────────────────────────────────────
@@ -142,6 +405,8 @@ class BacktestPage(QtWidgets.QWidget):
         self._backtest_worker: BacktestWorker | None = None
         self._progress_dialog: BacktestProgressDialog | None = None
         self._last_result: BacktestResult | None = None
+
+        self._month_highlight_curve = None  # 月度高亮曲线
 
         # 对比模式状态
         self._compare_mode: bool = False
@@ -216,20 +481,20 @@ class BacktestPage(QtWidgets.QWidget):
         self.capital_spin = QtWidgets.QSpinBox()
         self.capital_spin.setRange(10_000, 100_000_000)
         self.capital_spin.setSingleStep(100_000)
-        self.capital_spin.setValue(1_000_000)
+        self.capital_spin.setValue(100_000)
         self.capital_spin.setSuffix(" 元")
         self.capital_spin.setGroupSeparatorShown(True)
         form_layout.addRow("初始资金：", self.capital_spin)
 
         self.position_spin = QtWidgets.QSpinBox()
         self.position_spin.setRange(1, 100)
-        self.position_spin.setValue(10)
+        self.position_spin.setValue(33)
         self.position_spin.setSuffix(" %")
         form_layout.addRow("单只仓位：", self.position_spin)
 
         self.max_positions_spin = QtWidgets.QSpinBox()
         self.max_positions_spin.setRange(1, 100)
-        self.max_positions_spin.setValue(10)
+        self.max_positions_spin.setValue(3)
         self.max_positions_spin.setSuffix(" 只")
         form_layout.addRow("最大持仓：", self.max_positions_spin)
 
@@ -284,7 +549,7 @@ class BacktestPage(QtWidgets.QWidget):
 
         self.profit_threshold_spin = QtWidgets.QDoubleSpinBox()
         self.profit_threshold_spin.setRange(0.5, 50.0)
-        self.profit_threshold_spin.setValue(4.5)
+        self.profit_threshold_spin.setValue(3.0)
         self.profit_threshold_spin.setSuffix(" %")
         self.profit_threshold_spin.setSingleStep(0.5)
         sell_params_layout.addRow("分批止盈阈值：", self.profit_threshold_spin)
@@ -295,18 +560,63 @@ class BacktestPage(QtWidgets.QWidget):
         self.partial_sell_spin.setSuffix(" %")
         sell_params_layout.addRow("分批卖出比例：", self.partial_sell_spin)
 
+        self.sell_params_widget.setVisible(False)
         form_layout.addRow("", self.sell_params_widget)
+
+        # 买入评分权重（砖形图策略专属）
+        self.scorer_widget = QtWidgets.QWidget()
+        scorer_layout = QtWidgets.QFormLayout(self.scorer_widget)
+        scorer_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.scorer_checkbox = QtWidgets.QCheckBox("启用买入评分排序")
+        self.scorer_checkbox.setChecked(True)
+        scorer_layout.addRow("", self.scorer_checkbox)
+
+        self.weight_brick_body_spin = QtWidgets.QDoubleSpinBox()
+        self.weight_brick_body_spin.setRange(0, 100)
+        self.weight_brick_body_spin.setValue(30)
+        self.weight_brick_body_spin.setSingleStep(5)
+        scorer_layout.addRow("砖大柱短权重：", self.weight_brick_body_spin)
+
+        self.weight_trend_spin = QtWidgets.QDoubleSpinBox()
+        self.weight_trend_spin.setRange(0, 100)
+        self.weight_trend_spin.setValue(25)
+        self.weight_trend_spin.setSingleStep(5)
+        scorer_layout.addRow("趋势线权重：", self.weight_trend_spin)
+
+        self.weight_first_red_spin = QtWidgets.QDoubleSpinBox()
+        self.weight_first_red_spin.setRange(0, 100)
+        self.weight_first_red_spin.setValue(25)
+        self.weight_first_red_spin.setSingleStep(5)
+        scorer_layout.addRow("首根翻红权重：", self.weight_first_red_spin)
+
+        self.weight_exhaustion_spin = QtWidgets.QDoubleSpinBox()
+        self.weight_exhaustion_spin.setRange(0, 100)
+        self.weight_exhaustion_spin.setValue(20)
+        self.weight_exhaustion_spin.setSingleStep(5)
+        scorer_layout.addRow("衰竭反转权重：", self.weight_exhaustion_spin)
+
+        self.scorer_widget.setVisible(False)
+        form_layout.addRow("", self.scorer_widget)
 
         # ── 开始回测按钮 ──
         form_layout.addRow(QtWidgets.QLabel(""))  # 间距
 
+        start_layout = QtWidgets.QHBoxLayout()
         self.start_button = QtWidgets.QPushButton("🚀 开始回测")
         self.start_button.setMinimumHeight(40)
         start_font = QtGui.QFont()
         start_font.setPointSize(12)
         start_font.setBold(True)
         self.start_button.setFont(start_font)
-        form_layout.addRow(self.start_button)
+        start_layout.addWidget(self.start_button)
+
+        self.force_start_button = QtWidgets.QPushButton("🔄 强制回测")
+        self.force_start_button.setMinimumHeight(40)
+        self.force_start_button.setToolTip("忽略缓存，重新执行完整回测流程")
+        start_layout.addWidget(self.force_start_button)
+
+        form_layout.addRow(start_layout)
 
         # 参数敏感性分析按钮
         self.sensitivity_button = QtWidgets.QPushButton("📊 参数敏感性分析")
@@ -372,19 +682,32 @@ class BacktestPage(QtWidgets.QWidget):
         chart_title.setFont(chart_title_font)
         center_layout.addWidget(chart_title)
 
-        self.equity_plot = pg.PlotWidget()
+        self.equity_plot = pg.PlotWidget(
+            axisItems={"left": _WanYuanAxisItem(orientation="left")},
+        )
         self.equity_plot.setBackground("w")
         self.equity_plot.showGrid(x=True, y=True, alpha=0.3)
-        self.equity_plot.setLabel("left", "总资产 (元)")
+        self.equity_plot.setLabel("left", "总资产 (万元)")
         self.equity_plot.setLabel("bottom", "交易日")
+        # 禁用缩放和拖拽，保持初始比例
+        vb = self.equity_plot.getViewBox()
+        vb.setMouseEnabled(x=False, y=False)
+        vb.setMenuEnabled(False)
         center_layout.addWidget(self.equity_plot, stretch=3)
 
-        # 月度收益表格
+        # 月度收益表格标题栏（标题 + 还原按钮）
+        monthly_header_layout = QtWidgets.QHBoxLayout()
         monthly_title = QtWidgets.QLabel("月度收益分布")
         monthly_title_font = QtGui.QFont()
         monthly_title_font.setBold(True)
         monthly_title.setFont(monthly_title_font)
-        center_layout.addWidget(monthly_title)
+        monthly_header_layout.addWidget(monthly_title)
+        monthly_header_layout.addStretch()
+        self.monthly_reset_button = QtWidgets.QPushButton("还原")
+        self.monthly_reset_button.setFixedSize(50, 24)
+        self.monthly_reset_button.setVisible(False)
+        monthly_header_layout.addWidget(self.monthly_reset_button)
+        center_layout.addLayout(monthly_header_layout)
 
         self.monthly_table = QtWidgets.QTableWidget()
         self.monthly_table.setColumnCount(4)
@@ -392,6 +715,12 @@ class BacktestPage(QtWidgets.QWidget):
         self.monthly_table.horizontalHeader().setStretchLastSection(True)
         self.monthly_table.verticalHeader().setVisible(False)
         self.monthly_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.monthly_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.monthly_table.setCursor(QtCore.Qt.PointingHandCursor)
+        self.monthly_table.setMouseTracking(True)
+        self.monthly_table.setStyleSheet(
+            "QTableWidget { selection-background-color: #BAE7FF; }"
+        )
         center_layout.addWidget(self.monthly_table, stretch=1)
 
         # 导出按钮
@@ -425,6 +754,12 @@ class BacktestPage(QtWidgets.QWidget):
         self.trades_table.horizontalHeader().setStretchLastSection(True)
         self.trades_table.verticalHeader().setVisible(False)
         self.trades_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.trades_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.trades_table.setCursor(QtCore.Qt.PointingHandCursor)
+        self.trades_table.setMouseTracking(True)
+        self.trades_table.setStyleSheet(
+            "QTableWidget { selection-background-color: #BAE7FF; }"
+        )
         self.trades_table.setMinimumWidth(350)
         self.trades_table.setMaximumWidth(450)
         right_layout.addWidget(self.trades_table)
@@ -446,12 +781,16 @@ class BacktestPage(QtWidgets.QWidget):
 
     def _connect_signals(self):
         self.start_button.clicked.connect(self._on_start_backtest)
+        self.force_start_button.clicked.connect(self._on_force_start_backtest)
         self.back_button.clicked.connect(self._on_back_to_config)
         self.export_md_button.clicked.connect(self._on_export_markdown)
         self.export_csv_button.clicked.connect(self._on_export_csv)
         self.sell_strategy_combo.currentTextChanged.connect(self._on_sell_strategy_changed)
         self.template_combo.currentIndexChanged.connect(self._on_template_changed)
         self.sensitivity_button.clicked.connect(self._on_start_sensitivity)
+        self.trades_table.cellClicked.connect(self._on_trades_table_cell_clicked)
+        self.monthly_table.cellClicked.connect(self._on_monthly_row_clicked)
+        self.monthly_reset_button.clicked.connect(self._on_monthly_reset)
 
     # ── 模板管理 ──────────────────────────────────────────
 
@@ -474,6 +813,9 @@ class BacktestPage(QtWidgets.QWidget):
 
         self.template_combo.blockSignals(False)
 
+        # blockSignals 阻止了信号触发，需要手动同步卖出策略
+        self._sync_sell_strategy()
+
     def prefill_template(self, template_id: str):
         """从模板页跳转时预填模板"""
         for i in range(self.template_combo.count()):
@@ -483,19 +825,36 @@ class BacktestPage(QtWidgets.QWidget):
 
     def _on_template_changed(self, index: int):
         """模板切换时自动匹配卖出策略"""
+        self._sync_sell_strategy()
+
+    def _sync_sell_strategy(self):
+        """根据当前模板自动匹配卖出策略
+
+        检测规则：模板名称包含"砖"，或 TDX 源码包含砖型图公式关键词。
+        """
         template_id = self.template_combo.currentData()
         if not template_id:
             return
 
         template = self.template_service.get_template(template_id)
-        if template and "砖" in template.name:
+        if template is None:
+            return
+
+        is_brick = "砖" in template.name
+        if not is_brick and template.tdx_source:
+            brick_keywords = ("砖型图", "砖形图", "VAR1A", "VAR6A")
+            is_brick = any(kw in template.tdx_source for kw in brick_keywords)
+
+        if is_brick:
             idx = self.sell_strategy_combo.findText("brick_chart")
             if idx >= 0:
                 self.sell_strategy_combo.setCurrentIndex(idx)
 
     def _on_sell_strategy_changed(self, strategy_name: str):
         """卖出策略切换时显示/隐藏参数"""
-        self.sell_params_widget.setVisible(strategy_name == "brick_chart")
+        is_brick = strategy_name == "brick_chart"
+        self.sell_params_widget.setVisible(is_brick)
+        self.scorer_widget.setVisible(is_brick)
 
     # ── 回测执行 ──────────────────────────────────────────
 
@@ -517,11 +876,21 @@ class BacktestPage(QtWidgets.QWidget):
 
         sell_strategy_name = self.sell_strategy_combo.currentText()
         sell_params = {}
+        buy_scorer_name = ""
+        buy_scorer_params = {}
         if sell_strategy_name == "brick_chart":
             sell_params = {
                 "partial_profit_threshold": self.profit_threshold_spin.value() / 100.0,
                 "partial_sell_ratio": self.partial_sell_spin.value() / 100.0,
             }
+            if self.scorer_checkbox.isChecked():
+                buy_scorer_name = "brick"
+                buy_scorer_params = {
+                    "weight_big_brick_small_body": self.weight_brick_body_spin.value(),
+                    "weight_near_trend": self.weight_trend_spin.value(),
+                    "weight_first_red": self.weight_first_red_spin.value(),
+                    "weight_bear_exhaustion": self.weight_exhaustion_spin.value(),
+                }
 
         return BacktestConfig(
             template_id=template.id,
@@ -538,6 +907,8 @@ class BacktestPage(QtWidgets.QWidget):
             buy_timing=BuyTiming.CLOSE if self.buy_close_radio.isChecked() else BuyTiming.NEXT_OPEN,
             sell_strategy_name=sell_strategy_name,
             sell_strategy_params=sell_params,
+            buy_scorer_name=buy_scorer_name,
+            buy_scorer_params=buy_scorer_params,
         )
 
     def _on_start_backtest(self):
@@ -552,9 +923,21 @@ class BacktestPage(QtWidgets.QWidget):
             self._compare_mode = False
             self._start_single_backtest(config)
 
-    def _start_single_backtest(self, config: BacktestConfig):
+    def _on_force_start_backtest(self):
+        """强制回测：跳过缓存，重新执行完整回测流程"""
+        config = self._build_config_from_form()
+        if config is None:
+            return
+
+        if self.compare_checkbox.isChecked():
+            self._start_compare_backtest(config)
+        else:
+            self._compare_mode = False
+            self._start_single_backtest(config, skip_cache=True)
+
+    def _start_single_backtest(self, config: BacktestConfig, skip_cache: bool = False):
         """启动单次回测（先检查缓存）"""
-        cached = get_cached_result(self.root, config)
+        cached = None if skip_cache else get_cached_result(self.root, config)
         if cached is not None:
             self._last_result = cached
             self._display_result(cached)
@@ -580,6 +963,7 @@ class BacktestPage(QtWidgets.QWidget):
 
         self._progress_dialog.show()
         self.start_button.setEnabled(False)
+        self.force_start_button.setEnabled(False)
 
     def _start_compare_backtest(self, base_config: BacktestConfig):
         """启动对比模式回测：依次运行收盘价和次日开盘价两种模式"""
@@ -625,6 +1009,7 @@ class BacktestPage(QtWidgets.QWidget):
         )
 
         self.start_button.setEnabled(False)
+        self.force_start_button.setEnabled(False)
         self._progress_dialog.show()
         self._run_next_compare_backtest()
 
@@ -651,6 +1036,20 @@ class BacktestPage(QtWidgets.QWidget):
 
     def _on_backtest_progress(self, payload: dict):
         if self._progress_dialog:
+            phase = payload.get("phase", "simulate")
+
+            if phase == "precompute":
+                current = payload.get("current", 0)
+                total = payload.get("total", 1)
+                if payload.get("cache_hit"):
+                    self._progress_dialog.progressLabel.setText("信号缓存命中，跳过预计算")
+                else:
+                    self._progress_dialog.progressLabel.setText(
+                        f"信号预计算：{current} / {total} 只股票"
+                    )
+                self._progress_dialog.update_progress(payload)
+                return
+
             if self._compare_mode:
                 step = self._compare_current_index + 1
                 total_steps = len(self._compare_pending_configs)
@@ -690,7 +1089,7 @@ class BacktestPage(QtWidgets.QWidget):
 
             # 全部对比回测完成
             if self._progress_dialog:
-                self._progress_dialog.mark_finished("对比回测完成！")
+                self._progress_dialog.accept()
 
             self._last_result = self._compare_results[0]
             self._display_compare_results(self._compare_results)
@@ -699,10 +1098,7 @@ class BacktestPage(QtWidgets.QWidget):
             self._last_result = result
 
             if self._progress_dialog:
-                self._progress_dialog.mark_finished(
-                    f"回测完成！共 {result.trading_days} 个交易日，"
-                    f"{len(result.trades)} 笔交易"
-                )
+                self._progress_dialog.accept()
 
             self._display_result(result)
             self.statusMessageRequested.emit(
@@ -722,6 +1118,7 @@ class BacktestPage(QtWidgets.QWidget):
         # 对比模式下，仅在全部回测完成后才恢复按钮
         if not self._compare_mode or self._compare_current_index >= len(self._compare_pending_configs):
             self.start_button.setEnabled(True)
+            self.force_start_button.setEnabled(True)
 
     # ── 结果展示 ──────────────────────────────────────────
 
@@ -921,6 +1318,86 @@ class BacktestPage(QtWidgets.QWidget):
 
         for i, trade in enumerate(trades):
             self.trades_table.setItem(i, 0, QtWidgets.QTableWidgetItem(trade.trade_date))
+
+            self.trades_table.setItem(i, 1, QtWidgets.QTableWidgetItem(trade.symbol))
+
+            self.trades_table.setItem(i, 2, QtWidgets.QTableWidgetItem(trade.name))
+
+            direction_item = QtWidgets.QTableWidgetItem("买入" if trade.action == "BUY" else "卖出")
+            if trade.action == "BUY":
+                direction_item.setForeground(QtGui.QColor("red"))
+            else:
+                direction_item.setForeground(QtGui.QColor("green"))
+            self.trades_table.setItem(i, 3, direction_item)
+
+            self.trades_table.setItem(i, 4, QtWidgets.QTableWidgetItem(f"{trade.price:.2f}"))
+            self.trades_table.setItem(i, 5, QtWidgets.QTableWidgetItem(str(trade.quantity)))
+            reason_item = QtWidgets.QTableWidgetItem(trade.reason)
+            reason_item.setToolTip(trade.reason)
+            self.trades_table.setItem(i, 6, reason_item)
+
+        self.trades_table.resizeColumnsToContents()
+
+    def _on_monthly_row_clicked(self, row: int, _column: int):
+        """点击月度收益行：资金曲线标红对应区间，交易明细筛选对应月份"""
+        if not self._last_result or not self._last_result.snapshots:
+            return
+
+        month_item = self.monthly_table.item(row, 0)
+        if not month_item:
+            return
+
+        selected_month = month_item.text()  # "YYYY-MM"
+
+        # ── 1. 资金曲线：在对应月份区间叠加红色高亮线 ──
+        self._highlight_month_on_equity(selected_month)
+
+        # ── 2. 交易明细：筛选对应月份 ──
+        self._filter_trades_by_month(selected_month)
+
+        # 显示还原按钮
+        self.monthly_reset_button.setVisible(True)
+
+    def _highlight_month_on_equity(self, month_key: str):
+        """在资金曲线上用红色高亮指定月份的区间"""
+        result = self._last_result
+        if not result:
+            return
+
+        # 清除之前的高亮
+        self._remove_month_highlight()
+
+        snapshots = result.snapshots
+        month_x = []
+        month_y = []
+        for i, snapshot in enumerate(snapshots):
+            if snapshot.date[:7] == month_key:
+                month_x.append(i)
+                month_y.append(snapshot.total_assets)
+
+        if month_x:
+            highlight_pen = pg.mkPen(color=(255, 50, 50), width=3)
+            self._month_highlight_curve = self.equity_plot.plot(
+                month_x, month_y, pen=highlight_pen,
+            )
+
+    def _remove_month_highlight(self):
+        """移除资金曲线上的月度高亮"""
+        if hasattr(self, "_month_highlight_curve") and self._month_highlight_curve is not None:
+            self.equity_plot.removeItem(self._month_highlight_curve)
+            self._month_highlight_curve = None
+
+    def _filter_trades_by_month(self, month_key: str):
+        """交易明细表格只显示指定月份的交易"""
+        result = self._last_result
+        if not result:
+            return
+
+        filtered_trades = [t for t in result.trades if t.trade_date[:7] == month_key]
+        self.trades_table.setRowCount(len(filtered_trades))
+
+        for i, trade in enumerate(filtered_trades):
+            self.trades_table.setItem(i, 0, QtWidgets.QTableWidgetItem(trade.trade_date))
             self.trades_table.setItem(i, 1, QtWidgets.QTableWidgetItem(trade.symbol))
             self.trades_table.setItem(i, 2, QtWidgets.QTableWidgetItem(trade.name))
 
@@ -933,9 +1410,56 @@ class BacktestPage(QtWidgets.QWidget):
 
             self.trades_table.setItem(i, 4, QtWidgets.QTableWidgetItem(f"{trade.price:.2f}"))
             self.trades_table.setItem(i, 5, QtWidgets.QTableWidgetItem(str(trade.quantity)))
-            self.trades_table.setItem(i, 6, QtWidgets.QTableWidgetItem(trade.reason))
+            reason_item = QtWidgets.QTableWidgetItem(trade.reason)
+            reason_item.setToolTip(trade.reason)
+            self.trades_table.setItem(i, 6, reason_item)
 
         self.trades_table.resizeColumnsToContents()
+
+    def _on_monthly_reset(self):
+        """还原按钮：重置资金曲线高亮和交易明细"""
+        self._remove_month_highlight()
+
+        # 恢复完整交易明细
+        if self._last_result:
+            self._fill_trades_table(self._last_result)
+
+        # 清除月度表格选中状态
+        self.monthly_table.clearSelection()
+
+        # 隐藏还原按钮
+        self.monthly_reset_button.setVisible(False)
+
+    def _on_trades_table_cell_clicked(self, row: int, column: int):
+        """点击交易明细表格任意单元格时，弹出该股票的图表弹窗"""
+        if not self._last_result:
+            return
+
+        symbol_item = self.trades_table.item(row, 1)
+        name_item = self.trades_table.item(row, 2)
+        if not symbol_item:
+            return
+
+        symbol = symbol_item.text()
+        stock_name = name_item.text() if name_item else ""
+
+        # 获取点击行的交易日期
+        date_item = self.trades_table.item(row, 0)
+        focus_date = date_item.text() if date_item else ""
+
+        # 收集该股票的所有交易记录
+        symbol_trades = [t for t in self._last_result.trades if t.symbol == symbol]
+
+        stock_daily_data_dir = self.root / "stock_daily_data"
+        dialog = TradeDetailDialog(
+            symbol=symbol,
+            stock_name=stock_name,
+            trades=symbol_trades,
+            stock_daily_data_dir=stock_daily_data_dir,
+            focus_date=focus_date,
+            parent=self,
+        )
+        dialog.exec()
 
     # ── 导出功能 ──────────────────────────────────────────
 

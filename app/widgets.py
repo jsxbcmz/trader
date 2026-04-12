@@ -818,6 +818,9 @@ class StockChartWidget(QtWidgets.QWidget):
         ds = d.strftime("%Y-%m-%d") if hasattr(d, "strftime") else str(d)
 
         c = float(row["close"])
+        o = float(row.get("open", np.nan))
+        h = float(row.get("high", np.nan))
+        l = float(row.get("low", np.nan))
         amount_yi = float(row.get("volume", np.nan)) / 1e4
         turnover_rate = float(row.get("turnover_rate", np.nan))
 
@@ -827,7 +830,8 @@ class StockChartWidget(QtWidgets.QWidget):
         else:
             pct = float("nan")
 
-        text = build_info_box_html(ds, c, pct, amount_yi, turnover_rate)
+        text = build_info_box_html(ds, c, pct, amount_yi, turnover_rate,
+                                   open_value=o, high_value=h, low_value=l)
 
         vb = self.pricePlot.getViewBox()
         (x0, x1), (y0, y1) = vb.viewRange()

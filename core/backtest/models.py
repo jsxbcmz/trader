@@ -45,9 +45,9 @@ class BacktestConfig:
     end_date: str = ""
 
     # 资金参数
-    initial_capital: float = 1_000_000.0
-    position_size: float = 0.1    # 单只股票仓位比例（10%）
-    max_positions: int = 10       # 最大同时持仓数
+    initial_capital: float = 100_000.0
+    position_size: float = 0.33   # 单只股票仓位比例（33%）
+    max_positions: int = 3        # 最大同时持仓数
 
     # 交易成本
     commission_rate: float = 0.0001   # 佣金费率（万1）
@@ -60,6 +60,10 @@ class BacktestConfig:
     # 卖出策略名称（用于动态加载对应的 SellStrategy）
     sell_strategy_name: str = "default"
     sell_strategy_params: dict = field(default_factory=dict)
+
+    # 买入评分器（空字符串 = 不使用评分）
+    buy_scorer_name: str = ""
+    buy_scorer_params: dict = field(default_factory=dict)
 
 
 @dataclass(slots=True)
@@ -76,7 +80,10 @@ class BacktestHolding:
     current_value: float = 0.0
     pnl_amount: float = 0.0
     pnl_percent: float = 0.0
-    partial_sold: bool = False  # 是否已做过分批止盈
+    partial_sold: bool = False  # 是否已做过分批止盈（兼容旧逻辑）
+    partial_sell_count: int = 0  # 已执行分批止盈的次数
+    buy_day_low: float = 0.0    # 买入当天K线最低价（止损位）
+    buy_data_index: int = -1    # 买入日在 daily_data 中的索引（用于计算持有天数）
 
     def update_price(self, price: float) -> None:
         """更新当前价格并重新计算盈亏"""

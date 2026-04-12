@@ -66,7 +66,7 @@ def calculate_metrics(result: BacktestResult) -> BacktestMetrics:
     )
 
     # 月度收益分布
-    monthly_returns = _calc_monthly_returns(snapshots, initial_capital)
+    monthly_returns = _calc_monthly_returns(snapshots, initial_capital, trades)
 
     # 基准收益率
     benchmark_return = 0.0
@@ -226,52 +226,52 @@ def _calc_max_consecutive_losses(completed_trades: list[dict]) -> int:
 def _calc_monthly_returns(
     snapshots: list[DailySnapshot],
     initial_capital: float,
+    trades: list[BacktestTradeRecord] | None = None,
 ) -> list[dict]:
     """计算月度收益分布"""
     if not snapshots:
         return []
 
-    monthly_data: dict[str, dict] = {}
-    prev_month_end_assets = initial_capital
+    # 通过买卖配对正确计算每月胜率
+    monthly_trade_stats: dict[str, dict] = {}
+    if trades:
+        completed = _pair_trades(trades)
+        for paired in completed:
+            sell_date = paired["sell_record"].trade_date
+            month_key = sell_date[:7]  # "YYYY-MM"
+            if month_key not in monthly_trade_stats:
+                monthly_trade_stats[month_key] = {"trades": 0, "wins": 0}
+            monthly_trade_stats[month_key]["trades"] += 1
+            if paired["profit"] > 0:
+                monthly_trade_stats[month_key]["wins"] += 1
+
+    # 按月收集每月最后一天的总资产
+    monthly_end_assets: dict[str, float] = {}
+    month_order: list[str] = []
 
     for snapshot in snapshots:
-        month_key = snapshot.date[:7]  # "YYYY-MM"
+        month_key = snapshot.date[:7]
+        if month_key not in monthly_end_assets:
+            month_order.append(month_key)
+        monthly_end_assets[month_key] = snapshot.total_assets
 
-        if month_key not in monthly_data:
-            monthly_data[month_key] = {
-                "month": month_key,
-                "start_assets": prev_month_end_assets,
-                "end_assets": snapshot.total_assets,
-                "trades": 0,
-                "wins": 0,
-            }
-
-        entry = monthly_data[month_key]
-        entry["end_assets"] = snapshot.total_assets
-
-        for trade in snapshot.trades_today:
-            if trade.action == "SELL":
-                entry["trades"] += 1
-                sell_profit = trade.quantity * trade.price - trade.quantity * (
-                    trade.total_cost / trade.quantity if trade.quantity > 0 else 0
-                )
-                if sell_profit > 0:
-                    entry["wins"] += 1
-
+    # 计算环比月度收益率
     result = []
-    for month_key in sorted(monthly_data.keys()):
-        entry = monthly_data[month_key]
-        start = entry["start_assets"]
-        end = entry["end_assets"]
-        monthly_return = (end / start - 1) if start > 0 else 0.0
-        win_rate = entry["wins"] / entry["trades"] if entry["trades"] > 0 else 0.0
+    prev_assets = initial_capital
+
+    for month_key in month_order:
+        end = monthly_end_assets[month_key]
+        monthly_return = (end / prev_assets - 1) if prev_assets > 0 else 0.0
+
+        stats = monthly_trade_stats.get(month_key, {"trades": 0, "wins": 0})
+        win_rate = stats["wins"] / stats["trades"] if stats["trades"] > 0 else 0.0
 
         result.append({
-            "month": entry["month"],
+            "month": month_key,
             "return": monthly_return,
-            "trades": entry["trades"],
+            "trades": stats["trades"],
             "win_rate": win_rate,
         })
-        prev_month_end_assets = end
+        prev_assets = end
 
     return result

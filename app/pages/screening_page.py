@@ -1068,19 +1068,46 @@ class ScreeningPage(QtWidgets.QWidget):
             x_pos = int(date_indices[0])
             row = self._current_df.iloc[x_pos]
 
-            if record.action == TradeAction.BUY:
-                text = "B▲"
-                color = "#FF4444"
-                y_pos = float(row["low"]) * 0.995
+            bar_high = float(row["high"])
+            bar_low = float(row["low"])
+            color = "#FF4444" if record.action == TradeAction.BUY else "#00CC00"
+            letter = "B" if record.action == TradeAction.BUY else "S"
+
+            # 综合柱子和趋势线，计算该位置实际占用区域的上下边界
+            local_top = bar_high
+            local_bottom = bar_low
+            short_trend = getattr(self.chart, "_short_trend_values", [])
+            long_short = getattr(self.chart, "_long_short_values", [])
+            if x_pos < len(short_trend):
+                local_top = max(local_top, float(short_trend[x_pos]))
+                local_bottom = min(local_bottom, float(short_trend[x_pos]))
+            if x_pos < len(long_short):
+                local_top = max(local_top, float(long_short[x_pos]))
+                local_bottom = min(local_bottom, float(long_short[x_pos]))
+
+            # 比较上方和下方的空间，选择更宽裕的一侧
+            global_high = float(self._current_df["high"].max())
+            global_low = float(self._current_df["low"].min())
+            price_range = global_high - global_low if global_high > global_low else 1.0
+            marker_offset = price_range * 0.02
+            space_above = global_high - local_top
+            space_below = local_bottom - global_low
+            place_below = space_below >= space_above
+
+            if place_below:
+                # 标记放在下方：三角在上（靠近柱子），字母在下（远离柱子）
+                text = f"▲\n{letter}"
+                y_pos = local_bottom - marker_offset
                 anchor = (0.5, 0)
             else:
-                text = "S▼"
-                color = "#00CC00"
-                y_pos = float(row["high"]) * 1.005
+                # 标记放在上方：三角在下（靠近柱子），字母在上（远离柱子）
+                text = f"{letter}\n▼"
+                y_pos = local_top + marker_offset
                 anchor = (0.5, 1)
 
             marker = pg.TextItem(text=text, color=color, anchor=anchor)
-            marker.setFont(QtGui.QFont("Arial", 9, QtGui.QFont.Weight.Bold))
+            font = QtGui.QFont("Arial", 8, QtGui.QFont.Weight.Bold)
+            marker.setFont(font)
             marker.setPos(x_pos, y_pos)
             self.chart.pricePlot.addItem(marker)
             self._trade_marker_items.append(marker)

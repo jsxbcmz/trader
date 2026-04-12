@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
+
 from core.data.repository import StockRepository
 from core.data.time_index import locate_time_index
 from core.expression.evaluator import EvaluationContext, evaluate_at_index
@@ -204,3 +206,75 @@ class ScreeningEngine:
             total=total,
             matched_count=matched_count,
         )
+
+    # ── 回测专用：轻量级单进程选股 ──────────────────────────────
+
+    def run_fast_for_backtest(
+        self,
+        expression: Any,
+        target_date: str,
+        stock_pool_name: str,
+        preloaded_data: dict[str, pd.DataFrame] | None = None,
+        prebuilt_date_indices: dict[str, dict[str, int]] | None = None,
+        cached_pool: Any | None = None,
+    ) -> list[dict[str, str]]:
+        """回测专用的轻量级选股方法。
+
+        与 ``run()`` 的区别：
+        - 单进程执行，无进程池创建/销毁开销
+        - 接受预编译的表达式对象，无需重复解析
+        - 接受预加载的数据和预构建的日期索引，避免重复 IO 和日期解析
+        - 返回简化的匹配结果列表，而非完整的 ScreeningResult
+
+        Args:
+            expression: 预编译的表达式节点（由 transpile_tdx_source 生成）
+            target_date: 目标日期字符串 YYYY-MM-DD
+            stock_pool_name: 股票池名称
+            preloaded_data: 预加载的日线数据 {symbol: DataFrame}
+            prebuilt_date_indices: 预构建的日期索引 {symbol: {date_str: row_index}}
+            cached_pool: 缓存的股票池对象（避免每次重新获取）
+
+        Returns:
+            匹配的股票列表 [{"symbol": "000001", "name": "平安银行"}, ...]
+        """
+        from core.data.time_index import locate_time_index_fast
+
+        pool = cached_pool if cached_pool is not None else self.stock_pool_manager.get_default_pool(stock_pool_name)
+        stock_map = {stock.symbol: stock for stock in pool.stocks}
+        matched_stocks: list[dict[str, str]] = []
+
+        for symbol in pool.symbols:
+            try:
+                # 优先使用预加载数据
+                if preloaded_data is not None and symbol in preloaded_data:
+                    daily_df = preloaded_data[symbol]
+                else:
+                    daily_df = self.repository.get_daily_frame(symbol)
+
+                if daily_df is None or daily_df.empty:
+                    continue
+
+                # 优先使用预构建的日期索引进行 O(1) 定位
+                if prebuilt_date_indices is not None and symbol in prebuilt_date_indices:
+                    time_result = locate_time_index_fast(
+                        prebuilt_date_indices[symbol], target_date,
+                    )
+                else:
+                    time_result = locate_time_index(daily_df, target_date)
+
+                if not time_result.matched or time_result.index is None:
+                    continue
+
+                context = EvaluationContext(df=daily_df, target_index=time_result.index)
+                value = evaluate_at_index(expression, context)
+
+                if bool(value):
+                    stock_info = stock_map.get(symbol)
+                    matched_stocks.append({
+                        "symbol": symbol,
+                        "name": stock_info.name if stock_info else "",
+                    })
+            except Exception:
+                continue
+
+        return matched_stocks

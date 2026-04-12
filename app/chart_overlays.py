@@ -57,7 +57,8 @@ def format_tooltip_value(value, nd=2):
     return f"{value:.{nd}f}"
 
 
-def build_info_box_html(ds: str, close_value: float, pct: float, amount_yi: float, turnover_rate: float = float("nan")):
+def build_info_box_html(ds: str, close_value: float, pct: float, amount_yi: float, turnover_rate: float = float("nan"),
+                        open_value: float = float("nan"), high_value: float = float("nan"), low_value: float = float("nan")):
     if pct == pct:
         if pct > 0:
             accent_color = "#ff4d4f"
@@ -80,7 +81,10 @@ def build_info_box_html(ds: str, close_value: float, pct: float, amount_yi: floa
         f"<div style='background-color: {bg_color}; border: 1px solid {border_color}; "
         f"border-radius: 4px; padding: 6px 8px;'>"
         f"<div style='color: white;'>{ds}</div>"
+        f"<div style='color: white;'>开盘价 {format_tooltip_value(open_value)}</div>"
         f"<div style='color: white;'>收盘价 {format_tooltip_value(close_value)}</div>"
+        f"<div style='color: white;'>最高价 {format_tooltip_value(high_value)}</div>"
+        f"<div style='color: white;'>最低价 {format_tooltip_value(low_value)}</div>"
         f"<div style='color: {accent_color};'>涨跌幅 {format_tooltip_value(pct, 2)}%</div>"
         f"<div style='color: white;'>成交额 {format_tooltip_value(amount_yi, 4)} 亿</div>"
         f"<div style='color: white;'>换手率 {format_tooltip_value(turnover_rate, 2)}%</div>"
