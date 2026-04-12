@@ -25,11 +25,11 @@ from ..utils import start_worker
 from ..widgets import StockChartWidget
 
 
-class _WanYuanAxisItem(pg.AxisItem):
-    """Y 轴刻度以"万元"为单位显示，避免科学记数法。"""
+class _PercentAxisItem(pg.AxisItem):
+    """Y 轴刻度以百分比显示。"""
 
     def tickStrings(self, values, scale, spacing):
-        return [f"{v / 10000:.1f}" for v in values]
+        return [f"{v:+.1f}%" for v in values]
 
 
 # ── 回测后台 Worker ──────────────────────────────────────────
@@ -408,6 +408,11 @@ class BacktestPage(QtWidgets.QWidget):
 
         self._month_highlight_curve = None  # 月度高亮曲线
 
+        # 资金曲线 hover 状态
+        self._equity_snapshots: list | None = None  # 当前展示的快照列表
+        self._equity_crosshair: pg.InfiniteLine | None = None
+        self._equity_info_text: pg.TextItem | None = None
+
         # 对比模式状态
         self._compare_mode: bool = False
         self._compare_results: list[BacktestResult] = []
@@ -683,16 +688,37 @@ class BacktestPage(QtWidgets.QWidget):
         center_layout.addWidget(chart_title)
 
         self.equity_plot = pg.PlotWidget(
-            axisItems={"left": _WanYuanAxisItem(orientation="left")},
+            axisItems={"left": _PercentAxisItem(orientation="left")},
         )
         self.equity_plot.setBackground("w")
         self.equity_plot.showGrid(x=True, y=True, alpha=0.3)
-        self.equity_plot.setLabel("left", "总资产 (万元)")
+        self.equity_plot.setLabel("left", "涨幅 (%)")
         self.equity_plot.setLabel("bottom", "交易日")
         # 禁用缩放和拖拽，保持初始比例
         vb = self.equity_plot.getViewBox()
         vb.setMouseEnabled(x=False, y=False)
         vb.setMenuEnabled(False)
+
+        # 十字线和信息浮窗
+        self._equity_crosshair = pg.InfiniteLine(
+            angle=90, pen=pg.mkPen(color=(150, 150, 150), width=1, style=QtCore.Qt.DashLine),
+        )
+        self._equity_crosshair.setVisible(False)
+        self.equity_plot.addItem(self._equity_crosshair, ignoreBounds=True)
+
+        self._equity_info_text = pg.TextItem(
+            text="", anchor=(0, 0), color=(30, 30, 30),
+        )
+        self._equity_info_text.setVisible(False)
+        self._equity_info_text.setZValue(100)
+        font = QtGui.QFont("Consolas, Menlo, monospace", 9)
+        self._equity_info_text.setFont(font)
+        self.equity_plot.addItem(self._equity_info_text, ignoreBounds=True)
+
+        # 鼠标追踪
+        self.equity_plot.scene().sigMouseMoved.connect(self._on_equity_mouse_moved)
+        self.equity_plot.setMouseTracking(True)
+
         center_layout.addWidget(self.equity_plot, stretch=3)
 
         # 月度收益表格标题栏（标题 + 还原按钮）
@@ -1215,11 +1241,10 @@ class BacktestPage(QtWidgets.QWidget):
     # ── 资金曲线 ──────────────────────────────────────────
 
     def _draw_benchmark_overlay(self, result: BacktestResult):
-        """在资金曲线图上叠加基准指数走势（归一化到初始资金）"""
+        """在资金曲线图上叠加基准指数走势（涨幅%）"""
         if not result.benchmark_snapshots or not result.snapshots:
             return
 
-        initial_capital = result.config.initial_capital
         strategy_dates = {s.date: i for i, s in enumerate(result.snapshots)}
 
         x_values = []
@@ -1227,8 +1252,7 @@ class BacktestPage(QtWidgets.QWidget):
         for benchmark in result.benchmark_snapshots:
             if benchmark.date in strategy_dates:
                 x_values.append(strategy_dates[benchmark.date])
-                # 归一化：基准收益率映射到初始资金坐标系
-                y_values.append(initial_capital * (1 + benchmark.cumulative_return))
+                y_values.append(benchmark.cumulative_return * 100)
 
         if x_values:
             pen = pg.mkPen(color=(180, 180, 180), width=1.5, style=QtCore.Qt.DashLine)
@@ -1237,6 +1261,7 @@ class BacktestPage(QtWidgets.QWidget):
     def _draw_equity_curve(self, result: BacktestResult):
         """绘制资金曲线（单结果模式）"""
         self.equity_plot.clear()
+        self._equity_snapshots = result.snapshots
 
         if not result.snapshots:
             return
@@ -1245,25 +1270,30 @@ class BacktestPage(QtWidgets.QWidget):
         self.equity_plot.addLegend(offset=(60, 10))
 
         x_values = list(range(len(result.snapshots)))
-        y_values = [s.total_assets for s in result.snapshots]
+        y_values = [s.cumulative_return * 100 for s in result.snapshots]
 
         pen = pg.mkPen(color=(0, 120, 215), width=2)
-        self.equity_plot.plot(x_values, y_values, pen=pen, name="策略资金")
+        self.equity_plot.plot(x_values, y_values, pen=pen, name="策略")
 
-        # 初始资金参考线
-        initial_line = pg.InfiniteLine(
-            pos=result.config.initial_capital,
+        # 零线（初始基准）
+        zero_line = pg.InfiniteLine(
+            pos=0,
             angle=0,
             pen=pg.mkPen(color=(220, 220, 220), width=1, style=QtCore.Qt.DashLine),
         )
-        self.equity_plot.addItem(initial_line)
+        self.equity_plot.addItem(zero_line)
 
         # 叠加基准线
         self._draw_benchmark_overlay(result)
 
+        # 重新添加十字线和信息浮窗（clear 会移除它们）
+        self._restore_equity_hover_items()
+
     def _draw_compare_equity_curves(self, results: list[BacktestResult]):
         """绘制对比模式资金曲线（两条策略线 + 基准线）"""
         self.equity_plot.clear()
+        # 对比模式使用第一个结果的快照
+        self._equity_snapshots = results[0].snapshots if results else None
 
         colors = [(0, 120, 215), (255, 127, 14)]  # 蓝色、橙色
         labels = ["收盘价买入", "次日开盘价买入"]
@@ -1274,21 +1304,24 @@ class BacktestPage(QtWidgets.QWidget):
             if not result.snapshots:
                 continue
             x_values = list(range(len(result.snapshots)))
-            y_values = [s.total_assets for s in result.snapshots]
+            y_values = [s.cumulative_return * 100 for s in result.snapshots]
             pen = pg.mkPen(color=colors[idx % len(colors)], width=2)
             self.equity_plot.plot(x_values, y_values, pen=pen, name=labels[idx])
 
-        # 初始资金参考线
+        # 零线（初始基准）
         if results and results[0].snapshots:
-            initial_line = pg.InfiniteLine(
-                pos=results[0].config.initial_capital,
+            zero_line = pg.InfiniteLine(
+                pos=0,
                 angle=0,
                 pen=pg.mkPen(color=(220, 220, 220), width=1, style=QtCore.Qt.DashLine),
             )
-            self.equity_plot.addItem(initial_line)
+            self.equity_plot.addItem(zero_line)
 
             # 叠加基准线（使用第一个结果的基准数据）
             self._draw_benchmark_overlay(results[0])
+
+        # 重新添加十字线和信息浮窗
+        self._restore_equity_hover_items()
 
     def _fill_monthly_table(self, result: BacktestResult):
         """填充月度收益表格"""
@@ -1373,7 +1406,7 @@ class BacktestPage(QtWidgets.QWidget):
         for i, snapshot in enumerate(snapshots):
             if snapshot.date[:7] == month_key:
                 month_x.append(i)
-                month_y.append(snapshot.total_assets)
+                month_y.append(snapshot.cumulative_return * 100)
 
         if month_x:
             highlight_pen = pg.mkPen(color=(255, 50, 50), width=3)
@@ -1429,6 +1462,82 @@ class BacktestPage(QtWidgets.QWidget):
 
         # 隐藏还原按钮
         self.monthly_reset_button.setVisible(False)
+
+    # ── 资金曲线 hover 交互 ──────────────────────────────────
+
+    def _restore_equity_hover_items(self):
+        """clear() 后重新添加十字线和信息浮窗到 equity_plot"""
+        if self._equity_crosshair is not None:
+            self.equity_plot.addItem(self._equity_crosshair, ignoreBounds=True)
+            self._equity_crosshair.setVisible(False)
+        if self._equity_info_text is not None:
+            self.equity_plot.addItem(self._equity_info_text, ignoreBounds=True)
+            self._equity_info_text.setVisible(False)
+
+    def _on_equity_mouse_moved(self, pos):
+        """资金曲线鼠标移动事件：更新十字线和信息浮窗"""
+        if self._equity_snapshots is None or not self._equity_snapshots:
+            return
+
+        vb = self.equity_plot.getViewBox()
+        if not self.equity_plot.sceneBoundingRect().contains(pos):
+            if self._equity_crosshair is not None:
+                self._equity_crosshair.setVisible(False)
+            if self._equity_info_text is not None:
+                self._equity_info_text.setVisible(False)
+            return
+
+        mouse_point = vb.mapSceneToView(pos)
+        x = mouse_point.x()
+        index = int(round(x))
+
+        if index < 0 or index >= len(self._equity_snapshots):
+            if self._equity_crosshair is not None:
+                self._equity_crosshair.setVisible(False)
+            if self._equity_info_text is not None:
+                self._equity_info_text.setVisible(False)
+            return
+
+        snapshot = self._equity_snapshots[index]
+
+        # 更新十字线
+        if self._equity_crosshair is not None:
+            self._equity_crosshair.setPos(index)
+            self._equity_crosshair.setVisible(True)
+
+        # 构建信息文本
+        info_lines = [
+            f"  {snapshot.date}  ",
+            f"  总资产: {snapshot.total_assets:,.0f}  ",
+            f"  现金:   {snapshot.cash:,.0f}  ",
+            f"  持仓值: {snapshot.holdings_value:,.0f}  ",
+            f"  持仓数: {snapshot.holdings_count}只  仓位: {getattr(snapshot, 'position_ratio', 0) * 100:.1f}%  ",
+            f"  日收益: {snapshot.daily_return * 100:+.2f}%  累计: {snapshot.cumulative_return * 100:+.2f}%  ",
+        ]
+
+        info_text = "\n".join(info_lines)
+
+        if self._equity_info_text is not None:
+            self._equity_info_text.setText(info_text)
+            self._equity_info_text.setVisible(True)
+
+            # 用背景色填充
+            self._equity_info_text.fill = pg.mkBrush(255, 255, 255, 210)
+            self._equity_info_text.border = pg.mkPen(color=(180, 180, 180), width=1)
+
+            # 定位浮窗：放在十字线右侧，如果靠近右边则放左侧
+            view_range = vb.viewRange()
+            x_range = view_range[0]
+            y_range = view_range[1]
+            mid_x = (x_range[0] + x_range[1]) / 2
+
+            y_top = y_range[1] - (y_range[1] - y_range[0]) * 0.02
+            if index < mid_x:
+                self._equity_info_text.setAnchor((0, 0))
+                self._equity_info_text.setPos(index + 1, y_top)
+            else:
+                self._equity_info_text.setAnchor((1, 0))
+                self._equity_info_text.setPos(index - 1, y_top)
 
     def _on_trades_table_cell_clicked(self, row: int, column: int):
         """点击交易明细表格任意单元格时，弹出该股票的图表弹窗"""

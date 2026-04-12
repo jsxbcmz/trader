@@ -79,9 +79,14 @@ class BrickChartSellStrategy(SellStrategy):
             current_brick = brick_values[current_index]
             prev_brick = brick_values[current_index - 1]
             if current_brick < prev_brick:
+                # 计算刚好变绿砖的临界价格
+                threshold = self._calc_green_brick_price(
+                    daily_data, current_index, prev_brick,
+                )
                 return SellSignal(
                     action=SellAction.CLEAR,
-                    reason="绿砖止损",
+                    reason=f"绿砖止损(临界{threshold:.2f})" if threshold else "绿砖止损",
+                    price=threshold,
                 )
 
         # ━━ 纪律2：时间止损，N个交易日内不拉起来就走 ━━
@@ -120,6 +125,34 @@ class BrickChartSellStrategy(SellStrategy):
             "分批卖出比例": f"{self.partial_sell_ratio * 100:.0f}%",
             "止损条件": "破低点 / 绿砖 / 时间止损",
         }
+
+    def _calc_green_brick_price(
+        self,
+        daily_data: pd.DataFrame,
+        current_index: int,
+        prev_brick: float,
+    ) -> float | None:
+        """计算刚好变绿砖的临界收盘价。
+
+        返回使 brick[current_index] == prev_brick 的收盘价，
+        若无法计算或超出当天价格范围则返回 None（回退到收盘价）。
+        """
+        from app.chart_indicators import calc_brick_threshold_price
+
+        if not all(col in daily_data.columns for col in ("high", "low", "close")):
+            return None
+
+        high = daily_data["high"].values.astype(float)
+        low = daily_data["low"].values.astype(float)
+        close = daily_data["close"].values.astype(float)
+
+        threshold = calc_brick_threshold_price(
+            high, low, close, current_index, prev_brick,
+        )
+        if threshold is None:
+            # 临界价超出当天范围，使用开盘价（开盘即已绿砖）
+            return float(daily_data.iloc[current_index]["open"])
+        return threshold
 
     def _calc_brick_series(self, daily_data: pd.DataFrame) -> np.ndarray | None:
         """计算砖型图指标序列

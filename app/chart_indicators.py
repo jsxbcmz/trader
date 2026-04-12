@@ -143,6 +143,90 @@ def compute_brick_indicator(high: np.ndarray, low: np.ndarray, close: np.ndarray
     }
 
 
+def calc_brick_threshold_price(
+    high: np.ndarray,
+    low: np.ndarray,
+    close: np.ndarray,
+    target_index: int,
+    target_brick: float,
+) -> float | None:
+    """计算使砖型差值恰好为零的临界收盘价。
+
+    在 target_index 当天，求出使 brick[target_index] == target_brick
+    （通常 = brick[target_index-1]）的收盘价。
+
+    原理：hhv4/llv4 仅依赖 high/low（固定），brick 对 close 是线性的，
+    可通过解析 SMA 递推公式直接解出。
+
+    Returns:
+        临界价格，若无法计算则返回 None。
+    """
+    if target_index < 1 or target_index >= len(close):
+        return None
+
+    # ── 计算 target_index 当天的 hhv4 / llv4 ──
+    start = max(0, target_index - 3)
+    hhv4_val = float(np.max(high[start : target_index + 1]))
+    llv4_val = float(np.min(low[start : target_index + 1]))
+    span = hhv4_val - llv4_val
+    if span < 1e-12:
+        return None
+
+    # ── 递推 SMA 状态到 target_index - 1 ──
+    # 需要 var2a_raw, var4a, var5a_raw 在前一天的值
+    hhv4_all = rolling_max(high[: target_index], 4)
+    llv4_all = rolling_min(low[: target_index], 4)
+    span_all = hhv4_all - llv4_all
+    safe_span_all = np.where(np.abs(span_all) < 1e-12, np.nan, span_all)
+
+    var1a_prev = (hhv4_all - close[: target_index]) / safe_span_all * 100.0 - 90.0
+    var2a_raw_prev = tdx_sma(var1a_prev, 4, 1)  # 不加 100
+
+    var3a_prev = (close[: target_index] - llv4_all) / safe_span_all * 100.0
+    var4a_prev = tdx_sma(var3a_prev, 6, 1)
+    var5a_raw_prev = tdx_sma(var4a_prev, 6, 1)  # 不加 100
+
+    p2 = float(var2a_raw_prev[-1])  # prev_var2a_raw
+    p4 = float(var4a_prev[-1])      # prev_var4a
+    p5 = float(var5a_raw_prev[-1])  # prev_var5a_raw
+
+    if not (np.isfinite(p2) and np.isfinite(p4) and np.isfinite(p5)):
+        return None
+
+    # ── 解析求解 ──
+    # target_brick > 0 时: var6a = target_brick + 4
+    # target_brick == 0 时: var6a <= 4，取 var6a = 4（临界点）
+    target_var6a = target_brick + 4.0 if target_brick > 0 else 4.0
+
+    a = 100.0 / span
+    # C = (36*target_var6a + a*(llv4 + 9*hhv4) - 5*P4 - 30*P5 - 810 + 27*P2) / (10*a)
+    numerator = (
+        36.0 * target_var6a
+        + a * (llv4_val + 9.0 * hhv4_val)
+        - 5.0 * p4
+        - 30.0 * p5
+        - 810.0
+        + 27.0 * p2
+    )
+    threshold = numerator / (10.0 * a)
+
+    if not np.isfinite(threshold):
+        return None
+
+    # ── 边界约束 ──
+    day_high = float(high[target_index])
+    day_low = float(low[target_index])
+
+    if threshold > day_high:
+        # 开盘即已绿砖，使用开盘价
+        return None
+    if threshold < day_low:
+        # 理论上不应触发（如果 brick 确实下降了），回退
+        return None
+
+    return round(threshold, 2)
+
+
 def compute_kdj_indicator(high: np.ndarray, low: np.ndarray, close: np.ndarray):
     hhv9 = rolling_max(high, 9)
     llv9 = rolling_min(low, 9)

@@ -363,8 +363,9 @@ class BacktestEngine:
                 )
 
                 if sell_signal.action.value == "clear":
+                    sell_price = sell_signal.price if sell_signal.price is not None else current_close
                     sell_record = self._execute_sell(
-                        holding, current_close, trade_date,
+                        holding, sell_price, trade_date,
                         holding.quantity, config, sell_signal.reason,
                     )
                     cash += sell_record.total_cost
@@ -372,6 +373,7 @@ class BacktestEngine:
                     symbols_to_remove.append(symbol)
 
                 elif sell_signal.action.value == "partial":
+                    sell_price = sell_signal.price if sell_signal.price is not None else current_close
                     sell_quantity = max(
                         int(holding.quantity * sell_signal.ratio / 100) * 100,
                         100,
@@ -379,7 +381,7 @@ class BacktestEngine:
                     sell_quantity = min(sell_quantity, holding.quantity)
                     if sell_quantity >= 100:
                         sell_record = self._execute_sell(
-                            holding, current_close, trade_date,
+                            holding, sell_price, trade_date,
                             sell_quantity, config, sell_signal.reason,
                         )
                         cash += sell_record.total_cost
@@ -443,12 +445,14 @@ class BacktestEngine:
             daily_return = (total_assets / prev_total_assets - 1) if prev_total_assets > 0 else 0.0
             cumulative_return = (total_assets / config.initial_capital - 1)
 
+            position_ratio = holdings_value / total_assets if total_assets > 0 else 0.0
             snapshot = DailySnapshot(
                 date=trade_date,
                 total_assets=total_assets,
                 cash=cash,
                 holdings_value=holdings_value,
                 holdings_count=len(holdings),
+                position_ratio=position_ratio,
                 daily_return=daily_return,
                 cumulative_return=cumulative_return,
                 trades_today=today_trades,
@@ -585,8 +589,9 @@ class BacktestEngine:
                 )
 
                 if sell_signal.action.value == "clear":
+                    sell_price = sell_signal.price if sell_signal.price is not None else current_close
                     sell_record = self._execute_sell(
-                        holding, current_close, trade_date,
+                        holding, sell_price, trade_date,
                         holding.quantity, config, sell_signal.reason,
                     )
                     cash += sell_record.total_cost
@@ -594,6 +599,7 @@ class BacktestEngine:
                     symbols_to_remove.append(symbol)
 
                 elif sell_signal.action.value == "partial":
+                    sell_price = sell_signal.price if sell_signal.price is not None else current_close
                     sell_quantity = max(
                         int(holding.quantity * sell_signal.ratio / 100) * 100,
                         100,
@@ -601,7 +607,7 @@ class BacktestEngine:
                     sell_quantity = min(sell_quantity, holding.quantity)
                     if sell_quantity >= 100:
                         sell_record = self._execute_sell(
-                            holding, current_close, trade_date,
+                            holding, sell_price, trade_date,
                             sell_quantity, config, sell_signal.reason,
                         )
                         cash += sell_record.total_cost
@@ -660,12 +666,14 @@ class BacktestEngine:
             daily_return = (total_assets / prev_total_assets - 1) if prev_total_assets > 0 else 0.0
             cumulative_return = (total_assets / config.initial_capital - 1)
 
+            position_ratio = holdings_value / total_assets if total_assets > 0 else 0.0
             snapshot = DailySnapshot(
                 date=trade_date,
                 total_assets=total_assets,
                 cash=cash,
                 holdings_value=holdings_value,
                 holdings_count=len(holdings),
+                position_ratio=position_ratio,
                 daily_return=daily_return,
                 cumulative_return=cumulative_return,
                 trades_today=today_trades,

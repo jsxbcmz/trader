@@ -28,6 +28,7 @@ class SellSignal:
     action: SellAction = SellAction.HOLD
     ratio: float = 1.0   # 卖出比例（PARTIAL 时使用）
     reason: str = ""
+    price: float | None = None  # 建议卖出价（None = 使用默认收盘价）
 
 
 @dataclass(slots=True)
@@ -126,6 +127,7 @@ class DailySnapshot:
     cash: float                  # 可用资金
     holdings_value: float        # 持仓市值
     holdings_count: int          # 持仓数量
+    position_ratio: float = 0.0  # 仓位占比（持仓市值 / 总资产）
     daily_return: float = 0.0    # 当日收益率
     cumulative_return: float = 0.0  # 累计收益率
     trades_today: list[BacktestTradeRecord] = field(default_factory=list)

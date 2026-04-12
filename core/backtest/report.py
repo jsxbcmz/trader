@@ -128,15 +128,17 @@ def export_snapshots_csv(result: BacktestResult, file_path: str | Path) -> None:
         writer = csv.writer(csvfile)
         writer.writerow([
             "日期", "总资产", "可用资金", "持仓市值",
-            "持仓数量", "当日收益率", "累计收益率",
+            "持仓数量", "仓位占比", "当日收益率", "累计收益率",
         ])
         for snapshot in result.snapshots:
+            position_ratio = getattr(snapshot, "position_ratio", 0)
             writer.writerow([
                 snapshot.date,
                 f"{snapshot.total_assets:.2f}",
                 f"{snapshot.cash:.2f}",
                 f"{snapshot.holdings_value:.2f}",
                 snapshot.holdings_count,
+                f"{position_ratio * 100:.1f}%",
                 f"{snapshot.daily_return * 100:.4f}%",
                 f"{snapshot.cumulative_return * 100:.4f}%",
             ])

@@ -54,7 +54,7 @@ class BrickBuyScorer:
     """
 
     # ── 禁止规则参数 ──
-    veto_lookback: int = 10
+    veto_lookback: int = 20
     veto_volume_ratio: float = 1.8
     veto_avg_window: int = 30
     veto_brick_low_ratio: float = 0.5
