@@ -112,15 +112,29 @@ class CollectWorker(QtCore.QObject):
             self.logMessage.emit(f"开始请求 {len(apis_to_request)} 个接口...", "info")
 
             requester = ApiRequester(settings, progress_callback=self._progress_callback)
+            responses: list = []
             try:
-                responses = requester.request_all(apis_to_request)
+                for api_config in apis_to_request:
+                    if api_config.pagination.enabled:
+                        response = requester._request_paginated(api_config)
+                    elif api_config.batch.enabled:
+                        response = requester._request_batched(api_config)
+                    else:
+                        response = requester._request_single(api_config)
+                    response.output_file = api_config.output_file
+                    responses.append(response)
+
+                    # 逐个保存，确保后续接口能读到前置接口的输出
+                    if response.success:
+                        saved_paths = storage.save_responses([response])
+                        for path in saved_paths:
+                            self.logMessage.emit(f"已保存: {path}", "success")
+                    else:
+                        self.logMessage.emit(
+                            f"跳过失败接口: {api_config.name}", "warning",
+                        )
             finally:
                 requester.close()
-
-            self.logMessage.emit("保存接口响应数据...", "info")
-            saved_paths = storage.save_responses(responses)
-            for path in saved_paths:
-                self.logMessage.emit(f"已保存: {path}", "success")
 
             analyzer = DataAnalyzer()
             report = analyzer.analyze(responses)
