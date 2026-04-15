@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ScreeningRequest:
     tdx_source: str  # 通达信选股条件代码
     target_date: str
@@ -15,14 +15,14 @@ class ScreeningRequest:
     template_name: str = ""    # 模板名称，用于缓存记录展示
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ScreeningError:
     symbol: str = ""
     stage: str = ""
     message: str = ""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ScreeningMatch:
     symbol: str
     name: str = ""
@@ -33,7 +33,7 @@ class ScreeningMatch:
     debug: dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ScreeningResult:
     request: ScreeningRequest
     matches: tuple[ScreeningMatch, ...] = field(default_factory=tuple)

@@ -9,7 +9,7 @@ from core.models.market import StockInfo
 from core.models.screening import ScreeningError, ScreeningMatch, ScreeningRequest
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SingleRunResult:
     symbol: str
     name: str = ""
@@ -32,7 +32,7 @@ class SingleRunResult:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class EngineRunSummary:
     request: ScreeningRequest
     matches: tuple[ScreeningMatch, ...] = field(default_factory=tuple)

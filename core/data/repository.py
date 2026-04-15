@@ -9,7 +9,7 @@ from app.data_loader import get_daily_csv_path, load_daily_csv, load_stock_list,
 from core.models.market import StockInfo
 
 
-@dataclass(slots=True)
+@dataclass
 class StockRepository:
     root: Path
 

@@ -12,7 +12,7 @@ from core.models.trade import (
 )
 
 
-@dataclass(slots=True)
+@dataclass
 class TradeSimulator:
     """模拟交易管理器
 

@@ -9,12 +9,12 @@ LogicalOperator = Literal["and", "or", "not"]
 MathOperator = Literal["+", "-", "*", "/"]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ExpressionNode:
     kind: NodeKind
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ConstantNode(ExpressionNode):
     value: Any
     value_type: str = "auto"
@@ -25,7 +25,7 @@ class ConstantNode(ExpressionNode):
         object.__setattr__(self, "value_type", value_type)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FieldNode(ExpressionNode):
     field: str
     offset: int = 0
@@ -36,7 +36,7 @@ class FieldNode(ExpressionNode):
         object.__setattr__(self, "offset", int(offset))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FunctionNode(ExpressionNode):
     name: str
     args: tuple[ExpressionNode, ...] = field(default_factory=tuple)
@@ -47,7 +47,7 @@ class FunctionNode(ExpressionNode):
         object.__setattr__(self, "args", tuple(args))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ComparisonNode(ExpressionNode):
     operator: ComparisonOperator
     left: ExpressionNode
@@ -60,7 +60,7 @@ class ComparisonNode(ExpressionNode):
         object.__setattr__(self, "right", right)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class LogicalNode(ExpressionNode):
     operator: LogicalOperator
     operands: tuple[ExpressionNode, ...] = field(default_factory=tuple)
@@ -71,7 +71,7 @@ class LogicalNode(ExpressionNode):
         object.__setattr__(self, "operands", tuple(operands))
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MathNode(ExpressionNode):
     operator: MathOperator
     left: ExpressionNode

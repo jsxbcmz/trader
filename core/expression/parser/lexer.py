@@ -53,7 +53,7 @@ class TdxTokenKind(Enum):
     EOF = auto()
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TdxToken:
     """Token 结构"""
 

@@ -8,7 +8,7 @@ CACHE_STATUS_COMPLETED = "completed"
 CACHE_STATUS_INTERRUPTED = "interrupted"
 
 
-@dataclass(slots=True)
+@dataclass
 class ScreeningCacheEntry:
     """单条选股缓存记录（精简版）
 

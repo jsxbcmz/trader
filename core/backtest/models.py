@@ -21,7 +21,7 @@ class SellAction(Enum):
     CLEAR = "clear"      # 全部清仓
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SellSignal:
     """卖出信号"""
 
@@ -31,7 +31,7 @@ class SellSignal:
     price: float | None = None  # 建议卖出价（None = 使用默认收盘价）
 
 
-@dataclass(slots=True)
+@dataclass
 class BacktestConfig:
     """回测配置参数"""
 
@@ -67,7 +67,7 @@ class BacktestConfig:
     buy_scorer_params: dict = field(default_factory=dict)
 
 
-@dataclass(slots=True)
+@dataclass
 class BacktestHolding:
     """回测持仓信息"""
 
@@ -101,7 +101,7 @@ class BacktestHolding:
         return 0
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class BacktestTradeRecord:
     """回测交易记录"""
 
@@ -118,7 +118,7 @@ class BacktestTradeRecord:
     reason: str = ""         # 卖出原因
 
 
-@dataclass(slots=True)
+@dataclass
 class DailySnapshot:
     """每日状态快照"""
 
@@ -134,7 +134,7 @@ class DailySnapshot:
     holdings_detail: list[dict] = field(default_factory=list)
 
 
-@dataclass(slots=True)
+@dataclass
 class BacktestMetrics:
     """回测绩效指标"""
 
@@ -157,7 +157,7 @@ class BacktestMetrics:
     excess_return: float = 0.0          # 超额收益率（策略 - 基准）
 
 
-@dataclass(slots=True)
+@dataclass
 class BenchmarkSnapshot:
     """基准指数每日快照"""
 
@@ -166,7 +166,7 @@ class BenchmarkSnapshot:
     daily_return: float = 0.0
     cumulative_return: float = 0.0
 
-@dataclass(slots=True)
+@dataclass
 class BacktestResult:
     """回测结果"""
 

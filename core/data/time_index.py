@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TimeIndexResult:
     requested_date: str
     actual_date: str | None

@@ -7,7 +7,7 @@ from core.models.market import StockInfo
 from core.models.stock_pool import StockPool
 
 
-@dataclass(slots=True)
+@dataclass
 class StockPoolManager:
     repository: StockRepository
 

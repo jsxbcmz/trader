@@ -6,7 +6,7 @@ from typing import Any
 from core.utils import clean_string
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ScreeningTemplate:
     id: str
     name: str

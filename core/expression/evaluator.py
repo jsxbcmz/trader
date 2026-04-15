@@ -22,7 +22,7 @@ FIELD_ALIASES = {
 }
 
 
-@dataclass(slots=True)
+@dataclass
 class EvaluationContext:
     df: pd.DataFrame
     target_index: int | None = None

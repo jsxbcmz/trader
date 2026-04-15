@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class BuyScoreResult:
     """单只股票的评分结果"""
 

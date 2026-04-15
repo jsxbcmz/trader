@@ -27,7 +27,7 @@ from core.screening.result_formatter import (
 )
 
 
-@dataclass(slots=True)
+@dataclass
 class ScreeningService:
     engine: ScreeningEngine
     cache_repository: ScreeningCacheRepository

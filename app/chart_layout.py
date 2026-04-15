@@ -9,7 +9,7 @@ from .chart_primitives import BrickDeltaItem, CandlestickItem, DateAxisItem
 from .chart_interaction import StockChartViewBox
 
 
-@dataclass(slots=True)
+@dataclass
 class PlotBundle:
     """四联图的 PlotWidget、Axis、ViewBox 集合。"""
     price_axis: DateAxisItem
@@ -26,7 +26,7 @@ class PlotBundle:
     kdj_plot: pg.PlotWidget
 
 
-@dataclass(slots=True)
+@dataclass
 class PriceItems:
     """K 线面板的图形项集合。"""
     candle_item: CandlestickItem
@@ -42,13 +42,13 @@ class PriceItems:
     price_guide_labels: list[pg.TextItem]
 
 
-@dataclass(slots=True)
+@dataclass
 class VolumeItems:
     """成交额面板的图形项集合。"""
     vol_v_line: pg.InfiniteLine
 
 
-@dataclass(slots=True)
+@dataclass
 class BrickItems:
     """砖型差值面板的图形项集合。"""
     brick_delta_item: BrickDeltaItem
@@ -57,7 +57,7 @@ class BrickItems:
     brick_delta_label: QtWidgets.QLabel
 
 
-@dataclass(slots=True)
+@dataclass
 class KdjItems:
     """KDJ 面板的图形项集合。"""
     kdj_k_curve: pg.PlotDataItem
@@ -70,7 +70,7 @@ class KdjItems:
     kdj_label: QtWidgets.QLabel
 
 
-@dataclass(slots=True)
+@dataclass
 class DateBarItems:
     """底部时间标注栏的组件集合。"""
     date_bar: QtWidgets.QWidget

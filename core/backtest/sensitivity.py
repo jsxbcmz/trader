@@ -31,7 +31,7 @@ _SCORER_PARAM_NAMES = frozenset({
 })
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class SensitivityCell:
     """敏感性分析矩阵中的单个单元格"""
 
@@ -45,7 +45,7 @@ class SensitivityCell:
     total_trades: int         # 总交易次数
 
 
-@dataclass(slots=True)
+@dataclass
 class SensitivityResult:
     """敏感性分析结果"""
 

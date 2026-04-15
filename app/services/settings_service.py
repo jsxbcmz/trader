@@ -8,7 +8,7 @@ from app.tushare_client import DEFAULT_TUSHARE_TOKEN
 from app.widgets import StockChartWidget
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class AppSettings:
     tushare_token: str
     min_visible_days: int

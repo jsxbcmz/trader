@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .pages import BacktestPage, MarketPage, ScreeningPage, SettingsPage, TemplatePage
+from .pages import BacktestPage, MarketPage, ScreeningPage, SettingsPage, StatsPage, TemplatePage
 from .services import AppSettings, SettingsService
 
 
@@ -58,12 +58,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.screeningPage = ScreeningPage(self.root)
 
         self.backtestPage = BacktestPage(self.root)
+        self.statsPage = StatsPage(self.root)
 
         self.pageStack.addWidget(self.marketPage)
         self.pageStack.addWidget(self.templatePage)
         self.pageStack.addWidget(self.settingsPage)
         self.pageStack.addWidget(self.screeningPage)
         self.pageStack.addWidget(self.backtestPage)
+        self.pageStack.addWidget(self.statsPage)
 
         layout.addWidget(self.pageStack, 1)
 
@@ -81,6 +83,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openSettingsAction = view_menu.addAction("打开设置页")
         self.openScreeningAction = view_menu.addAction("打开选股页")
         self.openBacktestAction = view_menu.addAction("打开回测页")
+        self.openStatsAction = view_menu.addAction("打开统计页")
 
         data_menu = menu_bar.addMenu("数据")
         self.updateAllAction = data_menu.addAction("更新全部股票")
@@ -101,6 +104,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.templatePage.backtestRequested.connect(self._on_backtest_requested)
         self.screeningPage.statusMessageRequested.connect(self._show_status_message)
         self.backtestPage.statusMessageRequested.connect(self._show_status_message)
+        self.statsPage.statusMessageRequested.connect(self._show_status_message)
         self.settingsPage.settingsSaveRequested.connect(self._save_settings_from_page)
         self.settingsPage.updateAllRequested.connect(self._request_update_all)
         self.exitAction.triggered.connect(self.close)
@@ -109,6 +113,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openSettingsAction.triggered.connect(lambda: self.switch_page(2))
         self.openScreeningAction.triggered.connect(lambda: self.switch_page(3))
         self.openBacktestAction.triggered.connect(lambda: self.switch_page(4))
+        self.openStatsAction.triggered.connect(lambda: self.switch_page(5))
         self.updateAllAction.triggered.connect(self._request_update_all)
         self.newTemplateAction.triggered.connect(self._open_new_template_dialog)
         self.aboutAction.triggered.connect(self._show_about_dialog)

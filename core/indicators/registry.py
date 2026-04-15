@@ -8,7 +8,7 @@ from . import builtin, tdx_compat
 ReturnKind = Literal["series", "multi_series"]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class FunctionSpec:
     name: str
     func: Callable

@@ -8,45 +8,45 @@ from typing import Any, Union
 from .lexer import TdxLexer, TdxToken, TdxTokenKind
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TdxNumber:
     """数字字面量"""
     value: float
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TdxString:
     """字符串字面量"""
     value: str
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TdxIdentifier:
     """标识符（变量引用）"""
     name: str
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TdxField:
     """字段引用"""
     name: str  # CLOSE, OPEN, HIGH, LOW, VOL 等
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TdxFunctionCall:
     """函数调用"""
     name: str
     args: tuple["TdxExpression", ...]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TdxUnaryOp:
     """一元运算符"""
     operator: str  # - 或 +
     operand: "TdxExpression"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TdxBinaryOp:
     """二元运算符"""
     operator: str  # +, -, *, /, >, >=, <, <=, =, <>, AND, OR
@@ -54,7 +54,7 @@ class TdxBinaryOp:
     right: "TdxExpression"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TdxCondition:
     """条件表达式 (三元运算符)"""
     condition: "TdxExpression"
@@ -66,14 +66,14 @@ class TdxCondition:
 TdxExpression = Union[TdxNumber, TdxString, TdxIdentifier, TdxField, TdxFunctionCall, TdxUnaryOp, TdxBinaryOp, TdxCondition]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TdxAssignment:
     """变量赋值语句"""
     name: str
     value: TdxExpression
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TdxOutput:
     """输出语句"""
     name: str

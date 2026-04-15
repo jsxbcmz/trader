@@ -86,7 +86,7 @@ def _extract_trading_days(
     )
 
 
-@dataclass(slots=True)
+@dataclass
 class BacktestEngine:
     """回测引擎
 

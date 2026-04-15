@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from .market import StockInfo
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StockPool:
     name: str
     symbols: tuple[str, ...]

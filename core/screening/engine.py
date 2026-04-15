@@ -81,7 +81,7 @@ def _screen_single_stock(args: tuple) -> dict:
         }
 
 
-@dataclass(slots=True)
+@dataclass
 class ScreeningEngine:
     repository: StockRepository
     stock_pool_manager: StockPoolManager

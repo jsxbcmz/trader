@@ -8,7 +8,7 @@ ErrorPolicy = Literal["skip_symbol", "raise"]
 DEFAULT_ERROR_POLICY: ErrorPolicy = "skip_symbol"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ErrorContext:
     symbol: str = ""
     stage: str = ""

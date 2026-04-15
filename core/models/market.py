@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class StockInfo:
     symbol: str
     name: str = ""
@@ -14,7 +14,7 @@ class StockInfo:
     market: str = ""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DailyDataSpec:
     symbol: str
     file_path: Path
