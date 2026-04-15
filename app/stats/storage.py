@@ -21,23 +21,25 @@ class DataStorage:
         os.makedirs(self.output_dir, exist_ok=True)
 
     def is_cache_valid(self, output_file: str) -> bool:
-        """检查缓存文件是否存在、是当天生成的、且内容非空"""
+        """检查缓存文件是否存在、内容中记录的采集日期是当天、且数据非空"""
         if not output_file:
             return False
         filepath = os.path.join(self.output_dir, output_file)
         if not os.path.exists(filepath):
             return False
-        modified_time = datetime.fromtimestamp(os.path.getmtime(filepath))
-        if modified_time.date() != date.today():
-            return False
         try:
             with open(filepath, "r", encoding="utf-8") as cache_file:
                 data = json.load(cache_file)
-            if isinstance(data, list) and len(data) == 0:
-                logger.info(f"缓存文件内容为空数组，视为无效: {output_file}")
+            if not isinstance(data, dict):
+                logger.info(f"缓存文件格式不含元信息，视为无效: {output_file}")
                 return False
-            if isinstance(data, dict) and len(data) == 0:
-                logger.info(f"缓存文件内容为空对象，视为无效: {output_file}")
+            collected_date = data.get("collected_date", "")
+            if collected_date != date.today().isoformat():
+                logger.info(f"缓存采集日期 {collected_date} 非今天，视为无效: {output_file}")
+                return False
+            items = data.get("data")
+            if items is None or (isinstance(items, (list, dict)) and len(items) == 0):
+                logger.info(f"缓存文件数据为空，视为无效: {output_file}")
                 return False
         except (json.JSONDecodeError, IOError):
             logger.warning(f"缓存文件读取失败，视为无效: {output_file}")
@@ -69,8 +71,15 @@ class DataStorage:
                     )
                 ]
 
+            # 包装为带日期元信息的格式
+            wrapped = {
+                "collected_date": date.today().isoformat(),
+                "collected_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "data": core_data,
+            }
+
             with open(filepath, "w", encoding="utf-8") as output_file:
-                json.dump(core_data, output_file, ensure_ascii=False, indent=2)
+                json.dump(wrapped, output_file, ensure_ascii=False, indent=2)
 
             logger.info(f"[{response.api_name}] 数据已保存至: {filepath}")
             saved_paths.append(filepath)
@@ -82,7 +91,13 @@ class DataStorage:
         filepath = os.path.join(self.output_dir, "day_positions.json")
         try:
             with open(filepath, "r", encoding="utf-8") as positions_file:
-                return json.load(positions_file)
+                raw = json.load(positions_file)
+            # 兼容新格式（带元信息）和旧格式（纯数组）
+            if isinstance(raw, dict) and "data" in raw:
+                return raw["data"]
+            if isinstance(raw, list):
+                return raw
+            return []
         except (FileNotFoundError, json.JSONDecodeError):
             return []
 

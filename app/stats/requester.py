@@ -189,6 +189,10 @@ class ApiRequester:
                 error_message=f"读取批量参数源文件失败: {error}",
             )
 
+        # 兼容新格式（带元信息 {collected_date, data: [...]})和旧格式（纯数组 [...]）
+        if isinstance(source_data, dict) and "data" in source_data:
+            source_data = source_data["data"]
+
         param_values: list[str] = []
         if isinstance(source_data, list):
             for item in source_data:
