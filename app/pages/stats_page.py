@@ -6,8 +6,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from app.data_loader import get_last_trade_date, load_daily_csv
+from app.history_updater import HistoryUpdater
 from app.stats import (
     ApiRequester,
     ApiResponse,
@@ -15,6 +18,7 @@ from app.stats import (
     DataAnalyzer,
     DataStorage,
 )
+from app.widgets import StockChartWidget
 
 logger = logging.getLogger(__name__)
 
@@ -275,6 +279,8 @@ class OperationTag(QtWidgets.QPushButton):
 class PositionsTable(QtWidgets.QTableWidget):
     """持仓操作数据表格，支持排序"""
 
+    stockDoubleClicked = QtCore.Signal(str, str)  # (code, name)
+
     COLUMNS = [
         ("code", "股票代码", "string"),
         ("name", "股票名称", "string"),
@@ -301,6 +307,7 @@ class PositionsTable(QtWidgets.QTableWidget):
         self.verticalHeader().setVisible(False)
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.cellDoubleClicked.connect(self._on_cell_double_clicked)
         self.setAlternatingRowColors(False)
         self.setShowGrid(False)
 
@@ -318,6 +325,7 @@ class PositionsTable(QtWidgets.QTableWidget):
             }
             QTableWidget::item:selected {
                 background: #263348;
+                color: #e2e8f0;
             }
             QHeaderView::section {
                 background: #0f172a;
@@ -367,15 +375,18 @@ class PositionsTable(QtWidgets.QTableWidget):
 
     def _refresh_table(self):
         self.setRowCount(len(self._display_data))
+        default_color = QtGui.QColor("#e2e8f0")
 
         for row, item in enumerate(self._display_data):
             code_item = QtWidgets.QTableWidgetItem(str(item.get("code", "")))
             code_item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             code_item.setFont(QtGui.QFont("Courier", 13))
+            code_item.setForeground(default_color)
             self.setItem(row, 0, code_item)
 
             name_item = QtWidgets.QTableWidgetItem(str(item.get("name", "")))
             name_item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            name_item.setForeground(default_color)
             self.setItem(row, 1, name_item)
 
             op_code = str(item.get("op", "0"))
@@ -387,6 +398,7 @@ class PositionsTable(QtWidgets.QTableWidget):
 
             count_item = QtWidgets.QTableWidgetItem(str(item.get("_count", 1)))
             count_item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            count_item.setForeground(default_color)
             self.setItem(row, 3, count_item)
 
     def filter_by_ops(self, active_ops: set[str]):
@@ -402,6 +414,93 @@ class PositionsTable(QtWidgets.QTableWidget):
         else:
             self._refresh_table()
 
+    def _on_cell_double_clicked(self, row: int, _column: int):
+        code_item = self.item(row, 0)
+        name_item = self.item(row, 1)
+        if code_item:
+            code = code_item.text()
+            name = name_item.text() if name_item else ""
+            self.stockDoubleClicked.emit(code, name)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  股票预览弹窗（K线 + 成交量 + 砖型图 + KDJ）
+# ═══════════════════════════════════════════════════════════════════════════
+
+class StockPreviewDialog(QtWidgets.QDialog):
+    """双击持仓股票后弹出的图表预览弹窗"""
+
+    def __init__(
+        self,
+        symbol: str,
+        stock_name: str,
+        stock_daily_data_dir: Path,
+        parent: QtWidgets.QWidget | None = None,
+    ):
+        super().__init__(parent)
+        self.setWindowTitle(f"{symbol} {stock_name}")
+        self.resize(1200, 680)
+        self.setModal(True)
+
+        self._symbol = symbol
+        self._stock_name = stock_name
+        self._stock_daily_data_dir = stock_daily_data_dir
+
+        self._setup_ui()
+        self._load_chart()
+
+    def _setup_ui(self):
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(8, 8, 8, 8)
+
+        self.chart = StockChartWidget()
+        self.chart.set_stock_info(self._symbol, self._stock_name)
+        layout.addWidget(self.chart, stretch=1)
+
+        close_button = QtWidgets.QPushButton("关闭")
+        close_button.setFixedWidth(100)
+        close_button.clicked.connect(self.accept)
+        button_layout = QtWidgets.QHBoxLayout()
+        button_layout.addStretch()
+        button_layout.addWidget(close_button)
+        layout.addLayout(button_layout)
+
+    def _load_chart(self):
+        try:
+            df_daily = load_daily_csv(self._stock_daily_data_dir, self._symbol)
+            if not df_daily.empty:
+                self.chart.set_daily(df_daily)
+        except Exception as error:
+            logger.warning("加载 %s 图表数据失败: %s", self._symbol, error)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  单只股票数据更新 Worker
+# ═══════════════════════════════════════════════════════════════════════════
+
+class SingleStockUpdateWorker(QtCore.QObject):
+    """在后台线程中更新单只股票的日线数据"""
+
+    finished = QtCore.Signal(bool, str)  # (success, message)
+
+    def __init__(self, symbol: str, stocklist_csv: Path, stock_daily_data_dir: Path):
+        super().__init__()
+        self._symbol = symbol
+        self._stocklist_csv = stocklist_csv
+        self._stock_daily_data_dir = stock_daily_data_dir
+
+    @QtCore.Slot()
+    def run(self):
+        try:
+            updater = HistoryUpdater(self._stocklist_csv, self._stock_daily_data_dir)
+            result = updater.update_symbol(self._symbol)
+            if result.status == "failed":
+                self.finished.emit(False, result.message)
+            else:
+                self.finished.emit(True, result.message)
+        except Exception as error:
+            self.finished.emit(False, str(error))
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  统计页面主 Widget
@@ -415,9 +514,13 @@ class StatsPage(QtWidgets.QWidget):
     def __init__(self, root: Path, parent: QtWidgets.QWidget | None = None):
         super().__init__(parent)
         self.root = root
+        self.stocklist_csv = self.root / "stocklist.csv"
+        self.stock_daily_data_dir = self.root / "stock_daily_data"
         self._worker_thread: QtCore.QThread | None = None
+        self._update_thread: QtCore.QThread | None = None
         self._active_filter_ops: set[str] = set()
         self._positions_data: list[dict] = []
+        self._pending_preview: tuple[str, str] | None = None  # (symbol, name) 等待更新完成后展示
         self._setup_ui()
         self._load_positions()
 
@@ -436,38 +539,23 @@ class StatsPage(QtWidgets.QWidget):
         main_layout = QtWidgets.QVBoxLayout(container)
         main_layout.setContentsMargins(24, 24, 24, 24)
         main_layout.setSpacing(20)
-
-        # 标题
-        header_layout = QtWidgets.QVBoxLayout()
-        header_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        title = QtWidgets.QLabel("📊 接口采集进度监控")
-        title.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        title.setStyleSheet("""
-            font-size: 28px; font-weight: 700;
-            color: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 #60a5fa, stop:1 #a78bfa);
-        """)
-        title.setStyleSheet("font-size: 28px; font-weight: 700; color: #60a5fa;")
-
+        # 时钟
         self.timeLabel = QtWidgets.QLabel("等待操作...")
         self.timeLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.timeLabel.setStyleSheet("color: #94a3b8; font-size: 14px;")
+        self.timeLabel.setStyleSheet("color: #94a3b8; font-size: 13px;")
+        main_layout.addWidget(self.timeLabel)
 
-        header_layout.addWidget(title)
-        header_layout.addWidget(self.timeLabel)
-        main_layout.addLayout(header_layout)
-
-        # 时钟定时器
         self._clock_timer = QtCore.QTimer(self)
         self._clock_timer.timeout.connect(self._update_clock)
         self._clock_timer.start(1000)
 
-        # 开始按钮
-        button_layout = QtWidgets.QHBoxLayout()
-        button_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        # 开始按钮 + 进度卡片（同一行）
+        top_row = QtWidgets.QHBoxLayout()
+        top_row.setSpacing(12)
+
         self.startButton = QtWidgets.QPushButton("🚀 开始采集")
         self.startButton.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
-        self.startButton.setFixedSize(180, 42)
+        self.startButton.setFixedSize(140, 38)
         self.startButton.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
@@ -475,9 +563,8 @@ class StatsPage(QtWidgets.QWidget):
                 color: white;
                 border: none;
                 border-radius: 8px;
-                font-size: 15px;
+                font-size: 14px;
                 font-weight: 600;
-                padding: 10px 28px;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
@@ -489,19 +576,14 @@ class StatsPage(QtWidgets.QWidget):
             }
         """)
         self.startButton.clicked.connect(self._start_collect)
-        button_layout.addWidget(self.startButton)
-        main_layout.addLayout(button_layout)
+        top_row.addWidget(self.startButton)
 
-        # 进度卡片（紧凑垂直排列）
-        cards_layout = QtWidgets.QVBoxLayout()
-        cards_layout.setSpacing(6)
         self.api_cards: dict[str, ApiCard] = {}
         for api_id in ["api1", "api2"]:
             card = ApiCard(api_id)
             self.api_cards[api_id] = card
-            cards_layout.addWidget(card)
-        main_layout.addLayout(cards_layout)
-
+            top_row.addWidget(card, 1)
+        main_layout.addLayout(top_row)
         # 持仓操作区域
         positions_header = QtWidgets.QHBoxLayout()
         positions_title = QtWidgets.QLabel("📈 每日持仓操作一览")
@@ -517,6 +599,7 @@ class StatsPage(QtWidgets.QWidget):
         # 持仓表格
         self.positionsTable = PositionsTable()
         self.positionsTable.setMinimumHeight(400)
+        self.positionsTable.stockDoubleClicked.connect(self._on_stock_double_clicked)
         main_layout.addWidget(self.positionsTable)
 
         # 空数据提示
@@ -544,7 +627,6 @@ class StatsPage(QtWidgets.QWidget):
     def _start_collect(self):
         self.startButton.setEnabled(False)
         self.startButton.setText("⏳ 采集中...")
-        self.logBox.clear()
 
         for card in self.api_cards.values():
             card.reset()
@@ -568,7 +650,7 @@ class StatsPage(QtWidgets.QWidget):
 
     @QtCore.Slot(str, str)
     def _on_log_message(self, message: str, level: str):
-        pass
+        logger.debug("[%s] %s", level, message)
 
     @QtCore.Slot(str, int)
     def _on_api_start(self, api_id: str, total: int):
@@ -695,3 +777,82 @@ class StatsPage(QtWidgets.QWidget):
 
         self.positionsTable.filter_by_ops(self._active_filter_ops)
         self._rebuild_filter_tags(self._positions_data)
+
+    # ── 双击股票预览 ─────────────────────────────────────────────────────
+
+    def _is_data_fresh(self, symbol: str) -> bool:
+        """检查股票本地数据是否包含最近一个交易日"""
+        last_date = get_last_trade_date(self.stock_daily_data_dir, symbol)
+        if last_date is None:
+            return False
+        today = pd.Timestamp.today().normalize()
+        # 如果今天是周末，最近交易日是周五
+        weekday = today.weekday()
+        if weekday == 5:  # 周六
+            latest_expected = today - pd.Timedelta(days=1)
+        elif weekday == 6:  # 周日
+            latest_expected = today - pd.Timedelta(days=2)
+        else:
+            # 工作日：15:00 之前认为昨天是最新的，之后认为今天是最新的
+            now = datetime.now()
+            if now.hour < 15:
+                latest_expected = today - pd.Timedelta(days=1)
+                # 如果昨天是周末，回退到周五
+                if latest_expected.weekday() == 6:
+                    latest_expected -= pd.Timedelta(days=2)
+                elif latest_expected.weekday() == 5:
+                    latest_expected -= pd.Timedelta(days=1)
+            else:
+                latest_expected = today
+        return last_date >= latest_expected
+
+    @QtCore.Slot(str, str)
+    def _on_stock_double_clicked(self, code: str, name: str):
+        """双击股票行：检查数据新鲜度 → 需要时更新 → 弹出图表"""
+        symbol = str(code).zfill(6)
+
+        if self._is_data_fresh(symbol):
+            self._show_preview_dialog(symbol, name)
+        else:
+            self._pending_preview = (symbol, name)
+            self.statusMessageRequested.emit(f"正在更新 {symbol} {name} 的数据...", 5000)
+            self._start_single_update(symbol)
+
+    def _start_single_update(self, symbol: str):
+        if self._update_thread is not None:
+            self.statusMessageRequested.emit("已有更新任务进行中，请稍候", 3000)
+            return
+
+        self._update_thread = QtCore.QThread()
+        worker = SingleStockUpdateWorker(symbol, self.stocklist_csv, self.stock_daily_data_dir)
+        worker.moveToThread(self._update_thread)
+        worker.finished.connect(self._on_single_update_finished)
+        self._update_thread.started.connect(worker.run)
+        # 防止 worker 被回收
+        self._update_worker = worker
+        self._update_thread.start()
+
+    @QtCore.Slot(bool, str)
+    def _on_single_update_finished(self, success: bool, message: str):
+        if self._update_thread:
+            self._update_thread.quit()
+            self._update_thread.wait()
+            self._update_thread = None
+            self._update_worker = None
+
+        if self._pending_preview:
+            symbol, name = self._pending_preview
+            self._pending_preview = None
+            if success:
+                # 清除缓存以加载最新数据
+                from app.data_loader import _daily_data_cache
+                cache_key = f"{self.stock_daily_data_dir}:{symbol}"
+                _daily_data_cache.pop(cache_key, None)
+                self._show_preview_dialog(symbol, name)
+            else:
+                self.statusMessageRequested.emit(f"更新失败: {message}，尝试使用本地数据", 3000)
+                self._show_preview_dialog(symbol, name)
+
+    def _show_preview_dialog(self, symbol: str, name: str):
+        dialog = StockPreviewDialog(symbol, name, self.stock_daily_data_dir, parent=self)
+        dialog.exec()
