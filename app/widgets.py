@@ -6,6 +6,7 @@ from PySide6 import QtCore, QtWidgets
 
 from .chart_indicators import (
     ZX_MULTI_PERIODS,
+    calc_brick_threshold_price,
     compute_brick_indicator,
     compute_kdj_indicator,
     compute_zx_long_short,
@@ -191,6 +192,7 @@ class StockChartWidget(QtWidgets.QWidget):
         self._short_trend_values = np.array([])
         self._long_short_values = np.array([])
         self._brick_values = np.array([])
+        self._brick_green_threshold_items: list[pg.GraphicsObject] = []
         self._kdj_k_values = np.array([])
         self._kdj_d_values = np.array([])
         self._kdj_j_values = np.array([])
@@ -524,6 +526,52 @@ class StockChartWidget(QtWidgets.QWidget):
         self.zx_short_trend.setData(x, short_trend)
         self.zx_long_short.setData(x, long_short)
 
+    def _update_brick_green_thresholds(self, h, l, c, brick_values):
+        """在主图用横向虚线标注最后一天砖形图转绿的临界价格。
+
+        当最后一天砖形图为红砖（brick > prev_brick）时，计算该天收盘价
+        低于多少砖形图就会变绿，并在主图上画一根横向虚线。
+        """
+        for item in self._brick_green_threshold_items:
+            self.pricePlot.removeItem(item)
+        self._brick_green_threshold_items.clear()
+
+        if len(brick_values) < 2:
+            return
+
+        last_index = len(brick_values) - 1
+        current_brick = brick_values[last_index]
+        prev_brick_val = brick_values[last_index - 1]
+
+        is_red = current_brick > prev_brick_val
+        if not is_red:
+            return
+
+        threshold = calc_brick_threshold_price(h, l, c, last_index, prev_brick_val)
+        if threshold is None:
+            return
+
+        line = pg.InfiniteLine(
+            pos=threshold,
+            angle=0,
+            movable=False,
+            pen=pg.mkPen((0, 200, 80, 180), width=1, style=QtCore.Qt.DashLine),
+        )
+        line.setZValue(500)
+        self.pricePlot.addItem(line, ignoreBounds=True)
+        self._brick_green_threshold_items.append(line)
+
+        left_label = pg.TextItem(
+            text=f"{threshold:.2f}",
+            anchor=(1, 0.5),
+            color=(0, 200, 80),
+        )
+        left_label.setFont(pg.QtGui.QFont("sans-serif", 9))
+        left_label.setPos(0, threshold)
+        left_label.setZValue(500)
+        self.pricePlot.addItem(left_label)
+        self._brick_green_threshold_items.append(left_label)
+
     def _update_volume_panel(self, x, o, c, amount_yi):
         self.volPlot.clear()
         self.volPlot.addItem(self.volVLine, ignoreBounds=True)
@@ -802,6 +850,7 @@ class StockChartWidget(QtWidgets.QWidget):
             self._update_price_panel(x, o, h, l, c)
             self._update_volume_panel(x, o, c, amount_yi)
             brick_values = self._update_brick_panel(x, h, l, c)
+            self._update_brick_green_thresholds(h, l, c, brick_values)
             self._update_kdj_panel(x, h, l, c)
             self._reset_initial_view(df, brick_values)
         finally:

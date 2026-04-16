@@ -50,6 +50,44 @@ OPERATION_MAP = {
 OPERATION_SORT_ORDER = {"3": 1, "7": 2, "1": 3, "9": 4, "0": 5, "2": 6, "8": 7, "4": 8}
 
 
+def _char_initial(char: str) -> str:
+    """获取单个汉字的拼音首字母（基于 GB2312 编码区间）"""
+    if char.isascii() and char.isalpha():
+        return char.lower()
+    if not ("\u4e00" <= char <= "\u9fff"):
+        return ""
+    try:
+        gb_bytes = char.encode("gb2312")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return ""
+    if len(gb_bytes) != 2:
+        return ""
+    code = gb_bytes[0] * 256 + gb_bytes[1]
+    if code < 0xB0A1:
+        return ""
+    # GB2312 一级汉字按拼音排序的区间边界
+    bounds = (
+        (0xB0A1, "a"), (0xB0C5, "b"), (0xB2C1, "c"), (0xB4EE, "d"),
+        (0xB6EA, "e"), (0xB7A2, "f"), (0xB8C1, "g"), (0xB9FE, "h"),
+        (0xBBF7, "j"), (0xBFA6, "k"), (0xC0AC, "l"), (0xC2E8, "m"),
+        (0xC4C3, "n"), (0xC5B6, "o"), (0xC5BE, "p"), (0xC6DA, "q"),
+        (0xC8BB, "r"), (0xC8F6, "s"), (0xCBFA, "t"), (0xCDDA, "w"),
+        (0xCEF4, "x"), (0xD1B9, "y"), (0xD4D1, "z"),
+    )
+    for boundary, letter in reversed(bounds):
+        if code >= boundary:
+            return letter
+    return ""
+
+
+def _name_initials(text: str) -> str:
+    """获取中文名称的拼音首字母（小写）"""
+    text = str(text or "").strip()
+    if not text:
+        return ""
+    return "".join(_char_initial(ch) for ch in text)
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 #  采集工作线程
 # ═══════════════════════════════════════════════════════════════════════════
@@ -450,17 +488,40 @@ class PositionsTable(QtWidgets.QTableWidget):
             self.setCellWidget(row, 4, detail_button)
 
     def filter_by_ops(self, active_ops: set[str]):
-        if not active_ops:
-            self._display_data = list(self._raw_data)
-        else:
-            self._display_data = [
-                item for item in self._raw_data
+        self._active_ops = active_ops
+        self._apply_combined_filter()
+
+    def filter_by_text(self, text: str):
+        self._search_text = text.strip().lower()
+        self._apply_combined_filter()
+
+    def _apply_combined_filter(self):
+        active_ops = getattr(self, "_active_ops", set())
+        search_text = getattr(self, "_search_text", "")
+
+        filtered = self._raw_data
+        if active_ops:
+            filtered = [
+                item for item in filtered
                 if str(item.get("op", "")) in active_ops
             ]
+        if search_text:
+            filtered = [
+                item for item in filtered
+                if self._match_search(item, search_text)
+            ]
+        self._display_data = filtered
         if self._sort_column >= 0:
             self._sort_and_refresh()
         else:
             self._refresh_table()
+
+    @staticmethod
+    def _match_search(item: dict, query: str) -> bool:
+        code = str(item.get("code", "")).lower()
+        name = str(item.get("name", "")).lower()
+        initials = _name_initials(item.get("name", ""))
+        return query in code or query in name or query in initials
 
     def _on_cell_double_clicked(self, row: int, _column: int):
         code_item = self.item(row, 0)
@@ -897,26 +958,11 @@ class StatsPage(QtWidgets.QWidget):
     def _setup_ui(self):
         self.setStyleSheet("background: #0f172a;")
 
-        scroll = QtWidgets.QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
-        scroll.setStyleSheet("QScrollArea { border: none; background: #0f172a; }")
-
         container = QtWidgets.QWidget()
         container.setStyleSheet("background: #0f172a;")
         main_layout = QtWidgets.QVBoxLayout(container)
         main_layout.setContentsMargins(24, 24, 24, 24)
         main_layout.setSpacing(20)
-        # 时钟
-        self.timeLabel = QtWidgets.QLabel("等待操作...")
-        self.timeLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.timeLabel.setStyleSheet("color: #94a3b8; font-size: 13px;")
-        main_layout.addWidget(self.timeLabel)
-
-        self._clock_timer = QtCore.QTimer(self)
-        self._clock_timer.timeout.connect(self._update_clock)
-        self._clock_timer.start(1000)
-
         # 开始按钮 + 进度卡片（同一行）
         top_row = QtWidgets.QHBoxLayout()
         top_row.setSpacing(12)
@@ -964,12 +1010,35 @@ class StatsPage(QtWidgets.QWidget):
         positions_header.addLayout(self.filterContainer)
         main_layout.addLayout(positions_header)
 
+        # 搜索框
+        self.searchInput = QtWidgets.QLineEdit()
+        self.searchInput.setPlaceholderText("🔍 输入股票代码、名称或首字母筛选...")
+        self.searchInput.setClearButtonEnabled(True)
+        self.searchInput.setFixedHeight(36)
+        self.searchInput.setStyleSheet("""
+            QLineEdit {
+                background: #1e293b;
+                border: 1px solid #334155;
+                border-radius: 8px;
+                color: #e2e8f0;
+                font-size: 13px;
+                padding: 0 12px;
+            }
+            QLineEdit:focus {
+                border: 1px solid #3b82f6;
+            }
+            QLineEdit::placeholder {
+                color: #475569;
+            }
+        """)
+        self.searchInput.textChanged.connect(self._on_search_text_changed)
+        main_layout.addWidget(self.searchInput)
+
         # 持仓表格
         self.positionsTable = PositionsTable()
-        self.positionsTable.setMinimumHeight(400)
         self.positionsTable.stockDoubleClicked.connect(self._on_stock_double_clicked)
         self.positionsTable.rateDetailRequested.connect(self._on_rate_detail_requested)
-        main_layout.addWidget(self.positionsTable)
+        main_layout.addWidget(self.positionsTable, 1)
 
         # 空数据提示
         self.emptyLabel = QtWidgets.QLabel("暂无持仓数据，请先执行采集")
@@ -977,19 +1046,9 @@ class StatsPage(QtWidgets.QWidget):
         self.emptyLabel.setStyleSheet("color: #475569; font-size: 14px; padding: 48px 20px;")
         main_layout.addWidget(self.emptyLabel)
 
-        main_layout.addStretch()
-
-        scroll.setWidget(container)
-
         page_layout = QtWidgets.QVBoxLayout(self)
         page_layout.setContentsMargins(0, 0, 0, 0)
-        page_layout.addWidget(scroll)
-
-    # ── 时钟 ──────────────────────────────────────────────────────────────
-
-    def _update_clock(self):
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.timeLabel.setText(now)
+        page_layout.addWidget(container)
 
     # ── 采集控制 ──────────────────────────────────────────────────────────
 
@@ -1137,6 +1196,10 @@ class StatsPage(QtWidgets.QWidget):
             tag.set_active(op_code in self._active_filter_ops)
             tag.filterClicked.connect(self._on_filter_tag_clicked)
             self.filterContainer.addWidget(tag)
+
+    @QtCore.Slot(str)
+    def _on_search_text_changed(self, text: str):
+        self.positionsTable.filter_by_text(text)
 
     @QtCore.Slot(str)
     def _on_filter_tag_clicked(self, op_code: str):
