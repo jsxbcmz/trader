@@ -4,7 +4,7 @@ import json
 import os
 import time
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
@@ -272,14 +272,58 @@ class ApiRequester:
             elapsed_seconds=round(total_elapsed, 3),
         )
 
+    # 中国股市节假日休市日期（仅包含工作日被休市的日期，周末无需列出）
+    # 每年初需更新当年节假日；如日期不在此表中则仅按周末判断
+    _CN_MARKET_HOLIDAYS: set[str] = {
+        # ── 2025 年 ──
+        "2025-01-01",                                                   # 元旦
+        "2025-01-28", "2025-01-29", "2025-01-30", "2025-01-31",        # 春节
+        "2025-02-03", "2025-02-04",                                     # 春节
+        "2025-04-04",                                                   # 清明节
+        "2025-05-01", "2025-05-02", "2025-05-05",                      # 劳动节
+        "2025-05-30", "2025-06-02",                                     # 端午节
+        "2025-10-01", "2025-10-02", "2025-10-03",                      # 国庆节
+        "2025-10-06", "2025-10-07",                                     # 国庆节
+        # ── 2026 年 ──
+        "2026-01-01",                                                   # 元旦
+        "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19",        # 春节
+        "2026-02-20",                                                   # 春节
+        "2026-04-06",                                                   # 清明节
+        "2026-05-01", "2026-05-04", "2026-05-05",                      # 劳动节
+        "2026-06-19",                                                   # 端午节
+        "2026-10-01", "2026-10-02", "2026-10-05",                      # 国庆节
+        "2026-10-06", "2026-10-07",                                     # 国庆节
+    }
+
+    @staticmethod
+    def _is_trade_date(check_date: datetime) -> bool:
+        """判断指定日期是否为交易日（非周末且非节假日）"""
+        if check_date.weekday() >= 5:
+            return False
+        return check_date.strftime("%Y-%m-%d") not in ApiRequester._CN_MARKET_HOLIDAYS
+
+    @staticmethod
+    def _get_last_trade_date() -> str:
+        """获取最近一个交易日的日期字符串（格式 YYYYMMDD）。
+
+        从今天开始往前回退，跳过周末和中国股市节假日，最多回退 30 天。
+        """
+        candidate = datetime.now()
+        for _ in range(30):
+            if ApiRequester._is_trade_date(candidate):
+                return candidate.strftime("%Y%m%d")
+            candidate -= timedelta(days=1)
+        # 兜底：如果 30 天内都没找到交易日，返回当天
+        return datetime.now().strftime("%Y%m%d")
+
     @staticmethod
     def _resolve_params(params: dict) -> dict:
         """解析参数中的动态占位符，如 {today}"""
         resolved = {}
-        today_str = datetime.now().strftime("%Y%m%d")
+        trade_date_str = ApiRequester._get_last_trade_date()
         for key, value in params.items():
             if isinstance(value, str) and "{today}" in value:
-                resolved[key] = value.replace("{today}", today_str)
+                resolved[key] = value.replace("{today}", trade_date_str)
             else:
                 resolved[key] = value
         return resolved

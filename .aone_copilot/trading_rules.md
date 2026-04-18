@@ -1,0 +1,1 @@
+../.claude/trading_rules.md

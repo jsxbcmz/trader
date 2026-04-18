@@ -1,0 +1,1 @@
+../../.claude/zettaranc-perspective/SKILL.md

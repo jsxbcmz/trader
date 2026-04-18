@@ -202,6 +202,7 @@ class ApiCard(QtWidgets.QFrame):
         super().__init__(parent)
         self.api_id = api_id
         self.setObjectName(f"apiCard_{api_id}")
+        self.setFixedHeight(50)
         self.setStyleSheet("""
             ApiCard {
                 background: #1e293b;
@@ -997,7 +998,10 @@ class StatsPage(QtWidgets.QWidget):
             card = ApiCard(api_id)
             self.api_cards[api_id] = card
             top_row.addWidget(card, 1)
-        main_layout.addLayout(top_row)
+        top_row_widget = QtWidgets.QWidget()
+        top_row_widget.setLayout(top_row)
+        top_row_widget.setFixedHeight(50)
+        main_layout.addWidget(top_row_widget)
         # 持仓操作区域
         positions_header = QtWidgets.QHBoxLayout()
         positions_title = QtWidgets.QLabel("📈 每日持仓操作一览")
