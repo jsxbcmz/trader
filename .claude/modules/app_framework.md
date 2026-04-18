@@ -4,10 +4,12 @@
 
 | 文件 | 行数 | 职责 |
 |------|------|------|
-| `app/main_window.py` | ~150 | 主窗口，4页面切换+信号中枢 |
+| `app/main_window.py` | ~165 | 主窗口，6页面切换+信号中枢 |
 | `app/services/settings_service.py` | ~96 | QSettings 持久化 |
 | `app/components/settings_form.py` | ~41 | 设置表单复用组件 |
+| `app/dialogs/template_editor_dialog.py` | - | 模板编辑弹窗 |
 | `app/utils/thread_manager.py` | ~47 | 后台线程启动工具 |
+| `app/stats/` | - | 数据采集统计子系统 |
 | `app/main.py` | - | 应用入口 |
 
 ---
@@ -15,12 +17,12 @@
 ## main_window.py — MainWindow(QMainWindow)
 
 ### 页面管理
-- `pageStack: QStackedWidget` 管理 4 个页面
-- Index 0: MarketPage, 1: TemplatePage, 2: SettingsPage, 3: ScreeningPage
+- `pageStack: QStackedWidget` 管理 6 个页面
+- Index 0: MarketPage, 1: TemplatePage, 2: SettingsPage, 3: ScreeningPage, 4: BacktestPage, 5: StatsPage
 
 ### 菜单结构
 - 文件：退出
-- 视图：打开各页面
+- 视图：打开看盘页/模板页/设置页/选股页/回测页/统计页
 - 数据：更新全部股票
 - 工具：新建模板
 - 帮助：关于
@@ -30,6 +32,10 @@
 ```
 templatePage.templatesChanged → marketPage.reload_templates()
 templatePage.templatesChanged → screeningPage.reload_templates()
+templatePage.templatesChanged → backtestPage.reload_templates()
+
+templatePage.backtestRequested(template_id) → _on_backtest_requested()
+  → backtestPage.prefill_template() + switch_page(4)
 
 settingsPage.settingsSaveRequested → _save_settings_from_page()
   → SettingsService.save() → MarketPage.apply_settings()
@@ -50,16 +56,19 @@ marketPage.updateRunningChanged → _on_update_running_changed()
 | `switch_page(index)` | 切换页面 |
 | `_save_settings_from_page(app_settings)` | 保存设置并同步 |
 | `_request_update_all()` | 转发更新请求 |
+| `_on_backtest_requested(template_id)` | 模板页跳转回测页 |
+| `_open_new_template_dialog()` | 跳转模板页并打开新建弹窗 |
 | `closeEvent(event)` | 关闭时持久化状态 |
 
 ---
 
 ## settings_service.py — SettingsService
 
-### AppSettings(frozen dataclass, slots=True)
+### AppSettings(frozen dataclass)
 
 | 字段 | 说明 |
 |------|------|
+| `tushare_token` | Tushare API Token |
 | `min_visible_days` | 图表最小可见天数 |
 | `max_visible_days` | 图表最大可见天数 |
 | `last_selected_symbol` | 上次选中股票代码 |

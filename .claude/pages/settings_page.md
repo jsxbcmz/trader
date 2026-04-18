@@ -1,10 +1,10 @@
 # 设置页 SettingsPage
 
-**文件：** `app/pages/settings_page.py` (~71 行)
+**文件：** `app/pages/settings_page.py` (~85 行)
 
 ## 页面定位
 
-全局配置页面，使用 SettingsFormWidget 复用组件。配置项包括 Tushare Token、图表最小/最大可视天数。
+全局配置页面，直接内联表单布局。配置项包括 Tushare Token、图表最小/最大可视天数、批量数据更新入口。
 
 ## 类结构
 
@@ -22,7 +22,9 @@
 | 变量 | 说明 |
 |------|------|
 | `settings_service` | 设置服务实例 |
-| `settingsForm` | SettingsFormWidget 实例 |
+| `tokenEdit` | Token 输入框 |
+| `minDaysSpin / maxDaysSpin` | 图表天数 SpinBox |
+| `updateAllBtn` | 更新全部股票按钮 |
 
 ## 公开方法
 
@@ -30,6 +32,14 @@
 |------|------|
 | `set_settings(app_settings)` | 将 AppSettings 值写入表单 |
 | `set_update_enabled(enabled)` | 控制"更新全部股票"按钮的可用状态 |
+
+## UI 结构
+
+1. 页面描述文字
+2. 数据接口 GroupBox：Tushare Token 输入
+3. 图表显示 GroupBox：最小/最大可见天数 SpinBox
+4. 数据更新 GroupBox：提示文字 + 更新全部股票按钮
+5. 保存设置按钮
 
 ## 信号流
 
@@ -47,5 +57,4 @@
 ## 模块依赖
 
 - `SettingsService` — 读取初始值、`normalize_settings()` 校验
-- `SettingsFormWidget` — 表单 UI 组件
 - `AppSettings` 数据类

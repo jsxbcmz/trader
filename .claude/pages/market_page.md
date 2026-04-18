@@ -1,6 +1,6 @@
 # 看盘页 MarketPage
 
-**文件：** `app/pages/market_page.py` (~555 行)
+**文件：** `app/pages/market_page.py` (~569 行)
 
 ## 页面定位
 
@@ -33,6 +33,7 @@
 | 变量 | 说明 |
 |------|------|
 | `_last_selected_symbol` | 最后选中股票代码（持久化到 QSettings） |
+| `_tushare_token` | Tushare Token |
 | `_chart_min_visible_days / _chart_max_visible_days` | 图表可见范围 |
 | `_update_thread / _update_worker` | 更新任务线程与 Worker |
 | `_screening_thread / _screening_worker` | 选股任务线程与 Worker |
@@ -61,16 +62,18 @@
 搜索 → apply_filter() → on_select() → _load_symbol() → chart.set_daily() → onHover() → 状态栏
 选股 → run_screening() → ScreeningWorker(线程) → populate_screening_results()
 更新 → start_update_all() → UpdateWorker(线程) → 进度弹窗
+设置 → _toggle_settings_panel() → _save_settings_from_panel() → SettingsService.save()
 ```
 
 ## 左侧面板 UI 结构
 
-1. 展开/收起设置面板（SettingsFormWidget）
-2. 更新全部股票按钮
+1. 操作按钮行：展开/收起设置 + 更新全部股票
+2. 可折叠设置面板（Token、最小/最大可见天数、保存按钮）
 3. 搜索框：支持代码/名称/拼音首字母/行业/地区，空格分词多条件 AND
 4. 行业下拉筛选
-5. 选股面板：选择模板 + 日期 → 执行选股 → 选股结果表（6列）
-6. 全部股票表（3列：代码、名称、行业）
+5. 选股面板：选择模板 + 日期 → 执行选股
+6. 选股结果表（2列：代码、名称，最大高度220px）
+7. 全部股票表（3列：代码、名称、行业）
 
 ## 模块依赖
 
@@ -78,8 +81,9 @@
 - `ScreeningService` — 执行选股
 - `TemplateService` — 获取/构造模板请求
 - `HistoryUpdater` — 批量更新股票日线
+- `TushareClient` — 数据源客户端
 - `StockChartWidget` — K线图表组件
-- `SettingsFormWidget` — 可折叠设置面板
 - `UpdateProgressDialog / ScreeningProgressDialog` — 进度弹窗
 - `load_stock_list / load_daily_csv` — 数据加载
 - `start_worker` — 通用线程启动工具
+- `pypinyin`（可选）— 拼音首字母搜索

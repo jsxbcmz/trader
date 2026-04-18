@@ -4,7 +4,7 @@
 
 ## 页面定位
 
-选股模板的 CRUD 管理页面，左右分栏布局。左侧模板列表，右侧详情展示（名称、描述、通达信条件代码）。
+选股模板的 CRUD 管理页面，左右分栏布局（QSplitter 2:3）。左侧模板列表，右侧详情展示（名称、描述、通达信条件代码）。
 
 ## 类结构
 
@@ -12,7 +12,8 @@
 
 **信号：**
 - `statusMessageRequested = Signal(str, int)`
-- `templatesChanged = Signal()` — 模板增删改后触发，MarketPage 和 ScreeningPage 监听此信号刷新下拉框
+- `templatesChanged = Signal()` — 模板增删改后触发，MarketPage、ScreeningPage、BacktestPage 监听此信号刷新下拉框
+- `backtestRequested = Signal(str)` — 发射模板 ID，请求跳转回测页
 
 **构造参数：** `root: Path`
 
@@ -36,14 +37,24 @@
 
 ## 内部方法
 
-- `_render_template_detail(template)` — 右侧面板渲染：名称、描述、条件代码
+- `_on_selection_changed()` — 表格选中变化 → 渲染右侧详情
+- `_on_backtest_clicked()` — 回测按钮 → 发射 `backtestRequested` 信号
 - `_update_action_states(template)` — 根据是否有选中模板控制按钮可用状态
+
+## UI 结构
+
+1. 操作按钮行：新建、编辑、复制、删除 | 回测 | 刷新
+2. QSplitter 左右分栏：
+   - 左侧：QTableWidget（2列：名称、更新时间）
+   - 右侧：QFormLayout 详情面板（名称 Label、描述 Label、条件代码 PlainTextEdit 只读）
 
 ## 跨页通信
 
 ```
 templatesChanged → MainWindow → marketPage.reload_templates()
 templatesChanged → MainWindow → screeningPage.reload_templates()
+templatesChanged → MainWindow → backtestPage.reload_templates()
+backtestRequested(template_id) → MainWindow._on_backtest_requested() → backtestPage.prefill_template() + switch_page(4)
 ```
 
 ## 模块依赖

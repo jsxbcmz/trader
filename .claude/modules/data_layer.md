@@ -6,9 +6,10 @@
 |------|------|------|
 | `core/data/repository.py` | ~50 | 股票数据访问（StockRepository） |
 | `core/data/base_json_repository.py` | ~40 | JSON 文件读写基类 |
-| `core/data/time_index.py` | ~51 | 时间索引定位 |
+| `core/data/time_index.py` | ~100 | 时间索引定位 + 回测快速索引 |
 | `app/data_loader.py` | ~142 | CSV 读写和规范化 |
 | `app/history_updater.py` | ~208 | 历史数据增量更新 |
+| `app/tushare_client.py` | - | Tushare API 客户端 |
 
 ---
 
@@ -44,7 +45,11 @@
 **TimeIndexResult(frozen dataclass)：**
 - `requested_date` / `actual_date` / `index` / `matched` / `reason`
 
-**`locate_time_index(df, target_date)`** — 精确匹配日期，非交易日 `matched=False`
+| 函数 | 说明 |
+|------|------|
+| `locate_time_index(df, target_date)` | 精确匹配日期，非交易日 `matched=False` |
+| `build_date_index(df)` | 预构建 `{date_str: row_index}` 字典（回测性能优化） |
+| `locate_time_index_fast(date_index, target_date)` | 基于预构建索引的 O(1) 快速定位 |
 
 ---
 
@@ -82,7 +87,7 @@
 | `update_symbol(symbol, end_date, full_refresh)` | 增量更新单只股票 |
 | `update_all_symbols(progress_callback, stop_checker)` | 顺序遍历全部股票，逐只更新 |
 
-**依赖：** `app.akshare_client.AkshareClient`, `app.data_loader`
+**依赖：** `app.tushare_client.TushareClient`, `app.data_loader`
 
 ---
 

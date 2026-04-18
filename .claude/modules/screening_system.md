@@ -10,9 +10,9 @@
 | `service.py` | ~290 | 选股服务，缓存层+结果格式化 |
 | `cache_models.py` | ~111 | 缓存数据模型 |
 | `cache_repository.py` | ~61 | 缓存 JSON 持久化 |
-| `error_policy.py` | - | 错误处理策略 |
-| `result_models.py` | - | 结果模型 |
-| `result_formatter.py` | - | 结果格式化 |
+| `error_policy.py` | ~20 | 错误处理策略（ignore/raise） |
+| `result_models.py` | ~50 | 单次运行结果模型 + 调试信息构建 |
+| `result_formatter.py` | ~60 | 结果格式化（摘要/命中列表/错误列表） |
 
 ---
 

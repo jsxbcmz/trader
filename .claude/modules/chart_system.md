@@ -6,11 +6,11 @@
 
 | 文件 | 行数 | 职责 |
 |------|------|------|
-| `app/widgets.py` | ~879 | StockChartWidget 主组件 + 进度弹窗 |
-| `app/chart_layout.py` | ~354 | PlotBundle/Items dataclass + 工厂函数 |
+| `app/widgets.py` | ~933 | StockChartWidget 主组件 + 进度弹窗 |
+| `app/chart_layout.py` | ~357 | PlotBundle/Items dataclass + 工厂函数 |
 | `app/chart_primitives.py` | ~161 | CandlestickItem, BrickDeltaItem, DateAxisItem |
-| `app/chart_indicators.py` | ~161 | 指标计算（EMA, MA, SMA, KDJ, Brick） |
-| `app/chart_overlays.py` | ~87 | HTML 浮窗/标签构建 |
+| `app/chart_indicators.py` | ~245 | 指标计算（EMA, MA, SMA, KDJ, Brick, 临界价格） |
+| `app/chart_overlays.py` | ~92 | HTML 浮窗/标签构建 |
 | `app/chart_interaction.py` | ~45 | StockChartViewBox 鼠标交互 |
 | `app/chart_ranges.py` | ~60 | 范围 clamp 逻辑 |
 
@@ -151,6 +151,7 @@ DataFrame → set_daily() → _prepare_daily_arrays()
 | `compute_zx_long_short(close, periods)` | 四周期 MA 均值 |
 | `compute_brick_indicator(high, low, close)` | 砖型差值完整计算，返回 dict |
 | `compute_kdj_indicator(high, low, close)` | 标准 KDJ，返回 `{k, d, j}` |
+| `calc_brick_threshold_price(h, l, c, idx, target)` | 计算砖型差值恰好为零的临界收盘价 |
 
 ---
 
