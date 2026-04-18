@@ -202,13 +202,20 @@ class ApiCard(QtWidgets.QFrame):
         super().__init__(parent)
         self.api_id = api_id
         self.setObjectName(f"apiCard_{api_id}")
-        self.setFixedHeight(50)
+        self.setFixedHeight(42)
         self.setStyleSheet("""
             ApiCard {
                 background: #1e293b;
                 border: 1px solid #334155;
-                border-radius: 12px;
-                padding: 16px;
+                border-radius: 8px;
+            }
+            ApiCard QLabel {
+                background: transparent;
+                border: none;
+            }
+            ApiCard QProgressBar {
+                background: transparent;
+                border: none;
             }
         """)
         self._setup_ui()
@@ -216,39 +223,39 @@ class ApiCard(QtWidgets.QFrame):
 
     def _setup_ui(self):
         layout = QtWidgets.QHBoxLayout(self)
-        layout.setContentsMargins(12, 8, 12, 8)
-        layout.setSpacing(10)
+        layout.setContentsMargins(10, 2, 10, 2)
+        layout.setSpacing(8)
 
         self.titleLabel = QtWidgets.QLabel(API_DISPLAY_NAMES.get(self.api_id, self.api_id))
-        self.titleLabel.setStyleSheet("font-size: 13px; font-weight: 600; color: #e2e8f0;")
+        self.titleLabel.setStyleSheet("font-size: 12px; font-weight: 600; color: #e2e8f0; background: transparent;")
         layout.addWidget(self.titleLabel)
 
         self.progressBar = QtWidgets.QProgressBar()
         self.progressBar.setRange(0, 100)
         self.progressBar.setValue(0)
         self.progressBar.setTextVisible(True)
-        self.progressBar.setFixedHeight(18)
+        self.progressBar.setFixedHeight(12)
         self.progressBar.setMinimumWidth(120)
         self.progressBar.setStyleSheet("""
             QProgressBar {
                 background: #0f172a;
                 border: none;
-                border-radius: 6px;
+                border-radius: 4px;
                 text-align: center;
-                font-size: 11px;
+                font-size: 10px;
                 font-weight: 600;
                 color: #e2e8f0;
             }
             QProgressBar::chunk {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #3b82f6, stop:1 #8b5cf6);
-                border-radius: 6px;
+                border-radius: 4px;
             }
         """)
         layout.addWidget(self.progressBar, 1)
 
         self.infoLabel = QtWidgets.QLabel("")
-        self.infoLabel.setStyleSheet("font-size: 11px; color: #94a3b8;")
+        self.infoLabel.setStyleSheet("font-size: 10px; color: #94a3b8; background: transparent;")
         layout.addWidget(self.infoLabel)
 
         self.statusLabel = QtWidgets.QLabel("等待中")
@@ -265,7 +272,7 @@ class ApiCard(QtWidgets.QFrame):
             "done": "background: #1a3329; color: #4ade80;",
             "error": "background: #3b1c1c; color: #f87171;",
         }
-        base_style = "padding: 4px 12px; border-radius: 10px; font-size: 12px; font-weight: 600;"
+        base_style = "padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600;"
         self.statusLabel.setStyleSheet(base_style + styles.get(status, styles["waiting"]))
 
     def reset(self):
@@ -1000,7 +1007,7 @@ class StatsPage(QtWidgets.QWidget):
             top_row.addWidget(card, 1)
         top_row_widget = QtWidgets.QWidget()
         top_row_widget.setLayout(top_row)
-        top_row_widget.setFixedHeight(50)
+        top_row_widget.setFixedHeight(46)
         main_layout.addWidget(top_row_widget)
         # 持仓操作区域
         positions_header = QtWidgets.QHBoxLayout()

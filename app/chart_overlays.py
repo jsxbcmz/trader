@@ -86,7 +86,7 @@ def build_info_box_html(ds: str, close_value: float, pct: float, amount_yi: floa
         f"<div style='color: white;'>最高价 {format_tooltip_value(high_value)}</div>"
         f"<div style='color: white;'>最低价 {format_tooltip_value(low_value)}</div>"
         f"<div style='color: {accent_color};'>涨跌幅 {format_tooltip_value(pct, 2)}%</div>"
-        f"<div style='color: white;'>成交额 {format_tooltip_value(amount_yi, 4)} 亿</div>"
+        f"<div style='color: white;'>成交额 {format_tooltip_value(amount_yi, 2)} 亿</div>"
         f"<div style='color: white;'>换手率 {format_tooltip_value(turnover_rate, 2)}%</div>"
         f"</div>"
     )

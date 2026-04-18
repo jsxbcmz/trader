@@ -129,6 +129,40 @@ class HistoryUpdater:
             raise ValueError(f"股票 {key} 在 stocklist.csv 中缺少 ts_code 映射")
         return {"symbol": key, **meta}
 
+    def _needs_turnover_rate_backfill(self, local_df: pd.DataFrame) -> bool:
+        """检查本地数据是否缺少换手率，需要回填。"""
+        if local_df.empty:
+            return False
+        if "turnover_rate" not in local_df.columns:
+            return True
+        return local_df["turnover_rate"].notna().sum() == 0
+
+    def _backfill_turnover_rate(self, symbol: str, meta: dict, local_df: pd.DataFrame) -> pd.DataFrame:
+        """回填本地数据中缺失的换手率。"""
+        dates = pd.to_datetime(local_df["date"], errors="coerce").dropna()
+        if dates.empty:
+            return local_df
+
+        start_date = dates.min().strftime("%Y%m%d")
+        end_date = dates.max().strftime("%Y%m%d")
+
+        self.rate_limiter.acquire()
+        try:
+            basic_df = self.client.fetch_daily_basic(meta["ts_code"], start_date=start_date, end_date=end_date)
+        except TushareClientError:
+            return local_df
+
+        if basic_df is None or basic_df.empty or "turnover_rate" not in basic_df.columns:
+            return local_df
+
+        basic_df["date"] = pd.to_datetime(basic_df["trade_date"], format="%Y%m%d", errors="coerce").dt.strftime("%Y-%m-%d")
+        rate_map = dict(zip(basic_df["date"], pd.to_numeric(basic_df["turnover_rate"], errors="coerce")))
+
+        result = local_df.copy()
+        date_col = pd.to_datetime(result["date"], errors="coerce").dt.strftime("%Y-%m-%d")
+        result["turnover_rate"] = date_col.map(rate_map)
+        return result
+
     def update_symbol(self, symbol: str, end_date: str | None = None, full_refresh: bool = False) -> UpdateResult:
         start_ts = time.perf_counter()
         symbol = normalize_symbol(symbol)
@@ -136,6 +170,12 @@ class HistoryUpdater:
 
         try:
             local_df = load_raw_daily_csv(self.stock_daily_data_dir, symbol)
+
+            # 检查是否需要回填换手率
+            needs_backfill = self._needs_turnover_rate_backfill(local_df)
+            if needs_backfill and not local_df.empty:
+                local_df = self._backfill_turnover_rate(symbol, meta, local_df)
+
             if full_refresh:
                 start_date = self.default_start_date
             else:
@@ -147,11 +187,19 @@ class HistoryUpdater:
 
             end_date = end_date or pd.Timestamp.today().strftime("%Y%m%d")
             if start_date > end_date:
+                if needs_backfill:
+                    normalized = normalize_daily_dataframe(local_df)
+                    save_daily_csv(self.stock_daily_data_dir, symbol, normalized)
+                    return UpdateResult(symbol, meta["name"], "updated", 0, 0, "已补全换手率", time.perf_counter() - start_ts)
                 return UpdateResult(symbol, meta["name"], "skipped", 0, 0, "本地数据已是最新", time.perf_counter() - start_ts)
 
             self.rate_limiter.acquire()
             remote_df = self.client.fetch_daily(meta["ts_code"], start_date=start_date, end_date=end_date)
             if remote_df.empty:
+                if needs_backfill:
+                    normalized = normalize_daily_dataframe(local_df)
+                    save_daily_csv(self.stock_daily_data_dir, symbol, normalized)
+                    return UpdateResult(symbol, meta["name"], "updated", 0, 0, "已补全换手率", time.perf_counter() - start_ts)
                 return UpdateResult(symbol, meta["name"], "skipped", 0, 0, "接口未返回新数据", time.perf_counter() - start_ts)
 
             self.rate_limiter.acquire()
@@ -166,7 +214,8 @@ class HistoryUpdater:
             before_count = len(normalize_daily_dataframe(local_df)) if not local_df.empty else 0
             save_daily_csv(self.stock_daily_data_dir, symbol, normalized)
             written = max(0, len(normalized) - before_count)
-            return UpdateResult(symbol, meta["name"], "updated", len(mapped_df), written, "更新成功", time.perf_counter() - start_ts)
+            msg = "更新成功（含换手率补全）" if needs_backfill else "更新成功"
+            return UpdateResult(symbol, meta["name"], "updated", len(mapped_df), written, msg, time.perf_counter() - start_ts)
         except TushareClientError as exc:
             return UpdateResult(symbol, meta["name"], "failed", 0, 0, str(exc), time.perf_counter() - start_ts)
         except Exception as exc:

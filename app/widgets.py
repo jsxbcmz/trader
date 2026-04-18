@@ -882,30 +882,69 @@ class StockChartWidget(QtWidgets.QWidget):
         text = build_info_box_html(ds, c, pct, amount_yi, turnover_rate,
                                    open_value=o, high_value=h, low_value=l)
 
+        # Set HTML first so we can measure the actual rendered size
+        self.infoText.setHtml(text)
+
         vb = self.pricePlot.getViewBox()
         (x0, x1), (y0, y1) = vb.viewRange()
 
         x_range = x1 - x0
         y_range = y1 - y0
         dx = x_range * 0.03
-        dy = y_range * 0.06
+        dy = y_range * 0.02
 
-        if x > x0 + x_range * 0.72:
+        # Measure tooltip size in pixel space, then convert to data coordinates
+        # so we can precisely check whether it would overflow the view boundary.
+        br = self.infoText.boundingRect()
+        tooltip_pixel_width = br.width()
+        tooltip_pixel_height = br.height()
+
+        view_pixel_rect = vb.screenGeometry()
+        view_pixel_width = max(view_pixel_rect.width(), 1)
+        view_pixel_height = max(view_pixel_rect.height(), 1)
+
+        tooltip_data_width = tooltip_pixel_width / view_pixel_width * x_range
+        tooltip_data_height = tooltip_pixel_height / view_pixel_height * y_range
+
+        # Horizontal: prefer showing tooltip to the right of the cursor;
+        # flip to the left only when it would overflow the right boundary.
+        right_edge = x + dx + tooltip_data_width
+        if right_edge > x1:
             px = x - dx
             self.infoText.setAnchor((1, 0))
         else:
             px = x + dx
             self.infoText.setAnchor((0, 0))
 
-        if y > y0 + y_range * 0.78:
-            py = y - dy
-        else:
+        # Vertical: prefer showing tooltip below the cursor;
+        # flip upward only when it would overflow the bottom boundary.
+        # Note: in pyqtgraph the Y axis may be inverted (y0 < y1 means
+        # y0 is the bottom visually), so "below cursor" means towards y0.
+        bottom_edge = y - dy - tooltip_data_height
+        if bottom_edge < y0:
+            # Not enough room below → show above cursor
             py = y + dy
+            anchor_y = 1.0
+        else:
+            # Show below cursor
+            py = y - dy
+            anchor_y = 0.0
+
+        # Re-check: if showing above also overflows the top, clamp to top
+        if anchor_y == 1.0 and (py + tooltip_data_height) > y1:
+            py = y1
+        # If showing below overflows the bottom, clamp to bottom
+        if anchor_y == 0.0 and (py - tooltip_data_height) < y0:
+            py = y0 + tooltip_data_height
+
+        current_anchor = self.infoText.anchor
+        new_anchor_x = current_anchor.x()
+        if current_anchor.y() != anchor_y:
+            self.infoText.setAnchor((new_anchor_x, anchor_y))
 
         px = min(max(px, x0), x1)
         py = min(max(py, y0), y1)
 
-        self.infoText.setHtml(text)
         self.infoText.setPos(px, py)
         self.infoText.show()
 
