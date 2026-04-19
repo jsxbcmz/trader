@@ -1,0 +1,56 @@
+###############################################################################
+# 小宇量化 (JZhu Trading) — Docker Compose (Lite)
+#
+# All-in-one mode: single Java app + database + frontend = 3 containers
+# Uses ~500MB RAM instead of ~2.5GB
+#
+# Usage:
+#   docker compose -f compose-lite.yml up -d
+#   docker compose -f compose-lite.yml down
+###############################################################################
+
+services:
+  # ─── Database ──────────────────────────────────────────────────────
+  db:
+    image: crpi-3glujemjfb279758.cn-shanghai.personal.cr.aliyuncs.com/jzhu-trading/timescaledb:latest
+    restart: unless-stopped
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+    environment:
+      POSTGRES_DB: trading_platform
+      POSTGRES_USER: trading
+      POSTGRES_PASSWORD: trading123
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trading"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  # ─── All-in-one backend (replaces 6 Java services + gateway) ──────
+  app:
+    image: crpi-3glujemjfb279758.cn-shanghai.personal.cr.aliyuncs.com/jzhu-trading/all-in-one:latest
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DB_HOST: db
+      # Set by deploy/start.sh and start.bat before `docker compose up`.
+      # The frontend reads this back via /api/web/features to surface a
+      # warning modal if the host install path has spaces or non-ASCII.
+      HOST_INSTALL_PATH: ${HOST_INSTALL_PATH:-}
+      # LAN IP of the host machine. Used by the Navbar UI to show a
+      # copyable "open on another device" address for Wi-Fi sharing.
+      HOST_LAN_IP: ${HOST_LAN_IP:-}
+    ports:
+      - "8180:8180"
+
+  # ─── Frontend ──────────────────────────────────────────────────────
+  web-app:
+    image: crpi-3glujemjfb279758.cn-shanghai.personal.cr.aliyuncs.com/jzhu-trading/web-app:latest
+    restart: unless-stopped
+    depends_on:
+      app: { condition: service_started }
+    ports:
+      - "3000:80"
