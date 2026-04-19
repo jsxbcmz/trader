@@ -512,12 +512,17 @@ class StockChartWidget(QtWidgets.QWidget):
         l = df["low"].to_numpy(float)
         c = df["close"].to_numpy(float)
         amount_yi = df["volume"].to_numpy(float) / 1e4
-        return x, o, h, l, c, amount_yi
+        # 涨跌方向：基于 close vs 前一日 close，首日 fallback 到 close vs open
+        pre_close = np.empty_like(c)
+        pre_close[0] = o[0]
+        pre_close[1:] = c[:-1]
+        is_up = c >= pre_close
+        return x, o, h, l, c, amount_yi, is_up
 
-    def _update_price_panel(self, x, o, h, l, c):
+    def _update_price_panel(self, x, o, h, l, c, is_up):
         self._low_values = l
         self._high_values = h
-        self.candleItem.setData(np.column_stack([x, o, h, l, c]))
+        self.candleItem.setData(np.column_stack([x, o, h, l, c]), is_up=is_up)
 
         short_trend = compute_zx_short_trend(c)
         long_short = compute_zx_long_short(c, periods=ZX_MULTI_PERIODS)
@@ -572,13 +577,13 @@ class StockChartWidget(QtWidgets.QWidget):
         self.pricePlot.addItem(left_label)
         self._brick_green_threshold_items.append(left_label)
 
-    def _update_volume_panel(self, x, o, c, amount_yi):
+    def _update_volume_panel(self, x, is_up, amount_yi):
         self.volPlot.clear()
         self.volPlot.addItem(self.volVLine, ignoreBounds=True)
         self.volVLine.show()
         self._amount_yi_values = amount_yi
 
-        up_mask = c >= o
+        up_mask = is_up
         down_mask = ~up_mask
         if np.any(up_mask):
             self.volPlot.addItem(
@@ -846,9 +851,9 @@ class StockChartWidget(QtWidgets.QWidget):
             self._x_max = max(0, len(df) - 1) + self._item_half_width + self._right_view_padding
             self._apply_xrange_limits()
 
-            x, o, h, l, c, amount_yi = self._prepare_daily_arrays(df)
-            self._update_price_panel(x, o, h, l, c)
-            self._update_volume_panel(x, o, c, amount_yi)
+            x, o, h, l, c, amount_yi, is_up = self._prepare_daily_arrays(df)
+            self._update_price_panel(x, o, h, l, c, is_up)
+            self._update_volume_panel(x, is_up, amount_yi)
             brick_values = self._update_brick_panel(x, h, l, c)
             self._update_brick_green_thresholds(h, l, c, brick_values)
             self._update_kdj_panel(x, h, l, c)

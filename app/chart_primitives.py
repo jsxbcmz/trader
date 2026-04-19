@@ -28,6 +28,9 @@ class CandlestickItem(pg.GraphicsObject):
     """Simple candlestick item.
 
     Data: ndarray of rows [x, open, high, low, close]
+    is_up: optional bool ndarray indicating price-up (close >= pre_close).
+           When provided, candle color reflects true gain/loss vs previous close
+           instead of close vs open.
     """
 
     BODY_WIDTH = 0.6
@@ -35,13 +38,15 @@ class CandlestickItem(pg.GraphicsObject):
     def __init__(self):
         super().__init__()
         self._data: np.ndarray | None = None
+        self._is_up: np.ndarray | None = None
         self._up_pen = pg.mkPen((220, 0, 0))
         self._up_brush = pg.mkBrush((220, 0, 0))
         self._down_pen = pg.mkPen((0, 170, 0))
         self._down_brush = pg.mkBrush((0, 170, 0))
 
-    def setData(self, data: np.ndarray):
+    def setData(self, data: np.ndarray, is_up: np.ndarray | None = None):
         self._data = data
+        self._is_up = is_up
         self.prepareGeometryChange()
         self.update()
 
@@ -49,11 +54,14 @@ class CandlestickItem(pg.GraphicsObject):
         if self._data is None or len(self._data) == 0:
             return
 
-        for x, o, h, l, c in self._data:
+        for i, (x, o, h, l, c) in enumerate(self._data):
             if np.isnan([o, h, l, c]).any():
                 continue
 
-            up = c >= o
+            if self._is_up is not None:
+                up = bool(self._is_up[i])
+            else:
+                up = c >= o
             pen = self._up_pen if up else self._down_pen
             brush = self._up_brush if up else self._down_brush
 
