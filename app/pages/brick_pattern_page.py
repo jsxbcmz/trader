@@ -115,11 +115,12 @@ class BrickPatternPage(QtWidgets.QWidget):
         self.add_date_input.setPlaceholderText("如 20251231")
         self.add_date_input.setFixedWidth(100)
         self.add_date_input.setMaxLength(8)
+        self.add_date_input.setText(QtCore.QDate.currentDate().toString("yyyyMMdd"))
         header_row.addWidget(self.add_date_input)
 
         header_row.addWidget(QtWidgets.QLabel("期望:"))
         self.add_expected_combo = QtWidgets.QComboBox()
-        self.add_expected_combo.addItems(["N型起跳", "横盘起跳", "上升波段延续", ""])
+        self.add_expected_combo.addItems(["", "N型起跳", "横盘起跳", "上升波段延续"])
         self.add_expected_combo.setFixedWidth(100)
         header_row.addWidget(self.add_expected_combo)
 
@@ -226,7 +227,6 @@ class BrickPatternPage(QtWidgets.QWidget):
         expected = self.add_expected_combo.currentText()
         self._append_row(code.zfill(6), _format_date(date_raw), expected)
         self.add_code_input.clear()
-        self.add_date_input.clear()
         self._update_stats()
 
     def _delete_selected(self):
