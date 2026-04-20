@@ -17,6 +17,7 @@ from core.backtest.models import (
     BenchmarkSnapshot,
     BuyTiming,
     DailySnapshot,
+    SignalMode,
 )
 from core.backtest.buy_scorer import BrickBuyScorer, create_buy_scorer
 from core.backtest.sell_strategy import create_sell_strategy
@@ -25,6 +26,8 @@ from core.data.repository import StockRepository
 from core.data.time_index import build_date_index, locate_time_index, locate_time_index_fast
 from core.expression.evaluator import EvaluationContext, evaluate_expression
 from core.expression.parser.transpiler import transpile_tdx_source
+from core.models.brick_pattern import PatternType
+from core.screening.brick_pattern_engine import screen_single_stock
 from core.screening.engine import ScreeningEngine
 from core.stock_pool.manager import StockPoolManager
 
@@ -168,6 +171,90 @@ class BacktestEngine:
 
         return signal_table
 
+    def _precompute_pattern_signal_table(
+        self,
+        trading_days: list[str],
+        cached_pool,
+        daily_data_cache: dict[str, pd.DataFrame],
+        date_index_cache: dict[str, dict[str, int]],
+        min_score: float = 80.0,
+        price_limit: float = 0.0,
+        progress_callback: Callable[[dict], None] | None = None,
+    ) -> dict[str, list[dict[str, str]]]:
+        """预计算定式验证信号表：遍历每只股票的每个交易日，执行砖形图定式检测。
+
+        对每只股票的全部交易日逐日调用 screen_single_stock()，
+        当定式匹配通过（final_matched）且最高评分 ≥ min_score 时，记录为买入信号。
+
+        Returns:
+            信号表 {date_str: [{symbol, name, score_reason}, ...]}
+        """
+        all_patterns = (
+            PatternType.N_SHAPE_JUMP,
+            PatternType.SIDEWAYS_JUMP,
+            PatternType.UPTREND_CONTINUE,
+        )
+        trading_days_set = set(trading_days)
+        signal_table: dict[str, list[dict[str, str]]] = {d: [] for d in trading_days}
+        stock_map = {s.symbol: s for s in cached_pool.stocks}
+        total = len(cached_pool.symbols)
+
+        for i, symbol in enumerate(cached_pool.symbols):
+            try:
+                df = self._get_daily_data(symbol, daily_data_cache, date_index_cache)
+                if df is None or df.empty:
+                    continue
+
+                date_idx = date_index_cache.get(symbol, {})
+                name = stock_map[symbol].name if symbol in stock_map else ""
+
+                for date_str, row_idx in date_idx.items():
+                    if date_str not in trading_days_set:
+                        continue
+                    if row_idx < 10:
+                        continue
+
+                    match = screen_single_stock(
+                        df=df,
+                        index=row_idx,
+                        symbol=symbol,
+                        name=name,
+                        target_date=date_str,
+                        actual_date=date_str,
+                        enabled_patterns=all_patterns,
+                        price_limit=price_limit,
+                    )
+
+                    if not match.final_matched:
+                        continue
+
+                    # 取最高定式评分
+                    best_score = max(
+                        (pm.score for pm in match.pattern_matches if pm.matched),
+                        default=0.0,
+                    )
+
+                    if best_score >= min_score:
+                        signal_table[date_str].append({
+                            "symbol": symbol,
+                            "name": name,
+                            "score_reason": (
+                                f"定式验证买入({match.matched_pattern}"
+                                f" 评分:{best_score:.0f})"
+                            ),
+                        })
+            except Exception:
+                continue
+
+            if progress_callback is not None and ((i + 1) % 50 == 0 or i + 1 == total):
+                progress_callback({
+                    "phase": "precompute",
+                    "current": i + 1,
+                    "total": total,
+                })
+
+        return signal_table
+
     def precompute_signals(
         self,
         config: BacktestConfig,
@@ -256,38 +343,49 @@ class BacktestEngine:
         date_index_cache: dict[str, dict[str, int]] = {}
         cached_pool = self.stock_pool_manager.get_default_pool(config.stock_pool_name)
 
-        # ── 信号预计算（核心优化：每只股票只做一次全量表达式计算）──
+        # ── 信号预计算 ──
         root = self.repository.root
         signal_table: dict[str, list[dict[str, str]]] | None = None
 
-        # 1) 检查信号缓存
-        signal_table = get_cached_signals(
-            root, config.tdx_source, config.stock_pool_name,
-            config.start_date, config.end_date,
-        )
+        if config.signal_mode == SignalMode.PATTERN_VERIFY:
+            # 定式验证模式：使用砖形图定式引擎生成信号
+            signal_table = self._precompute_pattern_signal_table(
+                trading_days, cached_pool,
+                daily_data_cache, date_index_cache,
+                config.pattern_min_score,
+                config.pattern_price_limit,
+                progress_callback,
+            )
+        else:
+            # TDX 表达式模式（默认）：每只股票做一次全量表达式计算
+            # 1) 检查信号缓存
+            signal_table = get_cached_signals(
+                root, config.tdx_source, config.stock_pool_name,
+                config.start_date, config.end_date,
+            )
 
-        # 2) 缓存未命中 → 预计算信号表
-        if signal_table is None:
-            compiled_expression = None
-            if config.tdx_source and config.tdx_source.strip():
-                try:
-                    compiled_expression = transpile_tdx_source(config.tdx_source)
-                except Exception:
-                    pass
+            # 2) 缓存未命中 → 预计算信号表
+            if signal_table is None:
+                compiled_expression = None
+                if config.tdx_source and config.tdx_source.strip():
+                    try:
+                        compiled_expression = transpile_tdx_source(config.tdx_source)
+                    except Exception:
+                        pass
 
-            if compiled_expression is not None:
-                signal_table = self._precompute_signal_table(
-                    compiled_expression, trading_days, cached_pool,
-                    daily_data_cache, date_index_cache, progress_callback,
-                )
-                # 保存信号缓存
-                try:
-                    save_cached_signals(
-                        root, config.tdx_source, config.stock_pool_name,
-                        config.start_date, config.end_date, signal_table,
+                if compiled_expression is not None:
+                    signal_table = self._precompute_signal_table(
+                        compiled_expression, trading_days, cached_pool,
+                        daily_data_cache, date_index_cache, progress_callback,
                     )
-                except Exception:
-                    pass
+                    # 保存信号缓存
+                    try:
+                        save_cached_signals(
+                            root, config.tdx_source, config.stock_pool_name,
+                            config.start_date, config.end_date, signal_table,
+                        )
+                    except Exception:
+                        pass
 
         if signal_table is None:
             signal_table = {}
@@ -780,7 +878,13 @@ class BacktestEngine:
 
         当 sell_strategy_name == "brick_chart" 且 buy_scorer_name 未显式设置时，
         自动启用砖形图评分器。
+
+        定式验证模式下跳过评分器：定式引擎已包含完整的前提检测、
+        定式匹配和风险过滤，无需再做二次评分过滤。
         """
+        if config.signal_mode == SignalMode.PATTERN_VERIFY:
+            return None
+
         scorer_name = config.buy_scorer_name
         if not scorer_name and config.sell_strategy_name == "brick_chart":
             scorer_name = "brick"

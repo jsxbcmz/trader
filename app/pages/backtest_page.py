@@ -15,7 +15,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from core.backtest.cache import get_cached_result, save_cached_result
 from core.backtest.engine import BacktestEngine
 from core.backtest.metrics import calculate_metrics
-from core.backtest.models import BacktestConfig, BacktestResult, BuyTiming
+from core.backtest.models import BacktestConfig, BacktestResult, BuyTiming, SignalMode
 from core.backtest.report import export_snapshots_csv, export_trades_csv, generate_markdown_report
 from core.backtest.sell_strategy import SELL_STRATEGY_REGISTRY
 from core.templates import TemplateService
@@ -460,10 +460,48 @@ class BacktestPage(QtWidgets.QWidget):
         form_layout.addRow(title)
         form_layout.addRow(QtWidgets.QLabel(""))  # 间距
 
-        # 策略模板
+        # 选股模式
+        self.signal_mode_combo = QtWidgets.QComboBox()
+        self.signal_mode_combo.addItems(["TDX表达式选股", "定式验证选股"])
+        self.signal_mode_combo.setMinimumWidth(300)
+        self.signal_mode_combo.setToolTip(
+            "TDX表达式选股：使用通达信公式作为选股条件\n"
+            "定式验证选股：使用砖形图定式验证引擎，评分达标即买入"
+        )
+        form_layout.addRow("选股模式：", self.signal_mode_combo)
+
+        # 策略模板（TDX 模式下使用）
         self.template_combo = QtWidgets.QComboBox()
         self.template_combo.setMinimumWidth(300)
         form_layout.addRow("策略模板：", self.template_combo)
+
+        # 定式验证参数（定式验证模式下使用）
+        self.pattern_params_widget = QtWidgets.QWidget()
+        pattern_layout = QtWidgets.QFormLayout(self.pattern_params_widget)
+        pattern_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.pattern_min_score_spin = QtWidgets.QDoubleSpinBox()
+        self.pattern_min_score_spin.setRange(0, 100)
+        self.pattern_min_score_spin.setValue(80)
+        self.pattern_min_score_spin.setSingleStep(5)
+        self.pattern_min_score_spin.setSuffix(" 分")
+        self.pattern_min_score_spin.setToolTip(
+            "定式匹配评分 ≥ 此阈值时视为买入信号"
+        )
+        pattern_layout.addRow("最低评分阈值：", self.pattern_min_score_spin)
+
+        self.pattern_price_limit_spin = QtWidgets.QDoubleSpinBox()
+        self.pattern_price_limit_spin.setRange(0, 9999)
+        self.pattern_price_limit_spin.setValue(0)
+        self.pattern_price_limit_spin.setSingleStep(10)
+        self.pattern_price_limit_spin.setSuffix(" 元")
+        self.pattern_price_limit_spin.setToolTip(
+            "股价超过此值的股票不参与选股（0 = 不限制）"
+        )
+        pattern_layout.addRow("价格上限：", self.pattern_price_limit_spin)
+
+        self.pattern_params_widget.setVisible(False)
+        form_layout.addRow("", self.pattern_params_widget)
 
         # ── 时间范围 ──
         form_layout.addRow(self._make_section_label("时间范围"))
@@ -811,6 +849,7 @@ class BacktestPage(QtWidgets.QWidget):
         self.back_button.clicked.connect(self._on_back_to_config)
         self.export_md_button.clicked.connect(self._on_export_markdown)
         self.export_csv_button.clicked.connect(self._on_export_csv)
+        self.signal_mode_combo.currentIndexChanged.connect(self._on_signal_mode_changed)
         self.sell_strategy_combo.currentTextChanged.connect(self._on_sell_strategy_changed)
         self.template_combo.currentIndexChanged.connect(self._on_template_changed)
         self.sensitivity_button.clicked.connect(self._on_start_sensitivity)
@@ -849,6 +888,28 @@ class BacktestPage(QtWidgets.QWidget):
                 self.template_combo.setCurrentIndex(i)
                 break
 
+    def _on_signal_mode_changed(self, index: int):
+        """选股模式切换时联动 UI 显示/隐藏"""
+        is_pattern_mode = index == 1  # "定式验证选股"
+        self.template_combo.setVisible(not is_pattern_mode)
+        # 找到 template_combo 所在行的 label 并同步隐藏
+        form = self.template_combo.parent().layout()
+        if isinstance(form, QtWidgets.QFormLayout):
+            label = form.labelForField(self.template_combo)
+            if label is not None:
+                label.setVisible(not is_pattern_mode)
+
+        self.pattern_params_widget.setVisible(is_pattern_mode)
+
+        if is_pattern_mode:
+            # 定式验证模式：自动切换到 brick_chart 卖出策略
+            idx = self.sell_strategy_combo.findText("brick_chart")
+            if idx >= 0:
+                self.sell_strategy_combo.setCurrentIndex(idx)
+        else:
+            # TDX 模式：根据模板自动匹配
+            self._sync_sell_strategy()
+
     def _on_template_changed(self, index: int):
         """模板切换时自动匹配卖出策略"""
         self._sync_sell_strategy()
@@ -879,22 +940,39 @@ class BacktestPage(QtWidgets.QWidget):
     def _on_sell_strategy_changed(self, strategy_name: str):
         """卖出策略切换时显示/隐藏参数"""
         is_brick = strategy_name == "brick_chart"
+        is_pattern_mode = self.signal_mode_combo.currentIndex() == 1
         self.sell_params_widget.setVisible(is_brick)
-        self.scorer_widget.setVisible(is_brick)
+        # 定式验证模式下不显示买入评分器（定式引擎自带评分）
+        self.scorer_widget.setVisible(is_brick and not is_pattern_mode)
 
     # ── 回测执行 ──────────────────────────────────────────
 
     def _build_config_from_form(self) -> BacktestConfig | None:
         """从表单构建回测配置，返回 None 表示校验失败"""
-        template_id = self.template_combo.currentData()
-        if not template_id:
-            QtWidgets.QMessageBox.warning(self, "提示", "请先选择策略模板")
-            return None
+        is_pattern_mode = self.signal_mode_combo.currentIndex() == 1
 
-        template = self.template_service.get_template(template_id)
-        if not template:
-            QtWidgets.QMessageBox.warning(self, "提示", "模板不存在")
-            return None
+        # 根据选股模式确定模板和信号源
+        template_id = ""
+        template_name = ""
+        tdx_source = ""
+        stock_pool_name = "default"
+
+        if is_pattern_mode:
+            template_name = "定式验证选股"
+        else:
+            template_id = self.template_combo.currentData()
+            if not template_id:
+                QtWidgets.QMessageBox.warning(self, "提示", "请先选择策略模板")
+                return None
+
+            template = self.template_service.get_template(template_id)
+            if not template:
+                QtWidgets.QMessageBox.warning(self, "提示", "模板不存在")
+                return None
+
+            template_name = template.name
+            tdx_source = template.tdx_source
+            stock_pool_name = template.stock_pool_name
 
         commission_text = self.commission_combo.currentText()
         commission_map = {"万1": 0.0001, "万1.5": 0.00015, "万2": 0.0002, "万3": 0.0003}
@@ -909,7 +987,8 @@ class BacktestPage(QtWidgets.QWidget):
                 "partial_profit_threshold": self.profit_threshold_spin.value() / 100.0,
                 "partial_sell_ratio": self.partial_sell_spin.value() / 100.0,
             }
-            if self.scorer_checkbox.isChecked():
+            # 定式验证模式下不需要额外的买入评分器
+            if not is_pattern_mode and self.scorer_checkbox.isChecked():
                 buy_scorer_name = "brick"
                 buy_scorer_params = {
                     "weight_big_brick_small_body": self.weight_brick_body_spin.value(),
@@ -918,11 +997,13 @@ class BacktestPage(QtWidgets.QWidget):
                     "weight_bear_exhaustion": self.weight_exhaustion_spin.value(),
                 }
 
+        signal_mode = SignalMode.PATTERN_VERIFY if is_pattern_mode else SignalMode.TDX_EXPRESSION
+
         return BacktestConfig(
-            template_id=template.id,
-            template_name=template.name,
-            tdx_source=template.tdx_source,
-            stock_pool_name=template.stock_pool_name,
+            template_id=template_id,
+            template_name=template_name,
+            tdx_source=tdx_source,
+            stock_pool_name=stock_pool_name,
             start_date=self.start_date_edit.date().toString("yyyy-MM-dd"),
             end_date=self.end_date_edit.date().toString("yyyy-MM-dd"),
             initial_capital=float(self.capital_spin.value()),
@@ -935,6 +1016,9 @@ class BacktestPage(QtWidgets.QWidget):
             sell_strategy_params=sell_params,
             buy_scorer_name=buy_scorer_name,
             buy_scorer_params=buy_scorer_params,
+            signal_mode=signal_mode,
+            pattern_min_score=self.pattern_min_score_spin.value(),
+            pattern_price_limit=self.pattern_price_limit_spin.value(),
         )
 
     def _on_start_backtest(self):

@@ -13,6 +13,13 @@ class BuyTiming(Enum):
     NEXT_OPEN = "next_open"  # 次日开盘价买入
 
 
+class SignalMode(Enum):
+    """选股信号模式"""
+
+    TDX_EXPRESSION = "tdx_expression"      # TDX 表达式选股（默认）
+    PATTERN_VERIFY = "pattern_verify"      # 砖形图定式验证选股
+
+
 class SellAction(Enum):
     """卖出动作类型"""
 
@@ -65,6 +72,13 @@ class BacktestConfig:
     # 买入评分器（空字符串 = 不使用评分）
     buy_scorer_name: str = ""
     buy_scorer_params: dict = field(default_factory=dict)
+
+    # 选股信号模式
+    signal_mode: SignalMode = SignalMode.TDX_EXPRESSION
+
+    # 定式验证选股参数（signal_mode == PATTERN_VERIFY 时生效）
+    pattern_min_score: float = 80.0       # 定式评分 ≥ 此值视为买入信号
+    pattern_price_limit: float = 0.0      # 价格上限过滤（0 = 不限制）
 
 
 @dataclass
