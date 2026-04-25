@@ -18,6 +18,7 @@ except ImportError:
 from ..data_loader import load_daily_csv, load_stock_list
 from ..history_updater import HistoryUpdater
 from ..tushare_client import TushareClient, TushareClientError
+from ..chart_layout import DEFAULT_SUB_CHARTS, SubChartSelector, SubChartType
 from ..widgets import ScreeningProgressDialog, StockChartWidget, UpdateProgressDialog
 
 
@@ -198,9 +199,28 @@ class MarketPage(QtWidgets.QWidget):
         self.chart.set_visible_day_limits(self._chart_min_visible_days, self._chart_max_visible_days)
         self.chart.onHover.connect(self.on_hover)
 
+        self.subChartSelector = SubChartSelector()
+        saved_types = self._load_sub_chart_selection()
+        if saved_types:
+            self.subChartSelector.set_selected(saved_types)
+            self.chart.set_visible_sub_charts(saved_types)
+        self.subChartSelector.selectionChanged.connect(self._on_sub_chart_changed)
+
+        chartToolbar = QtWidgets.QHBoxLayout()
+        chartToolbar.setContentsMargins(0, 0, 0, 0)
+        chartToolbar.addStretch(1)
+        chartToolbar.addWidget(self.subChartSelector)
+
+        rightWidget = QtWidgets.QWidget()
+        rightLayout = QtWidgets.QVBoxLayout(rightWidget)
+        rightLayout.setContentsMargins(0, 0, 0, 0)
+        rightLayout.setSpacing(2)
+        rightLayout.addLayout(chartToolbar)
+        rightLayout.addWidget(self.chart, 1)
+
         splitter = QtWidgets.QSplitter()
         splitter.addWidget(left)
-        splitter.addWidget(self.chart)
+        splitter.addWidget(rightWidget)
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 3)
         splitter.setSizes([320, 880])
@@ -250,6 +270,28 @@ class MarketPage(QtWidgets.QWidget):
             self.minDaysSpin.setValue(self._chart_min_visible_days)
         if hasattr(self, "maxDaysSpin"):
             self.maxDaysSpin.setValue(self._chart_max_visible_days)
+
+    def _on_sub_chart_changed(self, selected: list[SubChartType]):
+        self.chart.set_visible_sub_charts(selected)
+        from PySide6.QtCore import QSettings
+        settings = QSettings()
+        settings.setValue("chart/visible_sub_charts", ",".join(t.value for t in selected))
+
+    @staticmethod
+    def _load_sub_chart_selection() -> list[SubChartType] | None:
+        from PySide6.QtCore import QSettings
+        settings = QSettings()
+        raw = settings.value("chart/visible_sub_charts", None)
+        if not raw:
+            return None
+        names = [s.strip() for s in str(raw).split(",") if s.strip()]
+        types = []
+        for name in names:
+            try:
+                types.append(SubChartType(name))
+            except ValueError:
+                pass
+        return types if types else None
 
     def _toggle_settings_panel(self):
         visible = not self.settingsGroup.isVisible()

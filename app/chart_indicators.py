@@ -243,3 +243,25 @@ def compute_kdj_indicator(high: np.ndarray, low: np.ndarray, close: np.ndarray):
         "d": d,
         "j": j,
     }
+
+
+def compute_needle20_indicator(high: np.ndarray, low: np.ndarray, close: np.ndarray):
+    llv_l3 = rolling_min(low, 3)
+    hhv_c3 = rolling_max(close, 3)
+    span3 = hhv_c3 - llv_l3
+    safe3 = np.where(np.abs(span3) < 1e-12, np.nan, span3)
+    short = (close - llv_l3) / safe3 * 100.0
+
+    llv_l14 = rolling_min(low, 14)
+    hhv_c14 = rolling_max(close, 14)
+    span14 = hhv_c14 - llv_l14
+    safe14 = np.where(np.abs(span14) < 1e-12, np.nan, span14)
+    mid = (close - llv_l14) / safe14 * 100.0
+
+    llv_l20 = rolling_min(low, 20)
+    hhv_c20 = rolling_max(close, 20)
+    span20 = hhv_c20 - llv_l20
+    safe20 = np.where(np.abs(span20) < 1e-12, np.nan, span20)
+    long = (close - llv_l20) / safe20 * 100.0
+
+    return {"short": short, "mid": mid, "long": long}
