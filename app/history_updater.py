@@ -130,21 +130,38 @@ class HistoryUpdater:
         return {"symbol": key, **meta}
 
     def _needs_turnover_rate_backfill(self, local_df: pd.DataFrame) -> bool:
-        """检查本地数据是否缺少换手率，需要回填。"""
+        """检查本地数据是否缺少换手率，需要回填。
+
+        只要存在任意一行换手率为空，就需要回填——这样可以兜住增量同步时
+        daily_basic 接口当天数据延迟、限流或临时失败导致最近若干天换手率
+        为空的情况，避免这些空缺被永久遗留。
+        """
         if local_df.empty:
             return False
         if "turnover_rate" not in local_df.columns:
             return True
-        return local_df["turnover_rate"].notna().sum() == 0
+        return local_df["turnover_rate"].isna().any()
 
     def _backfill_turnover_rate(self, symbol: str, meta: dict, local_df: pd.DataFrame) -> pd.DataFrame:
-        """回填本地数据中缺失的换手率。"""
-        dates = pd.to_datetime(local_df["date"], errors="coerce").dropna()
-        if dates.empty:
+        """回填本地数据中缺失的换手率。
+
+        只针对换手率为空的行去拉 daily_basic，避免每次都全量重拉。
+        拉取范围用缺失日期的 [min, max] 区间一次性请求，减少接口调用次数。
+        """
+        if "turnover_rate" not in local_df.columns:
+            missing_mask = pd.Series([True] * len(local_df), index=local_df.index)
+        else:
+            missing_mask = local_df["turnover_rate"].isna()
+
+        if not missing_mask.any():
             return local_df
 
-        start_date = dates.min().strftime("%Y%m%d")
-        end_date = dates.max().strftime("%Y%m%d")
+        missing_dates = pd.to_datetime(local_df.loc[missing_mask, "date"], errors="coerce").dropna()
+        if missing_dates.empty:
+            return local_df
+
+        start_date = missing_dates.min().strftime("%Y%m%d")
+        end_date = missing_dates.max().strftime("%Y%m%d")
 
         self.rate_limiter.acquire()
         try:
@@ -155,12 +172,19 @@ class HistoryUpdater:
         if basic_df is None or basic_df.empty or "turnover_rate" not in basic_df.columns:
             return local_df
 
+        basic_df = basic_df.copy()
         basic_df["date"] = pd.to_datetime(basic_df["trade_date"], format="%Y%m%d", errors="coerce").dt.strftime("%Y-%m-%d")
         rate_map = dict(zip(basic_df["date"], pd.to_numeric(basic_df["turnover_rate"], errors="coerce")))
 
         result = local_df.copy()
+        if "turnover_rate" not in result.columns:
+            result["turnover_rate"] = None
+
         date_col = pd.to_datetime(result["date"], errors="coerce").dt.strftime("%Y-%m-%d")
-        result["turnover_rate"] = date_col.map(rate_map)
+        existing_rate = pd.to_numeric(result["turnover_rate"], errors="coerce")
+        fetched_rate = date_col.map(rate_map)
+        # 只填补原本为空的行，已有的换手率保持不变
+        result["turnover_rate"] = existing_rate.where(existing_rate.notna(), fetched_rate)
         return result
 
     def update_symbol(self, symbol: str, end_date: str | None = None, full_refresh: bool = False) -> UpdateResult:

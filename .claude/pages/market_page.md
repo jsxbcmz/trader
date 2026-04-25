@@ -4,18 +4,12 @@
 
 ## 页面定位
 
-主力页面，左右分栏布局（QSplitter 1:3）。左侧为搜索筛选+选股面板，右侧为 StockChartWidget 四联图。
+主力页面，左右分栏布局（QSplitter 1:3）。左侧为搜索+股票列表，右侧为 StockChartWidget 四联图。
 
 ## 类结构
 
 ### UpdateWorker(QtCore.QObject)
 后台线程 Worker，调用 `HistoryUpdater.update_all_symbols()` 批量更新股票日线。
-
-**信号：** `progressChanged(dict)`, `finished(dict)`, `errorOccurred(str)`
-**方法：** `run()`, `cancel()`
-
-### ScreeningWorker(QtCore.QObject)
-后台线程 Worker，调用 `ScreeningService.screen_with_cache()` 执行选股。
 
 **信号：** `progressChanged(dict)`, `finished(dict)`, `errorOccurred(str)`
 **方法：** `run()`, `cancel()`
@@ -36,23 +30,17 @@
 | `_tushare_token` | Tushare Token |
 | `_chart_min_visible_days / _chart_max_visible_days` | 图表可见范围 |
 | `_update_thread / _update_worker` | 更新任务线程与 Worker |
-| `_screening_thread / _screening_worker` | 选股任务线程与 Worker |
-| `_screening_results` | 选股命中结果列表 |
 | `df_list` | 全量股票 DataFrame（含 `name_initials` 拼音首字母列） |
 | `filtered` | 过滤后的股票 DataFrame |
-| `screening_service` | ScreeningService 实例 |
-| `template_service` | TemplateService 实例 |
 
 ## 公开方法
 
 | 方法 | 说明 |
 |------|------|
-| `apply_settings(app_settings)` | 接收外部设置变更，更新图表范围和表单 |
-| `reload_templates()` | 刷新选股条件模板下拉框（由 TemplatePage 触发） |
+| `apply_settings(app_settings)` | 接收外部设置变更，更新图表范围 |
 | `populate_table(df)` | 将 DataFrame 渲染到左侧股票列表表格 |
-| `apply_filter(*_)` | 多条件过滤（搜索文本、行业）并刷新表格 |
+| `apply_filter(*_)` | 搜索文本过滤并刷新表格 |
 | `on_select()` | 表格选中事件 → `_load_symbol()` |
-| `run_screening()` | 启动选股后台任务 |
 | `start_update_all()` | 启动全量更新后台任务 |
 | `persist_page_state()` | 关闭时持久化最后选中股票代码 |
 
@@ -60,30 +48,22 @@
 
 ```
 搜索 → apply_filter() → on_select() → _load_symbol() → chart.set_daily() → onHover() → 状态栏
-选股 → run_screening() → ScreeningWorker(线程) → populate_screening_results()
 更新 → start_update_all() → UpdateWorker(线程) → 进度弹窗
-设置 → _toggle_settings_panel() → _save_settings_from_panel() → SettingsService.save()
 ```
 
 ## 左侧面板 UI 结构
 
-1. 操作按钮行：展开/收起设置 + 更新全部股票
-2. 可折叠设置面板（Token、最小/最大可见天数、保存按钮）
-3. 搜索框：支持代码/名称/拼音首字母/行业/地区，空格分词多条件 AND
-4. 行业下拉筛选
-5. 选股面板：选择模板 + 日期 → 执行选股
-6. 选股结果表（2列：代码、名称，最大高度220px）
-7. 全部股票表（3列：代码、名称、行业）
+1. 更新全部股票按钮
+2. 搜索框：支持代码/名称/拼音首字母/行业/地区，空格分词多条件 AND
+3. 全部股票表（3列：代码、名称、行业）
 
 ## 模块依赖
 
 - `SettingsService` — 加载/保存设置
-- `ScreeningService` — 执行选股
-- `TemplateService` — 获取/构造模板请求
 - `HistoryUpdater` — 批量更新股票日线
 - `TushareClient` — 数据源客户端
 - `StockChartWidget` — K线图表组件
-- `UpdateProgressDialog / ScreeningProgressDialog` — 进度弹窗
+- `UpdateProgressDialog` — 进度弹窗
 - `load_stock_list / load_daily_csv` — 数据加载
 - `start_worker` — 通用线程启动工具
 - `pypinyin`（可选）— 拼音首字母搜索

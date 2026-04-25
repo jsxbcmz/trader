@@ -6,8 +6,6 @@ from PySide6 import QtCore, QtWidgets
 
 from app.services import AppSettings, SettingsService
 from app.utils import start_worker
-from core.screening.service import ScreeningService
-from core.templates import TemplateService
 
 try:
     from pypinyin import Style, lazy_pinyin
@@ -19,7 +17,7 @@ from ..data_loader import load_daily_csv, load_stock_list
 from ..history_updater import HistoryUpdater
 from ..tushare_client import TushareClient, TushareClientError
 from ..chart_layout import DEFAULT_SUB_CHARTS, SubChartSelector, SubChartType
-from ..widgets import ScreeningProgressDialog, StockChartWidget, UpdateProgressDialog
+from ..widgets import StockChartWidget, UpdateProgressDialog
 
 
 class UpdateWorker(QtCore.QObject):
@@ -51,34 +49,6 @@ class UpdateWorker(QtCore.QObject):
         self._cancelled = True
 
 
-class ScreeningWorker(QtCore.QObject):
-    """选股后台任务"""
-    progressChanged = QtCore.Signal(dict)
-    finished = QtCore.Signal(dict)
-    errorOccurred = QtCore.Signal(str)
-
-    def __init__(self, screening_service: ScreeningService, request):
-        super().__init__()
-        self.screening_service = screening_service
-        self.request = request
-        self._cancelled = False
-
-    def cancel(self):
-        self._cancelled = True
-
-    @QtCore.Slot()
-    def run(self):
-        try:
-            payload = self.screening_service.screen_with_cache(
-                self.request,
-                progress_callback=lambda p: self.progressChanged.emit(p),
-                cancelled_fn=lambda: self._cancelled,
-            )
-            self.finished.emit(payload)
-        except Exception as exc:
-            self.errorOccurred.emit(str(exc))
-
-
 def build_name_initials(value) -> str:
     text = str(value or "").strip()
     if not text:
@@ -106,20 +76,12 @@ class MarketPage(QtWidgets.QWidget):
         self._update_thread = None
         self._update_worker = None
         self._progress_dialog = None
-        self._screening_thread = None
-        self._screening_worker = None
-        self._screening_progress_dialog = None
-        self.screening_service = ScreeningService.from_root(self.root)
-        self.template_service = TemplateService.from_root(self.root)
-        self._screening_results = []
-
         self.df_list = load_stock_list(self.stocklist_csv)
         self.df_list["name_initials"] = self.df_list["name"].apply(build_name_initials)
         self.df_list = self.df_list.reset_index(drop=True)
 
         self._setup_ui()
         self._connect_signals()
-        self.reload_templates()
 
         self.filtered = self.df_list.copy()
         self.populate_table(self.filtered)
@@ -131,61 +93,12 @@ class MarketPage(QtWidgets.QWidget):
         left = QtWidgets.QWidget()
         leftLayout = QtWidgets.QVBoxLayout(left)
 
-        actionLayout = QtWidgets.QHBoxLayout()
-        self.settingsToggleBtn = QtWidgets.QPushButton("展开设置")
         self.updateAllBtn = QtWidgets.QPushButton("更新全部股票")
-        actionLayout.addWidget(self.settingsToggleBtn)
-        actionLayout.addWidget(self.updateAllBtn)
-        leftLayout.addLayout(actionLayout)
-
-        self.settingsGroup = QtWidgets.QGroupBox("配置")
-        settingsLayout = QtWidgets.QFormLayout(self.settingsGroup)
-        self.tokenEdit = QtWidgets.QLineEdit(self._tushare_token)
-        self.tokenEdit.setPlaceholderText("请输入 Tushare Token")
-        self.minDaysSpin = QtWidgets.QSpinBox()
-        self.minDaysSpin.setRange(1, 10000)
-        self.minDaysSpin.setValue(self._chart_min_visible_days)
-        self.maxDaysSpin = QtWidgets.QSpinBox()
-        self.maxDaysSpin.setRange(2, 10000)
-        self.maxDaysSpin.setValue(self._chart_max_visible_days)
-        self.saveSettingsBtn = QtWidgets.QPushButton("保存配置")
-        settingsLayout.addRow("Tushare Token", self.tokenEdit)
-        settingsLayout.addRow("最小可见天数", self.minDaysSpin)
-        settingsLayout.addRow("最大可见天数", self.maxDaysSpin)
-        settingsLayout.addRow("", self.saveSettingsBtn)
-        self.settingsGroup.setVisible(False)
-        leftLayout.addWidget(self.settingsGroup)
+        leftLayout.addWidget(self.updateAllBtn)
 
         self.search = QtWidgets.QLineEdit()
         self.search.setPlaceholderText("搜索：代码/名称/行业/地区（空格分词）")
         leftLayout.addWidget(self.search)
-
-        self.industryBox = QtWidgets.QComboBox()
-        self.industryBox.addItem("全部行业")
-        industries = sorted(set(self.df_list.get("industry").dropna().astype(str).tolist()))
-        self.industryBox.addItems([i for i in industries if i and i != "nan"])
-        leftLayout.addWidget(self.industryBox)
-
-        self.screeningGroup = QtWidgets.QGroupBox("选股")
-        screeningLayout = QtWidgets.QFormLayout(self.screeningGroup)
-        self.screeningPresetBox = QtWidgets.QComboBox()
-        self.screeningDateEdit = QtWidgets.QDateEdit(QtCore.QDate.currentDate())
-        self.screeningDateEdit.setCalendarPopup(True)
-        self.screeningDateEdit.setDisplayFormat("yyyy-MM-dd")
-        self.screeningRunBtn = QtWidgets.QPushButton("执行选股")
-        screeningLayout.addRow("条件模板", self.screeningPresetBox)
-        screeningLayout.addRow("目标日期", self.screeningDateEdit)
-        screeningLayout.addRow("", self.screeningRunBtn)
-        leftLayout.addWidget(self.screeningGroup)
-
-        self.screeningResultTable = QtWidgets.QTableWidget()
-        self.screeningResultTable.setColumnCount(2)
-        self.screeningResultTable.setHorizontalHeaderLabels(["代码", "名称"])
-        self.screeningResultTable.horizontalHeader().setStretchLastSection(True)
-        self.screeningResultTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.screeningResultTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.screeningResultTable.setMaximumHeight(220)
-        leftLayout.addWidget(self.screeningResultTable)
 
         self.table = QtWidgets.QTableWidget()
         self.table.setColumnCount(3)
@@ -229,32 +142,8 @@ class MarketPage(QtWidgets.QWidget):
 
     def _connect_signals(self):
         self.search.textChanged.connect(self.apply_filter)
-        self.industryBox.currentTextChanged.connect(self.apply_filter)
         self.table.itemSelectionChanged.connect(self.on_select)
-        self.screeningRunBtn.clicked.connect(self.run_screening)
-        self.screeningResultTable.itemSelectionChanged.connect(self.on_screening_result_select)
-        self.settingsToggleBtn.clicked.connect(self._toggle_settings_panel)
-        self.saveSettingsBtn.clicked.connect(self._save_settings_from_panel)
         self.updateAllBtn.clicked.connect(self.start_update_all)
-
-    def reload_templates(self):
-        current_template_id = self.current_template_id()
-        templates = self.template_service.list_templates()
-        self.screeningPresetBox.blockSignals(True)
-        self.screeningPresetBox.clear()
-        selected_index = -1
-        for index, template in enumerate(templates):
-            self.screeningPresetBox.addItem(template.name, template.id)
-            if current_template_id and template.id == current_template_id:
-                selected_index = index
-        if selected_index >= 0:
-            self.screeningPresetBox.setCurrentIndex(selected_index)
-        elif templates:
-            self.screeningPresetBox.setCurrentIndex(0)
-        self.screeningPresetBox.blockSignals(False)
-
-    def current_template_id(self) -> str:
-        return str(self.screeningPresetBox.currentData() or "").strip()
 
     def _show_status_message(self, message: str, timeout: int = 0):
         self.statusMessageRequested.emit(message, timeout)
@@ -264,12 +153,6 @@ class MarketPage(QtWidgets.QWidget):
         self._chart_min_visible_days = app_settings.min_visible_days
         self._chart_max_visible_days = app_settings.max_visible_days
         self.chart.set_visible_day_limits(self._chart_min_visible_days, self._chart_max_visible_days)
-        if hasattr(self, "tokenEdit"):
-            self.tokenEdit.setText(self._tushare_token)
-        if hasattr(self, "minDaysSpin"):
-            self.minDaysSpin.setValue(self._chart_min_visible_days)
-        if hasattr(self, "maxDaysSpin"):
-            self.maxDaysSpin.setValue(self._chart_max_visible_days)
 
     def _on_sub_chart_changed(self, selected: list[SubChartType]):
         self.chart.set_visible_sub_charts(selected)
@@ -293,132 +176,9 @@ class MarketPage(QtWidgets.QWidget):
                 pass
         return types if types else None
 
-    def _toggle_settings_panel(self):
-        visible = not self.settingsGroup.isVisible()
-        self.settingsGroup.setVisible(visible)
-        self.settingsToggleBtn.setText("收起设置" if visible else "展开设置")
-
-    def _save_settings_from_panel(self):
-        token = self.tokenEdit.text().strip()
-        min_days = self.minDaysSpin.value()
-        max_days = self.maxDaysSpin.value()
-
-        try:
-            app_settings = self.settings_service.normalize_settings(
-                token=token,
-                min_days=min_days,
-                max_days=max_days,
-                last_selected_symbol=self._last_selected_symbol,
-            )
-        except ValueError as exc:
-            QtWidgets.QMessageBox.warning(self, "配置无效", str(exc))
-            return
-
-        saved_settings = self.settings_service.save(app_settings)
-        self.apply_settings(saved_settings)
-        self._show_status_message("设置已保存", 3000)
-
     def _set_update_controls_enabled(self, enabled: bool):
         self.updateAllBtn.setEnabled(enabled)
-        self.screeningRunBtn.setEnabled(enabled)
         self.updateRunningChanged.emit(not enabled)
-
-    def _build_screening_request(self):
-        template_id = self.current_template_id()
-        if not template_id:
-            raise ValueError("请选择模板")
-        qdate = self.screeningDateEdit.date()
-        target_date = qdate.toString("yyyy-MM-dd")
-        return self.template_service.build_screening_request(
-            template_id,
-            target_date,
-        )
-
-    def populate_screening_results(self, result):
-        self._screening_results = [match for match in result.matches if match.matched]
-        self.screeningResultTable.setRowCount(len(self._screening_results))
-        for row, item in enumerate(self._screening_results):
-            self.screeningResultTable.setItem(row, 0, QtWidgets.QTableWidgetItem(str(item.symbol)))
-            self.screeningResultTable.setItem(row, 1, QtWidgets.QTableWidgetItem(str(item.name or "")))
-        self.screeningResultTable.resizeColumnsToContents()
-
-    def run_screening(self):
-        if self._screening_thread is not None:
-            QtWidgets.QMessageBox.information(self, "提示", "已有选股任务正在进行中")
-            return
-
-        try:
-            request = self._build_screening_request()
-        except Exception as exc:
-            QtWidgets.QMessageBox.warning(self, "选股失败", str(exc))
-            return
-
-        self._set_update_controls_enabled(False)
-
-        self._screening_progress_dialog = ScreeningProgressDialog(
-            self.window() if isinstance(self.window(), QtWidgets.QWidget) else self
-        )
-        self._screening_progress_dialog.stopRequested.connect(self._on_screening_stop_requested)
-        self._screening_progress_dialog.show()
-
-        self._screening_worker = ScreeningWorker(self.screening_service, request)
-        self._screening_thread = start_worker(
-            self,
-            self._screening_worker,
-            on_progress=self._on_screening_progress,
-            on_finished=self._on_screening_finished,
-            on_error=self._on_screening_error,
-            on_cleanup=self._cleanup_screening_thread,
-        )
-
-    def _on_screening_stop_requested(self):
-        if self._screening_worker is not None:
-            self._screening_worker.cancel()
-
-    def _on_screening_progress(self, payload: dict):
-        if self._screening_progress_dialog is not None:
-            self._screening_progress_dialog.update_progress(payload)
-
-    def _on_screening_finished(self, payload: dict):
-        result = payload["result"]
-        was_cancelled = self._screening_worker is not None and self._screening_worker._cancelled
-
-        self.populate_screening_results(result)
-
-        if was_cancelled:
-            summary = f"选股已停止：已处理部分中命中 {result.matched_count} 只"
-        else:
-            summary = payload["summary"]
-
-        self._show_status_message(summary, 5000)
-
-        if self._screening_progress_dialog is not None:
-            if was_cancelled:
-                self._screening_progress_dialog.mark_finished(summary)
-            else:
-                self._screening_progress_dialog.accept()
-
-    def _on_screening_error(self, message: str):
-        if self._screening_progress_dialog is not None:
-            self._screening_progress_dialog.mark_finished(f"选股失败：{message}")
-        QtWidgets.QMessageBox.warning(self, "选股失败", message)
-        self._show_status_message(f"选股失败：{message}", 5000)
-
-    def _cleanup_screening_thread(self):
-        self._screening_thread = None
-        self._screening_worker = None
-        self._screening_progress_dialog = None
-        self._set_update_controls_enabled(True)
-
-    def on_screening_result_select(self):
-        row = self.screeningResultTable.currentRow()
-        if row < 0 or row >= len(self._screening_results):
-            return
-        symbol = self._screening_results[row].symbol
-        self.table.blockSignals(True)
-        self.table.clearSelection()
-        self.table.blockSignals(False)
-        self._load_symbol(symbol)
 
     def _select_symbol_in_table(self, symbol: str) -> bool:
         target = str(symbol or "").strip()
@@ -453,12 +213,8 @@ class MarketPage(QtWidgets.QWidget):
 
     def apply_filter(self, *_):
         text = self.search.text().strip().lower()
-        industry = self.industryBox.currentText().strip()
 
         df = self.df_list
-
-        if industry and industry != "全部行业":
-            df = df[df["industry"].astype(str) == industry]
 
         if text:
             parts = [p for p in text.split() if p]
@@ -485,9 +241,6 @@ class MarketPage(QtWidgets.QWidget):
         if symbol_item is None:
             return
         symbol = symbol_item.text()
-        self.screeningResultTable.blockSignals(True)
-        self.screeningResultTable.clearSelection()
-        self.screeningResultTable.blockSignals(False)
         self._load_symbol(symbol)
 
     def _load_symbol(self, symbol: str):

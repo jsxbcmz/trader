@@ -17,12 +17,12 @@
 ## main_window.py — MainWindow(QMainWindow)
 
 ### 页面管理
-- `pageStack: QStackedWidget` 管理 6 个页面
-- Index 0: MarketPage, 1: TemplatePage, 2: SettingsPage, 3: ScreeningPage, 4: BacktestPage, 5: StatsPage
+- `pageStack: QStackedWidget` 管理页面
+- Index 0: MarketPage, 1: TemplatePage, 2: SettingsPage, 3: ScreeningPage, 4: StatsPage, 5: BrickPatternPage
 
 ### 菜单结构
 - 文件：退出
-- 视图：打开看盘页/模板页/设置页/选股页/回测页/统计页
+- 视图：打开看盘页/模板页/设置页/选股页/统计页/定式验证页
 - 数据：更新全部股票
 - 工具：新建模板
 - 帮助：关于
@@ -30,12 +30,7 @@
 ### 信号连接链（核心跨页通信）
 
 ```
-templatePage.templatesChanged → marketPage.reload_templates()
 templatePage.templatesChanged → screeningPage.reload_templates()
-templatePage.templatesChanged → backtestPage.reload_templates()
-
-templatePage.backtestRequested(template_id) → _on_backtest_requested()
-  → backtestPage.prefill_template() + switch_page(4)
 
 settingsPage.settingsSaveRequested → _save_settings_from_page()
   → SettingsService.save() → MarketPage.apply_settings()
@@ -56,7 +51,6 @@ marketPage.updateRunningChanged → _on_update_running_changed()
 | `switch_page(index)` | 切换页面 |
 | `_save_settings_from_page(app_settings)` | 保存设置并同步 |
 | `_request_update_all()` | 转发更新请求 |
-| `_on_backtest_requested(template_id)` | 模板页跳转回测页 |
 | `_open_new_template_dialog()` | 跳转模板页并打开新建弹窗 |
 | `closeEvent(event)` | 关闭时持久化状态 |
 

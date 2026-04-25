@@ -624,17 +624,48 @@ def screen_single_stock(
             actual_date=actual_date, error="数据不足(少于10条)",
         )
 
+    indicators = _calc_indicators(df)
+    return screen_with_indicators(
+        indicators=indicators,
+        index=index,
+        symbol=symbol,
+        name=name,
+        target_date=target_date,
+        actual_date=actual_date,
+        enabled_patterns=enabled_patterns,
+        price_limit=price_limit,
+    )
+
+def screen_with_indicators(
+    indicators: dict[str, np.ndarray],
+    index: int,
+    symbol: str,
+    name: str,
+    target_date: str,
+    actual_date: str,
+    enabled_patterns: tuple[PatternType, ...],
+    price_limit: float = 0.0,
+) -> BrickPatternMatch:
+    """基于已经预计算好的指标执行单日定式检测。
+
+    与 ``screen_single_stock`` 行为完全一致，但不会重复调用 ``_calc_indicators``，
+    适合在「同一只股票多日扫描」的回测场景中复用，性能可提升一个数量级。
+    """
+    close_arr = indicators["close"]
+    if index < 0 or index >= len(close_arr) or len(close_arr) < 10:
+        return BrickPatternMatch(
+            symbol=symbol, name=name, target_date=target_date,
+            actual_date=actual_date, error="数据不足(少于10条)",
+        )
+
     # 价格过滤
-    close_val = float(df.iloc[index]["close"])
+    close_val = float(close_arr[index])
     if price_limit > 0 and close_val > price_limit:
         return BrickPatternMatch(
             symbol=symbol, name=name, target_date=target_date,
             actual_date=actual_date,
             prerequisite_detail=f"股价{close_val:.2f}超过限制{price_limit:.0f}",
         )
-
-    # 计算指标
-    indicators = _calc_indicators(df)
 
     # ── 步骤1：必备前提检测 ──
     prereq_passed, prereq_detail = check_prerequisites(indicators, index)
