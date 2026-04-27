@@ -15,6 +15,7 @@ class SubChartType(str, Enum):
     BRICK = "brick"
     KDJ = "kdj"
     NEEDLE20 = "needle20"
+    MACD = "macd"
 
 
 SUB_CHART_META = {
@@ -22,6 +23,7 @@ SUB_CHART_META = {
     SubChartType.BRICK:    {"label": "砖型差值", "order": 1},
     SubChartType.KDJ:      {"label": "KDJ",      "order": 2},
     SubChartType.NEEDLE20: {"label": "单针下20", "order": 3},
+    SubChartType.MACD:     {"label": "MACD",     "order": 4},
 }
 
 DEFAULT_SUB_CHARTS = [SubChartType.VOLUME, SubChartType.BRICK, SubChartType.KDJ]
@@ -35,16 +37,19 @@ class PlotBundle:
     brick_axis: DateAxisItem
     kdj_axis: DateAxisItem
     needle20_axis: DateAxisItem
+    macd_axis: DateAxisItem
     price_viewbox: StockChartViewBox
     vol_viewbox: StockChartViewBox
     brick_viewbox: StockChartViewBox
     kdj_viewbox: StockChartViewBox
     needle20_viewbox: StockChartViewBox
+    macd_viewbox: StockChartViewBox
     price_plot: pg.PlotWidget
     vol_plot: pg.PlotWidget
     brick_plot: pg.PlotWidget
     kdj_plot: pg.PlotWidget
     needle20_plot: pg.PlotWidget
+    macd_plot: pg.PlotWidget
 
 
 @dataclass
@@ -104,12 +109,23 @@ class Needle20Items:
 
 
 @dataclass
+class MacdItems:
+    """MACD 面板的图形项集合。"""
+    diff_curve: pg.PlotDataItem
+    dea_curve: pg.PlotDataItem
+    zero_line: pg.InfiniteLine
+    v_line: pg.InfiniteLine
+    label: QtWidgets.QLabel
+
+
+@dataclass
 class SubChartSeparators:
     """副图与主图之间的分隔线。"""
     vol_separator: QtWidgets.QWidget
     brick_separator: QtWidgets.QWidget
     kdj_separator: QtWidgets.QWidget
     needle20_separator: QtWidgets.QWidget
+    macd_separator: QtWidgets.QWidget
 
 
 @dataclass
@@ -136,20 +152,23 @@ def create_plot_bundle(owner) -> PlotBundle:
     brick_axis = DateAxisItem([], orientation="bottom")
     kdj_axis = DateAxisItem([], orientation="bottom")
     needle20_axis = DateAxisItem([], orientation="bottom")
+    macd_axis = DateAxisItem([], orientation="bottom")
 
     price_viewbox = StockChartViewBox(owner)
     vol_viewbox = StockChartViewBox(owner)
     brick_viewbox = StockChartViewBox(owner)
     kdj_viewbox = StockChartViewBox(owner)
     needle20_viewbox = StockChartViewBox(owner)
+    macd_viewbox = StockChartViewBox(owner)
 
     price_plot = pg.PlotWidget(axisItems={"bottom": price_axis}, viewBox=price_viewbox)
     vol_plot = pg.PlotWidget(axisItems={"bottom": vol_axis}, viewBox=vol_viewbox)
     brick_plot = pg.PlotWidget(axisItems={"bottom": brick_axis}, viewBox=brick_viewbox)
     kdj_plot = pg.PlotWidget(axisItems={"bottom": kdj_axis}, viewBox=kdj_viewbox)
     needle20_plot = pg.PlotWidget(axisItems={"bottom": needle20_axis}, viewBox=needle20_viewbox)
+    macd_plot = pg.PlotWidget(axisItems={"bottom": macd_axis}, viewBox=macd_viewbox)
 
-    for plot in (price_plot, vol_plot, brick_plot, kdj_plot, needle20_plot):
+    for plot in (price_plot, vol_plot, brick_plot, kdj_plot, needle20_plot, macd_plot):
         configure_plot_widget(plot)
         plot_item = plot.getPlotItem()
         plot_item.hideButtons()
@@ -164,6 +183,7 @@ def create_plot_bundle(owner) -> PlotBundle:
     brick_plot.setXLink(price_plot)
     kdj_plot.setXLink(price_plot)
     needle20_plot.setXLink(price_plot)
+    macd_plot.setXLink(price_plot)
 
     return PlotBundle(
         price_axis=price_axis,
@@ -171,16 +191,19 @@ def create_plot_bundle(owner) -> PlotBundle:
         brick_axis=brick_axis,
         kdj_axis=kdj_axis,
         needle20_axis=needle20_axis,
+        macd_axis=macd_axis,
         price_viewbox=price_viewbox,
         vol_viewbox=vol_viewbox,
         brick_viewbox=brick_viewbox,
         kdj_viewbox=kdj_viewbox,
         needle20_viewbox=needle20_viewbox,
+        macd_viewbox=macd_viewbox,
         price_plot=price_plot,
         vol_plot=vol_plot,
         brick_plot=brick_plot,
         kdj_plot=kdj_plot,
         needle20_plot=needle20_plot,
+        macd_plot=macd_plot,
     )
 
 def _create_separator() -> QtWidgets.QWidget:
@@ -190,7 +213,7 @@ def _create_separator() -> QtWidgets.QWidget:
     return sep
 
 
-def create_chart_layout(owner, price_plot, vol_plot, brick_plot, kdj_plot, needle20_plot):
+def create_chart_layout(owner, price_plot, vol_plot, brick_plot, kdj_plot, needle20_plot, macd_plot):
     chart_container = QtWidgets.QWidget()
     chart_layout = QtWidgets.QVBoxLayout(chart_container)
     chart_layout.setContentsMargins(0, 0, 16, 0)
@@ -214,6 +237,10 @@ def create_chart_layout(owner, price_plot, vol_plot, brick_plot, kdj_plot, needl
     chart_layout.addWidget(needle20_sep, 0)
     chart_layout.addWidget(needle20_plot, 1)
 
+    macd_sep = _create_separator()
+    chart_layout.addWidget(macd_sep, 0)
+    chart_layout.addWidget(macd_plot, 1)
+
     date_bar_items = _create_date_bar()
     chart_layout.addWidget(date_bar_items.date_bar, 0)
 
@@ -222,6 +249,7 @@ def create_chart_layout(owner, price_plot, vol_plot, brick_plot, kdj_plot, needl
         brick_separator=brick_sep,
         kdj_separator=kdj_sep,
         needle20_separator=needle20_sep,
+        macd_separator=macd_sep,
     )
 
     layout = QtWidgets.QVBoxLayout(owner)
@@ -447,6 +475,33 @@ def create_needle20_items(needle20_plot) -> Needle20Items:
         long_curve=long_curve,
         low_line=low_line,
         high_line=high_line,
+        v_line=v_line,
+        label=label,
+    )
+
+
+def create_macd_items(macd_plot) -> MacdItems:
+    diff_curve = macd_plot.plot(pen=pg.mkPen((255, 255, 255), width=1.5), name="DIFF")
+    dea_curve = macd_plot.plot(pen=pg.mkPen((255, 215, 0), width=1.5), name="DEA")
+
+    zero_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen((120, 120, 120), width=1, style=QtCore.Qt.DashLine))
+    macd_plot.addItem(zero_line, ignoreBounds=True)
+    zero_line.setPos(0)
+
+    v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen((200, 200, 200), width=1))
+    macd_plot.addItem(v_line, ignoreBounds=True)
+    v_line.hide()
+
+    label = QtWidgets.QLabel(macd_plot)
+    label.setStyleSheet("color: white; background: transparent; border: none; padding: 0px; margin: 0px;")
+    label.setTextFormat(QtCore.Qt.RichText)
+    label.move(40, 2)
+    label.hide()
+
+    return MacdItems(
+        diff_curve=diff_curve,
+        dea_curve=dea_curve,
+        zero_line=zero_line,
         v_line=v_line,
         label=label,
     )

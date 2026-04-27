@@ -1,7 +1,7 @@
 # StockViewer 项目指引
 
 ## 项目定位
-PySide6 + pyqtgraph 本地股票日线查看器，支持通达信选股、模拟交易训练、数据采集分析。
+PySide6 + pyqtgraph 本地股票日线查看器，支持通达信选股、砖形图定式选股、模拟交易训练、数据采集分析。
 
 ## 启动方式
 ```bash
@@ -12,17 +12,18 @@ python -m run  # 或 python run.py
 
 | 页面 | 源文件 | 详细文档 |
 |------|--------|----------|
-| 看盘页 | `app/pages/market_page.py` | [.claude/pages/market_page.md](.claude/pages/market_page.md) — 股票搜索、四联图、数据更新 |
+| 看盘页 | `app/pages/market_page.py` | [.claude/pages/market_page.md](.claude/pages/market_page.md) — 股票搜索、图表、子图切换、数据更新 |
 | 模板页 | `app/pages/template_page.py` | [.claude/pages/template_page.md](.claude/pages/template_page.md) — 模板 CRUD |
 | 设置页 | `app/pages/settings_page.py` | [.claude/pages/settings_page.md](.claude/pages/settings_page.md) — Token、图表配置、批量更新 |
 | 选股页 | `app/pages/screening_page.py` | [.claude/pages/screening_page.md](.claude/pages/screening_page.md) — 两态选股+模拟交易(T+1) |
 | 统计页 | `app/pages/stats_page.py` | [.claude/pages/stats_page.md](.claude/pages/stats_page.md) — API数据采集+持仓分析+收益图表 |
+| 定式验证页 | `app/pages/brick_pattern_page.py` | [.claude/pages/brick_pattern_page.md](.claude/pages/brick_pattern_page.md) — 砖形图定式批量验证 |
 
 ## 模块文档
 
 | 模块 | 详细文档 | 核心文件 |
 |------|----------|----------|
-| 四联图系统 | [.claude/modules/chart_system.md](.claude/modules/chart_system.md) | `app/widgets.py` + chart_*.py |
+| 图表系统 | [.claude/modules/chart_system.md](.claude/modules/chart_system.md) | `app/widgets.py` + chart_*.py |
 | 通达信表达式 | [.claude/modules/expression_system.md](.claude/modules/expression_system.md) | `core/expression/` |
 | 选股系统 | [.claude/modules/screening_system.md](.claude/modules/screening_system.md) | `core/screening/` |
 | 模拟交易 | [.claude/modules/trade_simulator.md](.claude/modules/trade_simulator.md) | `core/trade/simulator.py` |
@@ -39,13 +40,15 @@ python -m run  # 或 python run.py
 | 改模板管理界面 | `app/pages/template_page.py` | pages/template_page.md |
 | 改设置页 | `app/pages/settings_page.py` | pages/settings_page.md |
 | 改统计页/数据采集 | `app/pages/stats_page.py` | pages/stats_page.md |
-| 改四联图/hover/十字线 | `app/widgets.py` | modules/chart_system.md |
-| 改图表布局/面板结构 | `app/chart_layout.py` | modules/chart_system.md |
+| 改定式验证页 | `app/pages/brick_pattern_page.py` | pages/brick_pattern_page.md |
+| 改图表主组件/hover/十字线 | `app/widgets.py` | modules/chart_system.md |
+| 改图表布局/面板/子图切换 | `app/chart_layout.py` | modules/chart_system.md |
 | 改K线/砖型图元绘制 | `app/chart_primitives.py` | modules/chart_system.md |
-| 改指标计算(EMA/KDJ/Brick) | `app/chart_indicators.py` | modules/chart_system.md |
+| 改指标计算(EMA/KDJ/Brick/MACD/Needle20) | `app/chart_indicators.py` | modules/chart_system.md |
 | 改信息浮窗/标签HTML | `app/chart_overlays.py` | modules/chart_system.md |
 | 改通达信条件解析 | `core/expression/` | modules/expression_system.md |
-| 改选股引擎/缓存 | `core/screening/` | modules/screening_system.md |
+| 改选股引擎/缓存 | `core/screening/engine.py`, `service.py` | modules/screening_system.md |
+| 改砖形图定式引擎 | `core/screening/brick_pattern_engine.py` | modules/screening_system.md |
 | 改模板服务 | `core/templates/service.py` | modules/indicators.md |
 | 改模拟交易逻辑 | `core/trade/simulator.py` | modules/trade_simulator.md |
 | 改数据加载/更新 | `app/data_loader.py`, `app/history_updater.py` | modules/data_layer.md |
@@ -53,14 +56,20 @@ python -m run  # 或 python run.py
 | 改数据采集/API请求 | `app/stats/` | pages/stats_page.md |
 | 改股票池管理 | `core/stock_pool/manager.py` | modules/screening_system.md |
 
-## 四联图指标速览
+## 图表指标速览
 
-| 面板 | 占比 | 计算 |
+### 价格面板（固定）
+蜡烛图 + 趋势EMA(EMA(C,10),10) + 多空MA均值
+
+### 可选子图面板
+
+| 面板 | 默认 | 计算 |
 |------|------|------|
-| K线 | 3/6 | 蜡烛图 + 趋势EMA(EMA(C,10),10) + 多空MA均值 |
-| 成交额 | 1/6 | 红绿柱(亿) |
-| 砖型差值 | 1/6 | HHV/LLV(4)+SMA多步 |
-| KDJ | 1/6 | RSV→SMA→K,D,J=3K-2D |
+| 成交额 | ✅ | 红绿柱(亿) |
+| 砖型差值 | ✅ | HHV/LLV(4)+SMA多步 |
+| KDJ | ✅ | RSV→SMA→K,D,J=3K-2D |
+| 单针下20 | — | 短期(3)/中期(14)/长期(20) LLV/HHV 百分比 |
+| MACD | — | EMA(12)-EMA(26)→DIFF/DEA/MACD柱 |
 
 ## 交易知识库（交易相关问题必读）
 
@@ -86,6 +95,7 @@ python -m run  # 或 python run.py
 
 ## 数据约定
 - `volume` = 成交额(万元)，展示时换算为亿
+- `turnover_rate` = 换手率(%)，增量更新时从 daily_basic 接口获取，支持缺失值回填
 - 看盘页X轴：30~150天(可配置)；选股页：固定90天
 - `symbol` 补齐6位，`date` 转datetime升序排列
 - 数据文件：`stocklist.csv`、`stock_daily_data/{symbol}.csv`、`templates.json`、`screening_cache/screening_cache.json`
@@ -97,3 +107,4 @@ python -m run  # 或 python run.py
 3. hover 联动是交互核心（`_on_mouse_moved()`）
 4. `start_worker()` 统一线程管理
 5. `screen_with_cache()` 缓存+断点续选
+6. 子图切换不重建面板 —— 只控制 show/hide + 重新链接 X 轴

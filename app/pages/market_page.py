@@ -158,7 +158,8 @@ class MarketPage(QtWidgets.QWidget):
         self.chart.set_visible_sub_charts(selected)
         from PySide6.QtCore import QSettings
         settings = QSettings()
-        settings.setValue("chart/visible_sub_charts", ",".join(t.value for t in selected))
+        settings.setValue("chart/visible_sub_charts", ",".join(str(t) for t in selected))
+        settings.sync()
 
     @staticmethod
     def _load_sub_chart_selection() -> list[SubChartType] | None:

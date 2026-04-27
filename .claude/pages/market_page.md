@@ -1,10 +1,10 @@
 # 看盘页 MarketPage
 
-**文件：** `app/pages/market_page.py` (~569 行)
+**文件：** `app/pages/market_page.py` (~365 行)
 
 ## 页面定位
 
-主力页面，左右分栏布局（QSplitter 1:3）。左侧为搜索+股票列表，右侧为 StockChartWidget 四联图。
+主力页面，左右分栏布局（QSplitter 1:3）。左侧为搜索+股票列表+子图选择器，右侧为 StockChartWidget 图表。
 
 ## 类结构
 
@@ -44,16 +44,26 @@
 | `start_update_all()` | 启动全量更新后台任务 |
 | `persist_page_state()` | 关闭时持久化最后选中股票代码 |
 
+## 子图选择器
+
+通过 `SubChartSelector` 组件，用户可动态切换图表可见子图（成交额/砖型差值/KDJ/单针下20/MACD）。
+
+| 方法 | 说明 |
+|------|------|
+| `_on_sub_chart_changed(selected)` | 子图选择变化回调，更新图表并持久化选择 |
+| `_load_sub_chart_selection()` | 从 QSettings 加载持久化的子图选择 |
+
 ## 核心链路
 
 ```
 搜索 → apply_filter() → on_select() → _load_symbol() → chart.set_daily() → onHover() → 状态栏
 更新 → start_update_all() → UpdateWorker(线程) → 进度弹窗
+子图切换 → SubChartSelector → _on_sub_chart_changed() → chart.set_visible_sub_charts()
 ```
 
 ## 左侧面板 UI 结构
 
-1. 更新全部股票按钮
+1. 更新全部股票按钮 + 子图选择器按钮
 2. 搜索框：支持代码/名称/拼音首字母/行业/地区，空格分词多条件 AND
 3. 全部股票表（3列：代码、名称、行业）
 
@@ -63,6 +73,8 @@
 - `HistoryUpdater` — 批量更新股票日线
 - `TushareClient` — 数据源客户端
 - `StockChartWidget` — K线图表组件
+- `SubChartSelector` — 子图选择下拉按钮
+- `SubChartType` — 子图类型枚举
 - `UpdateProgressDialog` — 进度弹窗
 - `load_stock_list / load_daily_csv` — 数据加载
 - `start_worker` — 通用线程启动工具

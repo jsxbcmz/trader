@@ -7,9 +7,9 @@
 | `core/data/repository.py` | ~50 | 股票数据访问（StockRepository） |
 | `core/data/base_json_repository.py` | ~40 | JSON 文件读写基类 |
 | `core/data/time_index.py` | ~100 | 时间索引定位 + 回测快速索引 |
-| `app/data_loader.py` | ~142 | CSV 读写和规范化 |
-| `app/history_updater.py` | ~208 | 历史数据增量更新 |
-| `app/tushare_client.py` | - | Tushare API 客户端 |
+| `app/data_loader.py` | ~150 | CSV 读写和规范化 |
+| `app/history_updater.py` | ~321 | 历史数据增量更新（含限流+换手率回填） |
+| `app/tushare_client.py` | ~57 | Tushare API 客户端 |
 
 ---
 
@@ -79,12 +79,18 @@
 - `UpdateResult` — 单只更新结果
 - `BatchUpdateSummary` — 批量更新汇总
 
+### RateLimiter
+API 调用限流器（默认 450 次/60 秒），`acquire()` 在限额内直接通过，超限时自动 sleep 等待。
+
 ### HistoryUpdater
 
 | 方法 | 说明 |
 |------|------|
-| `_map_remote_to_local(df_remote)` | AKShare 中文列名 → 本地标准列名 |
-| `update_symbol(symbol, end_date, full_refresh)` | 增量更新单只股票 |
+| `_map_tushare_daily_to_local(df_remote, df_basic)` | Tushare 日线+daily_basic → 本地标准格式（含换手率合并） |
+| `_get_symbol_meta(symbol)` | 从 stocklist.csv 获取股票 ts_code 等元信息 |
+| `_needs_turnover_rate_backfill(local_df)` | 检查本地数据是否缺少换手率，需要回填 |
+| `_backfill_turnover_rate(symbol, meta, local_df)` | 回填本地数据中缺失的换手率 |
+| `update_symbol(symbol, end_date, full_refresh)` | 增量更新单只股票（含换手率回填） |
 | `update_all_symbols(progress_callback, stop_checker)` | 顺序遍历全部股票，逐只更新 |
 
 **依赖：** `app.tushare_client.TushareClient`, `app.data_loader`
@@ -99,6 +105,6 @@
 | 路径 | 说明 |
 |------|------|
 | `stocklist.csv` | 股票列表（ts_code, symbol, name, area, industry） |
-| `stock_daily_data/{symbol}.csv` | 个股日线（date, open, high, low, close, volume） |
+| `stock_daily_data/{symbol}.csv` | 个股日线（date, open, high, low, close, volume, turnover_rate） |
 | `templates.json` | 选股模板存储 |
 | `screening_cache/screening_cache.json` | 选股缓存 |

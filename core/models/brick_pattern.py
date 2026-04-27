@@ -1,6 +1,7 @@
 """砖形图交易定式选股模型。
 
 定义三种交易定式类型、匹配结果、风险过滤结果等数据结构。
+V2：定式专属(70分) + 通用质量(30分) + 风险扣分，S/A/B/C/D 五级评分。
 """
 
 from __future__ import annotations
@@ -22,8 +23,84 @@ class RiskFilterType(Enum):
     """风险过滤规则类型"""
 
     LIMIT_DOWN = "一字板跌停"
-    LONG_SIDEWAYS = "横盘时间过长"
-    HEAVY_VOLUME_DROP = "放量大阴线"
+    HEAVY_VOLUME_DROP = "高位放量大阴线"
+    TREND_BROKEN = "短趋势跌破多空线"
+    CHASE_HIGH = "追高离心"
+    GREEN_VOLUME_UP = "绿砖期放量"
+    PEAK_VOLUME = "天量见顶"
+    TREND_EXHAUST = "趋势衰竭"
+    FAKE_SIDEWAYS = "假横盘"
+
+
+@dataclass(frozen=True)
+class ScoreBreakdown:
+    """评分分解详情"""
+
+    specific_score: float = 0.0
+    specific_items: dict[str, float] = field(default_factory=dict)
+
+    common_score: float = 0.0
+    common_items: dict[str, float] = field(default_factory=dict)
+
+    risk_penalty: float = 0.0
+    risk_items: dict[str, float] = field(default_factory=dict)
+
+    @property
+    def base_score(self) -> float:
+        return self.specific_score + self.common_score
+
+    @property
+    def final_score(self) -> float:
+        return max(0.0, self.base_score + self.risk_penalty)
+
+    @property
+    def grade(self) -> str:
+        s = self.final_score
+        if s >= 85:
+            return "S"
+        if s >= 70:
+            return "A"
+        if s >= 55:
+            return "B"
+        if s >= 40:
+            return "C"
+        return "D"
+
+    @property
+    def risk_level(self) -> str:
+        p = self.risk_penalty
+        if p == 0:
+            return "无风险"
+        if p >= -15:
+            return "低风险"
+        if p >= -30:
+            return "中风险"
+        return "高风险"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "specific_score": self.specific_score,
+            "specific_items": dict(self.specific_items),
+            "common_score": self.common_score,
+            "common_items": dict(self.common_items),
+            "risk_penalty": self.risk_penalty,
+            "risk_items": dict(self.risk_items),
+            "base_score": self.base_score,
+            "final_score": self.final_score,
+            "grade": self.grade,
+            "risk_level": self.risk_level,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> ScoreBreakdown:
+        return cls(
+            specific_score=d.get("specific_score", 0.0),
+            specific_items=d.get("specific_items", {}),
+            common_score=d.get("common_score", 0.0),
+            common_items=d.get("common_items", {}),
+            risk_penalty=d.get("risk_penalty", 0.0),
+            risk_items=d.get("risk_items", {}),
+        )
 
 
 @dataclass(frozen=True)
@@ -34,6 +111,7 @@ class PatternMatchDetail:
     matched: bool = False
     description: str = ""
     score: float = 0.0
+    score_breakdown: ScoreBreakdown | None = None
     extra: dict[str, Any] = field(default_factory=dict)
 
 
@@ -44,6 +122,7 @@ class RiskFilterDetail:
     filter_type: RiskFilterType
     triggered: bool = False
     description: str = ""
+    penalty: float = 0.0
     extra: dict[str, Any] = field(default_factory=dict)
 
 
@@ -67,6 +146,10 @@ class BrickPatternMatch:
     risk_rejected: bool = False
     risk_reason: str = ""
 
+    final_score: float = 0.0
+    grade: str = ""
+    score_breakdown: ScoreBreakdown | None = None
+
     error: str = ""
 
     @property
@@ -82,10 +165,12 @@ class BrickPatternMatch:
             return f"错误: {self.error}"
         if not self.prerequisite_passed:
             return f"前提不满足: {self.prerequisite_detail}"
+        if self.final_matched:
+            grade_str = f" [{self.grade}级]" if self.grade else ""
+            score_str = f" {self.final_score:.0f}分" if self.final_score > 0 else ""
+            return f"命中: {self.matched_pattern}{score_str}{grade_str}"
         if self.risk_rejected:
             return f"风险过滤: {self.risk_reason}"
-        if self.final_matched:
-            return f"命中: {self.matched_pattern}"
         return "未命中任何定式"
 
 

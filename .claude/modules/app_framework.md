@@ -4,10 +4,10 @@
 
 | 文件 | 行数 | 职责 |
 |------|------|------|
-| `app/main_window.py` | ~165 | 主窗口，6页面切换+信号中枢 |
-| `app/services/settings_service.py` | ~96 | QSettings 持久化 |
-| `app/components/settings_form.py` | ~41 | 设置表单复用组件 |
-| `app/dialogs/template_editor_dialog.py` | - | 模板编辑弹窗 |
+| `app/main_window.py` | ~159 | 主窗口，6页面切换+信号中枢 |
+| `app/services/settings_service.py` | ~116 | QSettings 持久化 |
+| `app/components/settings_form.py` | ~40 | 设置表单复用组件 |
+| `app/dialogs/template_editor_dialog.py` | ~75 | 模板编辑弹窗 |
 | `app/utils/thread_manager.py` | ~47 | 后台线程启动工具 |
 | `app/stats/` | - | 数据采集统计子系统 |
 | `app/main.py` | - | 应用入口 |
@@ -75,13 +75,14 @@ marketPage.updateRunningChanged → _on_update_running_changed()
 |------|------|
 | `load() -> AppSettings` | 读取（含边界修正） |
 | `save(settings) -> AppSettings` | 正规化后写入 |
-| `validate_settings(min, max)` | 校验规则 |
+| `validate_settings(token, min, max)` | 校验规则 |
 | `normalize_settings(...)` | 类型转换+校验+构造 |
 | `get_last_selected_symbol()` | 读取上次选中代码 |
 | `save_last_selected_symbol(symbol)` | 持久化代码（补零6位） |
+| `get_tushare_token()` | 读取 Tushare Token |
 | `get_chart_limits()` | 返回 (min, max) |
 
-**存储 Key：** `chart/min_visible_days`, `chart/max_visible_days`, `last_selected_symbol`
+**存储 Key：** `tushare_token`, `chart/min_visible_days`, `chart/max_visible_days`, `last_selected_symbol`
 
 ---
 

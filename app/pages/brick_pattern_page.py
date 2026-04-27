@@ -1,7 +1,7 @@
-"""砖形图交易定式批量验证页面。
+"""砖形图交易定式批量验证页面 V2。
 
 独立页面：预填充文档中的案例数据，支持批量验证和手动添加，
-展示每条数据的验证结论（是否符合定式、符合哪个、匹配度）。
+展示每条数据的验证结论（定式匹配、V2评分等级、评分分解）。
 """
 
 from __future__ import annotations
@@ -14,49 +14,74 @@ from app.data_loader import load_daily_csv
 from app.widgets import StockChartWidget
 from core.data.repository import StockRepository
 from core.data.time_index import locate_time_index
-from core.models.brick_pattern import PatternType
+from core.models.brick_pattern import PatternType, ScoreBreakdown
 from core.screening.brick_pattern_engine import (
     _calc_indicators,
     check_prerequisites,
+    compute_common_quality_score,
+    compute_risk_penalty,
     detect_n_shape_jump,
     detect_sideways_jump,
     detect_uptrend_continue,
-    filter_heavy_volume_drop,
-    filter_limit_down,
-    filter_long_sideways,
 )
 
 # ── 文档中的默认案例数据 ──────────────────────────────────────
-# (代码, 日期YYYYMMDD, 期望定式)
 DEFAULT_CASES: list[tuple[str, str, str]] = [
     # N型起跳
     ("002444", "20251231", "N型起跳"),
-    ("002766", "20251231", "N型起跳"),
     ("600693", "20241225", "N型起跳"),
     ("000833", "20241105", "N型起跳"),
     ("002792", "20251124", "N型起跳"),
+    ("600366", "20250806", "N型起跳"),
+    ("601778", "20260403", "N型起跳"),
     # 横盘起跳
     ("600893", "20260212", "横盘起跳"),
     ("600744", "20260224", "横盘起跳"),
     ("600389", "20250815", "横盘起跳"),
-    ("600366", "20250806", "横盘起跳"),
-    ("600089", "20250929", "横盘起跳"),
-    ("601566", "20251110", "横盘起跳"),
     ("002846", "20250620", "横盘起跳"),
     # 上升波段延续
-    ("600843", "20241023", "上升波段延续"),
     ("600410", "20250811", "上升波段延续"),
     ("600363", "20241029", "上升波段延续"),
     ("002402", "20250916", "上升波段延续"),
+    ("002536", "20260417", "上升波段延续"),
 ]
+
+GRADE_COLORS = {
+    "S": "#D5F5D5",
+    "A": "#F6FFED",
+    "B": "#FFFBE6",
+    "C": "#FFF1E6",
+    "D": "#FFF1F0",
+}
 
 
 def _format_date(raw: str) -> str:
-    """将 YYYYMMDD 转为 YYYY-MM-DD"""
     raw = raw.strip()
     if len(raw) == 8 and raw.isdigit():
         return f"{raw[:4]}-{raw[4:6]}-{raw[6:]}"
     return raw
+
+
+def _build_score_tooltip(breakdown: ScoreBreakdown) -> str:
+    """构建评分分解的tooltip文本"""
+    lines = [f"最终得分: {breakdown.final_score:.0f} ({breakdown.grade}级)"]
+    lines.append(f"基础分: {breakdown.base_score:.0f} = 专属{breakdown.specific_score:.0f} + 通用{breakdown.common_score:.0f}")
+    lines.append("")
+
+    lines.append(f"── 定式专属 ({breakdown.specific_score:.0f}/70) ──")
+    for k, v in breakdown.specific_items.items():
+        lines.append(f"  {k}: {v:+.0f}" if v < 0 else f"  {k}: {v:.0f}")
+
+    lines.append(f"── 通用质量 ({breakdown.common_score:.0f}/30) ──")
+    for k, v in breakdown.common_items.items():
+        lines.append(f"  {k}: {v:.0f}")
+
+    if breakdown.risk_penalty != 0:
+        lines.append(f"── 风险扣分 ({breakdown.risk_penalty:.0f}) ──")
+        for k, v in breakdown.risk_items.items():
+            lines.append(f"  {k}: {v:.0f}")
+
+    return "\n".join(lines)
 
 
 class BrickPatternPage(QtWidgets.QWidget):
@@ -64,7 +89,6 @@ class BrickPatternPage(QtWidgets.QWidget):
 
     statusMessageRequested = QtCore.Signal(str, int)
 
-    # 结果表列定义
     COL_CODE = 0
     COL_DATE = 1
     COL_EXPECTED = 2
@@ -73,7 +97,7 @@ class BrickPatternPage(QtWidgets.QWidget):
     COL_SCORE = 5
     COL_RISK = 6
     COL_DETAIL = 7
-    COLUMN_HEADERS = ["代码", "日期", "期望定式", "前提", "匹配定式", "匹配度", "风险", "详情"]
+    COLUMN_HEADERS = ["代码", "日期", "期望定式", "前提", "匹配定式", "评分", "风险", "详情"]
 
     def __init__(self, root: Path, parent: QtWidgets.QWidget | None = None):
         super().__init__(parent)
@@ -102,7 +126,6 @@ class BrickPatternPage(QtWidgets.QWidget):
 
         header_row.addStretch()
 
-        # 手动添加区域
         header_row.addWidget(QtWidgets.QLabel("代码:"))
         self.add_code_input = QtWidgets.QLineEdit()
         self.add_code_input.setPlaceholderText("如 002444")
@@ -124,7 +147,7 @@ class BrickPatternPage(QtWidgets.QWidget):
         self.add_expected_combo.setFixedWidth(100)
         header_row.addWidget(self.add_expected_combo)
 
-        self.add_btn = QtWidgets.QPushButton("➕ 添加")
+        self.add_btn = QtWidgets.QPushButton("+ 添加")
         self.add_btn.setFixedWidth(70)
         header_row.addWidget(self.add_btn)
 
@@ -133,7 +156,7 @@ class BrickPatternPage(QtWidgets.QWidget):
         # ── 操作按钮栏 ──
         btn_row = QtWidgets.QHBoxLayout()
 
-        self.verify_all_btn = QtWidgets.QPushButton("🔍 批量验证全部")
+        self.verify_all_btn = QtWidgets.QPushButton("批量验证全部")
         self.verify_all_btn.setMinimumHeight(36)
         self.verify_all_btn.setStyleSheet(
             "background-color: #1890FF; color: white; font-weight: bold; font-size: 13px;"
@@ -141,21 +164,20 @@ class BrickPatternPage(QtWidgets.QWidget):
         )
         btn_row.addWidget(self.verify_all_btn)
 
-        self.reset_btn = QtWidgets.QPushButton("🔄 重置为默认")
+        self.reset_btn = QtWidgets.QPushButton("重置为默认")
         self.reset_btn.setMinimumHeight(36)
         btn_row.addWidget(self.reset_btn)
 
-        self.clear_results_btn = QtWidgets.QPushButton("🧹 清空结果")
+        self.clear_results_btn = QtWidgets.QPushButton("清空结果")
         self.clear_results_btn.setMinimumHeight(36)
         btn_row.addWidget(self.clear_results_btn)
 
-        self.delete_selected_btn = QtWidgets.QPushButton("🗑 删除选中行")
+        self.delete_selected_btn = QtWidgets.QPushButton("删除选中行")
         self.delete_selected_btn.setMinimumHeight(36)
         btn_row.addWidget(self.delete_selected_btn)
 
         btn_row.addStretch()
 
-        # 统计标签
         self.stats_label = QtWidgets.QLabel("")
         self.stats_label.setStyleSheet("font-size: 13px; color: #666;")
         btn_row.addWidget(self.stats_label)
@@ -172,14 +194,13 @@ class BrickPatternPage(QtWidgets.QWidget):
         self.table.setAlternatingRowColors(True)
         self.table.verticalHeader().setDefaultSectionSize(28)
 
-        # 列宽
         self.table.setColumnWidth(self.COL_CODE, 70)
         self.table.setColumnWidth(self.COL_DATE, 90)
         self.table.setColumnWidth(self.COL_EXPECTED, 90)
         self.table.setColumnWidth(self.COL_PREREQ, 60)
         self.table.setColumnWidth(self.COL_MATCHED, 90)
-        self.table.setColumnWidth(self.COL_SCORE, 60)
-        self.table.setColumnWidth(self.COL_RISK, 60)
+        self.table.setColumnWidth(self.COL_SCORE, 80)
+        self.table.setColumnWidth(self.COL_RISK, 100)
 
         main_layout.addWidget(self.table, 1)
 
@@ -195,25 +216,21 @@ class BrickPatternPage(QtWidgets.QWidget):
     # ── 数据管理 ─────────────────────────────────────────────
 
     def _load_default_cases(self):
-        """加载默认案例数据到表格"""
         self.table.setRowCount(0)
         for code, date_raw, expected in DEFAULT_CASES:
             self._append_row(code, _format_date(date_raw), expected)
         self._update_stats()
 
     def _append_row(self, code: str, date_str: str, expected: str):
-        """添加一行到表格（仅填充输入列，结果列留空）"""
         row = self.table.rowCount()
         self.table.insertRow(row)
         self.table.setItem(row, self.COL_CODE, QtWidgets.QTableWidgetItem(code.zfill(6)))
         self.table.setItem(row, self.COL_DATE, QtWidgets.QTableWidgetItem(date_str))
         self.table.setItem(row, self.COL_EXPECTED, QtWidgets.QTableWidgetItem(expected))
-        # 结果列先留空
         for col in (self.COL_PREREQ, self.COL_MATCHED, self.COL_SCORE, self.COL_RISK, self.COL_DETAIL):
             self.table.setItem(row, col, QtWidgets.QTableWidgetItem(""))
 
     def _on_add_case(self):
-        """手动添加一条验证数据"""
         code = self.add_code_input.text().strip()
         date_raw = self.add_date_input.text().strip()
 
@@ -230,26 +247,28 @@ class BrickPatternPage(QtWidgets.QWidget):
         self._update_stats()
 
     def _delete_selected(self):
-        """删除选中的行"""
         rows = sorted(set(idx.row() for idx in self.table.selectedIndexes()), reverse=True)
         for row in rows:
             self.table.removeRow(row)
         self._update_stats()
 
     def _clear_results(self):
-        """清空所有行的结果列"""
         for row in range(self.table.rowCount()):
             for col in (self.COL_PREREQ, self.COL_MATCHED, self.COL_SCORE, self.COL_RISK, self.COL_DETAIL):
                 item = self.table.item(row, col)
                 if item:
                     item.setText("")
+                    item.setToolTip("")
                     item.setForeground(QtGui.QColor("#000"))
+            for col in range(self.table.columnCount()):
+                item = self.table.item(row, col)
+                if item:
+                    item.setBackground(QtGui.QColor("#FFF"))
         self._update_stats()
 
     # ── 批量验证 ─────────────────────────────────────────────
 
     def _on_verify_all(self):
-        """批量验证所有行"""
         total = self.table.rowCount()
         if total == 0:
             QtWidgets.QMessageBox.information(self, "提示", "没有待验证的数据")
@@ -258,13 +277,11 @@ class BrickPatternPage(QtWidgets.QWidget):
         self.verify_all_btn.setEnabled(False)
         self.verify_all_btn.setText("验证中...")
 
-        # 用 QTimer 逐行验证，避免阻塞 UI
         self._verify_index = 0
         self._verify_stats = {"pass": 0, "fail": 0, "risk": 0, "error": 0}
         QtCore.QTimer.singleShot(10, self._verify_next_row)
 
     def _verify_next_row(self):
-        """验证当前行，然后调度下一行"""
         row = self._verify_index
         total = self.table.rowCount()
 
@@ -280,24 +297,22 @@ class BrickPatternPage(QtWidgets.QWidget):
         self._verify_index += 1
         self.verify_all_btn.setText(f"验证中... ({self._verify_index}/{total})")
 
-        # 调度下一行
         QtCore.QTimer.singleShot(5, self._verify_next_row)
 
     def _on_verify_complete(self):
-        """全部验证完成"""
         self.verify_all_btn.setEnabled(True)
-        self.verify_all_btn.setText("🔍 批量验证全部")
+        self.verify_all_btn.setText("批量验证全部")
         self._update_stats()
 
         stats = self._verify_stats
         self.statusMessageRequested.emit(
-            f"批量验证完成：✅通过{stats['pass']} ⚠️风险{stats['risk']} "
-            f"❌不符{stats['fail']} ⛔错误{stats['error']}",
+            f"批量验证完成：通过{stats['pass']} 风险{stats['risk']} "
+            f"不符{stats['fail']} 错误{stats['error']}",
             5000,
         )
 
     def _execute_single_verify(self, row: int, code: str, target_date: str):
-        """对单行执行验证并填充结果"""
+        """对单行执行V2验证并填充结果"""
         code = code.zfill(6)
 
         try:
@@ -328,7 +343,7 @@ class BrickPatternPage(QtWidgets.QWidget):
         if not prereq_passed:
             self._set_row_result(
                 row,
-                prereq="❌",
+                prereq="X",
                 matched="--",
                 score="--",
                 risk="--",
@@ -356,7 +371,7 @@ class BrickPatternPage(QtWidgets.QWidget):
 
             self._set_row_result(
                 row,
-                prereq="✅",
+                prereq="OK",
                 matched="无匹配",
                 score="--",
                 risk="--",
@@ -366,48 +381,79 @@ class BrickPatternPage(QtWidgets.QWidget):
             self._verify_stats["fail"] += 1
             return
 
-        best_match = max(matched_results, key=lambda r: r.score)
-        matched_pattern_type = best_match.pattern_type
+        # ── V2 评分：对每个匹配的定式计算完整分数，取最高 ──
+        best_match = None
+        best_breakdown = None
+        best_final = -1.0
+        best_risk_details = []
 
-        # ── 风险过滤 ──
-        risk_results = [
-            filter_limit_down(indicators, index),
-            filter_long_sideways(indicators, index, matched_pattern_type),
-            filter_heavy_volume_drop(indicators, index),
-        ]
+        for match_r in matched_results:
+            specific_score = match_r.score
+            specific_items = match_r.extra.get("specific_items", {})
 
-        triggered_risks = [r for r in risk_results if r.triggered]
+            common_score, common_items = compute_common_quality_score(
+                indicators, index, match_r.pattern_type,
+            )
 
+            risk_penalty, risk_items, risk_details_list = compute_risk_penalty(
+                indicators, index, match_r.pattern_type,
+            )
+
+            breakdown = ScoreBreakdown(
+                specific_score=specific_score,
+                specific_items=specific_items,
+                common_score=common_score,
+                common_items=common_items,
+                risk_penalty=risk_penalty,
+                risk_items=risk_items,
+            )
+
+            if breakdown.final_score > best_final:
+                best_final = breakdown.final_score
+                best_breakdown = breakdown
+                best_match = match_r
+                best_risk_details = risk_details_list
+
+        grade = best_breakdown.grade
+        final_score = best_breakdown.final_score
+        risk_level = best_breakdown.risk_level
+
+        # 评分列显示
+        score_text = f"{final_score:.0f} ({grade})"
+
+        # 风险列显示
+        if best_breakdown.risk_penalty == 0:
+            risk_text = "无风险"
+        else:
+            risk_text = f"{risk_level}({best_breakdown.risk_penalty:.0f})"
+
+        # 详情
         all_matched_names = ", ".join(r.pattern_type.value for r in matched_results)
         detail_parts = [best_match.description]
         if len(matched_results) > 1:
             detail_parts.append(f"同时匹配: {all_matched_names}")
 
+        triggered_risks = [r for r in best_risk_details if r.triggered]
         if triggered_risks:
-            risk_names = ", ".join(r.filter_type.value for r in triggered_risks)
-            risk_details = "; ".join(r.description for r in triggered_risks)
-            detail_parts.append(f"风险: {risk_details}")
+            risk_descs = "; ".join(r.description for r in triggered_risks)
+            detail_parts.append(f"风险: {risk_descs}")
 
-            self._set_row_result(
-                row,
-                prereq="✅",
-                matched=matched_pattern_type.value,
-                score=f"{best_match.score:.0f}",
-                risk=f"⚠️{risk_names}",
-                detail=" | ".join(detail_parts),
-                row_color="#FFFBE6",
-            )
+        row_color = GRADE_COLORS.get(grade, "#FFF")
+
+        self._set_row_result(
+            row,
+            prereq="OK",
+            matched=best_match.pattern_type.value,
+            score=score_text,
+            risk=risk_text,
+            detail=" | ".join(detail_parts),
+            row_color=row_color,
+            breakdown=best_breakdown,
+        )
+
+        if triggered_risks:
             self._verify_stats["risk"] += 1
         else:
-            self._set_row_result(
-                row,
-                prereq="✅",
-                matched=matched_pattern_type.value,
-                score=f"{best_match.score:.0f}",
-                risk="✅通过",
-                detail=" | ".join(detail_parts),
-                row_color="#F6FFED",
-            )
             self._verify_stats["pass"] += 1
 
     # ── 表格辅助 ─────────────────────────────────────────────
@@ -421,21 +467,30 @@ class BrickPatternPage(QtWidgets.QWidget):
         risk: str,
         detail: str,
         row_color: str = "",
+        breakdown: ScoreBreakdown | None = None,
     ):
-        """填充一行的结果列"""
         self.table.item(row, self.COL_PREREQ).setText(prereq)
         self.table.item(row, self.COL_MATCHED).setText(matched)
         self.table.item(row, self.COL_SCORE).setText(score)
         self.table.item(row, self.COL_RISK).setText(risk)
         self.table.item(row, self.COL_DETAIL).setText(detail)
 
-        # 行背景色
         if row_color:
             bg = QtGui.QColor(row_color)
             for col in range(self.table.columnCount()):
                 item = self.table.item(row, col)
                 if item:
                     item.setBackground(bg)
+
+        # 评分列tooltip
+        if breakdown:
+            tooltip = _build_score_tooltip(breakdown)
+            score_item = self.table.item(row, self.COL_SCORE)
+            if score_item:
+                score_item.setToolTip(tooltip)
+            detail_item = self.table.item(row, self.COL_DETAIL)
+            if detail_item:
+                detail_item.setToolTip(tooltip)
 
         # 匹配列颜色
         matched_item = self.table.item(row, self.COL_MATCHED)
@@ -452,8 +507,7 @@ class BrickPatternPage(QtWidgets.QWidget):
                     matched_item.setForeground(QtGui.QColor("#1890FF"))
 
     def _set_row_error(self, row: int, message: str):
-        """填充一行的错误信息"""
-        self.table.item(row, self.COL_PREREQ).setText("⛔")
+        self.table.item(row, self.COL_PREREQ).setText("ERR")
         self.table.item(row, self.COL_MATCHED).setText("--")
         self.table.item(row, self.COL_SCORE).setText("--")
         self.table.item(row, self.COL_RISK).setText("--")
@@ -468,7 +522,6 @@ class BrickPatternPage(QtWidgets.QWidget):
         self._verify_stats["error"] += 1
 
     def _update_stats(self):
-        """更新统计标签"""
         total = self.table.rowCount()
         verified = 0
         for row in range(total):
@@ -480,7 +533,6 @@ class BrickPatternPage(QtWidgets.QWidget):
     # ── 双击弹窗查看图表 ─────────────────────────────────────
 
     def _on_row_double_clicked(self, index: QtCore.QModelIndex):
-        """双击表格行，弹出图表弹窗展示该股票的K线+成交量+砖型图+KDJ"""
         row = index.row()
         code_item = self.table.item(row, self.COL_CODE)
         date_item = self.table.item(row, self.COL_DATE)
@@ -501,10 +553,8 @@ class BrickPatternPage(QtWidgets.QWidget):
             QtWidgets.QMessageBox.warning(self, "提示", f"{code} 数据为空")
             return
 
-        # 加载全量数据（不截取，支持左右拖动查看所有日期）
         df_full = df.copy().reset_index(drop=True)
 
-        # 找到目标日期在全量数据中的位置
         target_index = None
         for i, row_data in df_full.iterrows():
             date_val = row_data["date"]
@@ -524,19 +574,21 @@ class BrickPatternPage(QtWidgets.QWidget):
             )
             return
 
-        # 获取期望定式信息
         expected_item = self.table.item(row, self.COL_EXPECTED)
         expected = expected_item.text().strip() if expected_item else ""
         matched_item = self.table.item(row, self.COL_MATCHED)
         matched = matched_item.text().strip() if matched_item else ""
+        score_item = self.table.item(row, self.COL_SCORE)
+        score_text = score_item.text().strip() if score_item else ""
 
         dialog_title = f"{code} @ {target_date}"
         if expected:
             dialog_title += f"  期望: {expected}"
         if matched and matched not in ("--", "无匹配"):
             dialog_title += f"  匹配: {matched}"
+        if score_text and score_text != "--":
+            dialog_title += f"  {score_text}"
 
-        # 创建弹窗
         dialog = QtWidgets.QDialog(self)
         dialog.setWindowTitle(dialog_title)
         dialog.resize(1100, 700)
@@ -547,7 +599,6 @@ class BrickPatternPage(QtWidgets.QWidget):
         chart = StockChartWidget()
         chart.set_daily(df_full)
 
-        # 初始视图：最右边定位到目标日期，往左显示120个交易日
         half_width = chart._item_half_width
         right_padding = chart._right_view_padding
         x_right = target_index + half_width + right_padding

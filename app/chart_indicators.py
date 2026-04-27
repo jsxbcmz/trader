@@ -30,11 +30,11 @@ def rolling_min(values: np.ndarray, period: int) -> np.ndarray:
 
 
 @njit(cache=True)
-def _tdx_sma_numba(values: np.ndarray, n: int, m: int) -> np.ndarray:
+def _tdx_sma_numba(values: np.ndarray, n: int, m: int, init_val: float) -> np.ndarray:
     """Numba加速的通达信SMA计算"""
     length = len(values)
     out = np.full(length, np.nan, dtype=np.float64)
-    prev = np.nan
+    prev = init_val
     for i in range(length):
         value = values[i]
         if not np.isfinite(value):
@@ -49,10 +49,10 @@ def _tdx_sma_numba(values: np.ndarray, n: int, m: int) -> np.ndarray:
     return out
 
 
-def tdx_sma(values: np.ndarray, n: int, m: int) -> np.ndarray:
+def tdx_sma(values: np.ndarray, n: int, m: int, init_val: float = np.nan) -> np.ndarray:
     """通达信SMA计算 - 使用Numba JIT加速（如果可用）"""
     arr = np.asarray(values, dtype=np.float64)
-    return _tdx_sma_numba(arr, n, m)
+    return _tdx_sma_numba(arr, n, m, init_val)
 
 
 def moving_average(values: np.ndarray, period: int) -> np.ndarray:
@@ -227,15 +227,16 @@ def calc_brick_threshold_price(
     return round(threshold, 2)
 
 
-def compute_kdj_indicator(high: np.ndarray, low: np.ndarray, close: np.ndarray):
-    hhv9 = rolling_max(high, 9)
-    llv9 = rolling_min(low, 9)
-    span = hhv9 - llv9
+def compute_kdj_indicator(high: np.ndarray, low: np.ndarray, close: np.ndarray,
+                          n: int = 5, m1: int = 3, m2: int = 3):
+    hhv = rolling_max(high, n)
+    llv = rolling_min(low, n)
+    span = hhv - llv
     safe_span = np.where(np.abs(span) < 1e-12, np.nan, span)
 
-    rsv = (close - llv9) / safe_span * 100.0
-    k = tdx_sma(rsv, 3, 1)
-    d = tdx_sma(k, 3, 1)
+    rsv = (close - llv) / safe_span * 100.0
+    k = tdx_sma(rsv, m1, 1, init_val=50.0)
+    d = tdx_sma(k, m2, 1, init_val=50.0)
     j = 3.0 * k - 2.0 * d
 
     return {
@@ -243,6 +244,19 @@ def compute_kdj_indicator(high: np.ndarray, low: np.ndarray, close: np.ndarray):
         "d": d,
         "j": j,
     }
+
+
+def compute_macd_indicator(close: np.ndarray):
+    diff = ema(close, 12) - ema(close, 26)
+    dea = ema(diff, 9)
+    macd = 2.0 * (diff - dea)
+    cross_up = np.zeros(len(diff), dtype=bool)
+    cross_down = np.zeros(len(diff), dtype=bool)
+    for i in range(1, len(diff)):
+        cross_up[i] = diff[i - 1] < 0 and diff[i] >= 0
+        cross_down[i] = diff[i - 1] > 0 and diff[i] <= 0
+    return {"diff": diff, "dea": dea, "macd": macd,
+            "cross_up": cross_up, "cross_down": cross_down}
 
 
 def compute_needle20_indicator(high: np.ndarray, low: np.ndarray, close: np.ndarray):
