@@ -34,7 +34,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, root: Path):
         super().__init__()
         self.setWindowTitle("StockViewer")
-        self.resize(1200, 800)
+        self.resize(1400, 950)
         self.root = root
         self.settingsService = SettingsService()
 

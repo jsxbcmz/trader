@@ -13,6 +13,7 @@ env/
 build/
 dist/
 stock_daily_data/
+industry_daily_data/
 screening_cache/
 output/
 *.spec

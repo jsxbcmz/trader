@@ -185,6 +185,7 @@ class StockChartWidget(QtWidgets.QWidget):
     DEFAULT_MAX_VISIBLE_DAYS = 150
 
     onHover = QtCore.Signal(dict)
+    visibleDateRangeChanged = QtCore.Signal(str, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1058,6 +1059,10 @@ class StockChartWidget(QtWidgets.QWidget):
         self._last_visible_range_indices = visible_indices
 
         left, right = visible_indices
+        if self._dates:
+            d0 = self._dates[max(0, left)]
+            d1 = self._dates[min(right, len(self._dates) - 1)]
+            self.visibleDateRangeChanged.emit(d0, d1)
         visible_low = self._low_values[left:right + 1]
         visible_high = self._high_values[left:right + 1]
         y_range = padded_min_max(visible_low, visible_high)

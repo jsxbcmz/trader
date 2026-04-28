@@ -6,7 +6,19 @@ from pathlib import Path
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from core.data.repository import StockRepository
+from core.data.time_index import locate_time_index
+from core.models.brick_pattern import ScoreBreakdown
 from core.models.trade import TradeAction
+from core.screening.brick_pattern_engine import (
+    _calc_indicators,
+    check_prerequisites,
+    compute_common_quality_score,
+    compute_risk_penalty,
+    detect_n_shape_jump,
+    detect_sideways_jump,
+    detect_uptrend_continue,
+)
 from core.screening.service import ScreeningService
 from core.templates import TemplateService
 from core.trade.simulator import TradeSimulator
@@ -14,6 +26,14 @@ from core.trade.simulator import TradeSimulator
 from ..data_loader import load_daily_csv, load_stock_list
 from ..utils import start_worker
 from ..widgets import ScreeningProgressDialog, StockChartWidget
+
+GRADE_COLORS = {
+    "S": "#D5F5D5",
+    "A": "#F6FFED",
+    "B": "#FFFBE6",
+    "C": "#FFF1E6",
+    "D": "#FFF1F0",
+}
 
 
 class ScreeningWorker(QtCore.QObject):
@@ -77,6 +97,8 @@ class ScreeningPage(QtWidgets.QWidget):
         self._current_df = None
         self._trade_marker_items: list = []
         self._is_at_open: bool = False  # 当前是否处于开盘阶段
+        self._repository = StockRepository(self.root)
+        self._score_results: list[dict] = []
 
         self._setup_ui()
         self._connect_signals()
@@ -191,8 +213,8 @@ class ScreeningPage(QtWidgets.QWidget):
         left_layout.addWidget(result_label)
 
         self.result_table = QtWidgets.QTableWidget()
-        self.result_table.setColumnCount(2)
-        self.result_table.setHorizontalHeaderLabels(["代码", "名称"])
+        self.result_table.setColumnCount(4)
+        self.result_table.setHorizontalHeaderLabels(["代码", "名称", "评分", "原因"])
         self.result_table.horizontalHeader().setStretchLastSection(True)
         self.result_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.result_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -597,16 +619,143 @@ class ScreeningPage(QtWidgets.QWidget):
 
     # ── 结果态操作 ────────────────────────────────────────────
 
+    def _compute_brick_score(self, symbol: str, target_date: str) -> dict:
+        """对单只股票运行砖形图定式评分，返回评分结果字典。"""
+        result: dict = {"score_text": "--", "reason": "--", "breakdown": None, "grade": ""}
+        try:
+            df = self._repository.get_daily_frame(symbol)
+        except FileNotFoundError:
+            return result
+
+        if df.empty or len(df) < 10:
+            return result
+
+        time_result = locate_time_index(df, target_date)
+        if not time_result.matched or time_result.index is None:
+            return result
+
+        index = time_result.index
+        indicators = _calc_indicators(df)
+
+        prereq_passed, prereq_detail = check_prerequisites(indicators, index)
+        if not prereq_passed:
+            result["reason"] = f"前提不满足: {prereq_detail}"
+            return result
+
+        result_n = detect_n_shape_jump(indicators, index)
+        result_sideways = detect_sideways_jump(indicators, index)
+        result_uptrend = detect_uptrend_continue(indicators, index)
+
+        matched_results = [r for r in (result_n, result_sideways, result_uptrend) if r.matched]
+        if not matched_results:
+            result["reason"] = "未命中定式"
+            return result
+
+        best_breakdown = None
+        best_match = None
+        best_final = -1.0
+
+        for match_r in matched_results:
+            specific_score = match_r.score
+            specific_items = match_r.extra.get("specific_items", {})
+
+            common_score, common_items = compute_common_quality_score(
+                indicators, index, match_r.pattern_type,
+            )
+            risk_penalty, risk_items, _ = compute_risk_penalty(
+                indicators, index, match_r.pattern_type,
+            )
+
+            breakdown = ScoreBreakdown(
+                specific_score=specific_score,
+                specific_items=specific_items,
+                common_score=common_score,
+                common_items=common_items,
+                risk_penalty=risk_penalty,
+                risk_items=risk_items,
+            )
+
+            if breakdown.final_score > best_final:
+                best_final = breakdown.final_score
+                best_breakdown = breakdown
+                best_match = match_r
+
+        grade = best_breakdown.grade
+        result["score_text"] = f"{best_breakdown.final_score:.0f} ({grade})"
+        result["reason"] = best_match.pattern_type.value
+        result["breakdown"] = best_breakdown
+        result["grade"] = grade
+        return result
+
+    @staticmethod
+    def _build_score_tooltip(breakdown: ScoreBreakdown) -> str:
+        lines = [f"最终得分: {breakdown.final_score:.0f} ({breakdown.grade}级)"]
+        lines.append(f"基础分: {breakdown.base_score:.0f} = 专属{breakdown.specific_score:.0f} + 通用{breakdown.common_score:.0f}")
+        lines.append("")
+
+        lines.append(f"-- 定式专属 ({breakdown.specific_score:.0f}/70) --")
+        for k, v in breakdown.specific_items.items():
+            lines.append(f"  {k}: {v:+.0f}" if v < 0 else f"  {k}: {v:.0f}")
+
+        lines.append(f"-- 通用质量 ({breakdown.common_score:.0f}/30) --")
+        for k, v in breakdown.common_items.items():
+            lines.append(f"  {k}: {v:.0f}")
+
+        if breakdown.risk_penalty != 0:
+            lines.append(f"-- 风险扣分 ({breakdown.risk_penalty:.0f}) --")
+            for k, v in breakdown.risk_items.items():
+                lines.append(f"  {k}: {v:.0f}")
+
+        return "\n".join(lines)
+
     def _show_results(self):
         """填充股票列表并切换到结果面板"""
+        self._score_results = []
+        for match in self._screening_matches:
+            score_info = self._compute_brick_score(str(match.symbol), self._target_date)
+            self._score_results.append(score_info)
+
+        scored_pairs = list(zip(self._screening_matches, self._score_results))
+        scored_pairs.sort(
+            key=lambda p: (
+                p[1]["breakdown"].final_score if p[1]["breakdown"] else -1
+            ),
+            reverse=True,
+        )
+        self._screening_matches = [p[0] for p in scored_pairs]
+        self._score_results = [p[1] for p in scored_pairs]
+
         self.result_table.setRowCount(len(self._screening_matches))
-        for row, match in enumerate(self._screening_matches):
+        for row, (match, score_info) in enumerate(
+            zip(self._screening_matches, self._score_results)
+        ):
             self.result_table.setItem(
                 row, 0, QtWidgets.QTableWidgetItem(str(match.symbol))
             )
             self.result_table.setItem(
                 row, 1, QtWidgets.QTableWidgetItem(str(match.name or ""))
             )
+
+            score_item = QtWidgets.QTableWidgetItem(score_info["score_text"])
+            self.result_table.setItem(row, 2, score_item)
+
+            reason_item = QtWidgets.QTableWidgetItem(score_info["reason"])
+            self.result_table.setItem(row, 3, reason_item)
+
+            breakdown = score_info.get("breakdown")
+            if breakdown:
+                tooltip = self._build_score_tooltip(breakdown)
+                score_item.setToolTip(tooltip)
+                reason_item.setToolTip(tooltip)
+
+            grade = score_info.get("grade", "")
+            if grade and grade in GRADE_COLORS:
+                bg = QtGui.QColor(GRADE_COLORS[grade])
+                for col in range(self.result_table.columnCount()):
+                    item = self.result_table.item(row, col)
+                    if item:
+                        item.setBackground(bg)
+
         self.result_table.resizeColumnsToContents()
 
         # 初始化模拟交易日期为选股目标日期
