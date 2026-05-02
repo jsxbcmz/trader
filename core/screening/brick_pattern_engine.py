@@ -967,7 +967,8 @@ def compute_risk_penalty(
                     continue
 
                 # 豁免：N型起跳时大阴线在回调阶段（绿砖段）内
-                if pattern_type == PatternType.N_SHAPE_JUMP:
+                # 但跌停级别(≥7%)的暴跌不豁免
+                if pattern_type == PatternType.N_SHAPE_JUMP and change_pct > -0.07:
                     pb_s, _, _ = _find_pullback_phase(brick, index)
                     if pb_s <= day < index and _is_green_brick(brick, day):
                         continue

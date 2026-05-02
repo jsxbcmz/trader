@@ -8,9 +8,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pandas as pd
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from app.data_loader import load_daily_csv
+from app.data_loader import load_daily_csv, load_stock_list
+from app.utils.thread_manager import start_worker
 from app.widgets import StockChartWidget
 from core.data.repository import StockRepository
 from core.data.time_index import locate_time_index
@@ -82,6 +84,411 @@ def _build_score_tooltip(breakdown: ScoreBreakdown) -> str:
             lines.append(f"  {k}: {v:.0f}")
 
     return "\n".join(lines)
+
+
+_PATTERN_DETECTORS = {
+    PatternType.N_SHAPE_JUMP: detect_n_shape_jump,
+    PatternType.SIDEWAYS_JUMP: detect_sideways_jump,
+    PatternType.UPTREND_CONTINUE: detect_uptrend_continue,
+}
+
+DATE_RANGE_START = "2024-01-01"
+DATE_RANGE_END = "2026-03-31"
+
+
+_GRADE_ORDER = {"S": 0, "A": 1, "B": 2, "C": 3, "D": 4}
+
+
+def _is_feature_similar(
+    pattern_type: PatternType,
+    ref_extra: dict,
+    candidate_extra: dict,
+) -> bool:
+    """判断候选结果的特征是否与参考特征相似。
+
+    按定式类型使用不同的关键特征进行范围匹配。
+    """
+    if pattern_type == PatternType.N_SHAPE_JUMP:
+        ref_j = ref_extra.get("kdj_j", 50)
+        cand_j = candidate_extra.get("kdj_j", 50)
+        # J值同区间: <0 / 0~20 / 20~40
+        ref_band = 0 if ref_j < 0 else (1 if ref_j < 20 else 2)
+        cand_band = 0 if cand_j < 0 else (1 if cand_j < 20 else 2)
+        if abs(ref_band - cand_band) > 1:
+            return False
+
+        ref_green = ref_extra.get("max_green_segment", 0)
+        cand_green = candidate_extra.get("max_green_segment", 0)
+        if ref_green != cand_green:
+            return False
+
+        ref_vs = ref_extra.get("vs_short_trend", 0)
+        cand_vs = candidate_extra.get("vs_short_trend", 0)
+        # 价格vs短趋势偏离差距不超过5%
+        if abs(ref_vs - cand_vs) > 5:
+            return False
+
+    elif pattern_type == PatternType.SIDEWAYS_JUMP:
+        ref_sw = ref_extra.get("switches", 0)
+        cand_sw = candidate_extra.get("switches", 0)
+        # 切换次数差距不超过2
+        if abs(ref_sw - cand_sw) > 2:
+            return False
+
+        ref_amp = ref_extra.get("amplitude", 0)
+        cand_amp = candidate_extra.get("amplitude", 0)
+        # 振幅差距不超过5%
+        if abs(ref_amp - cand_amp) > 5:
+            return False
+
+        ref_jump = ref_extra.get("brick_jump", 0)
+        cand_jump = candidate_extra.get("brick_jump", 0)
+        # 跳升幅度比值在 0.5~2.0 之间
+        if ref_jump > 0 and cand_jump > 0:
+            ratio = cand_jump / ref_jump
+            if ratio < 0.5 or ratio > 2.0:
+                return False
+
+    elif pattern_type == PatternType.UPTREND_CONTINUE:
+        ref_red = ref_extra.get("red_count", 0)
+        cand_red = candidate_extra.get("red_count", 0)
+        # 红砖数差距不超过3
+        if abs(ref_red - cand_red) > 3:
+            return False
+
+        ref_green = ref_extra.get("green_count", 0)
+        cand_green = candidate_extra.get("green_count", 0)
+        # 绿砖数差距不超过1
+        if abs(ref_green - cand_green) > 1:
+            return False
+
+        ref_bv = ref_extra.get("brick_val", 0)
+        cand_bv = candidate_extra.get("brick_val", 0)
+        # 砖值差距不超过30
+        if abs(ref_bv - cand_bv) > 30:
+            return False
+
+    return True
+
+
+class SimilarPatternWorker(QtCore.QObject):
+    progressChanged = QtCore.Signal(dict)
+    finished = QtCore.Signal(dict)
+    errorOccurred = QtCore.Signal(str)
+
+    def __init__(
+        self,
+        stock_daily_data_dir: Path,
+        stocklist_csv: Path,
+        pattern_type: PatternType,
+        exclude_symbol: str,
+        exclude_date: str,
+        ref_extra: dict | None = None,
+        ref_grade: str = "",
+    ):
+        super().__init__()
+        self._stock_daily_data_dir = stock_daily_data_dir
+        self._stocklist_csv = stocklist_csv
+        self._pattern_type = pattern_type
+        self._exclude_symbol = exclude_symbol
+        self._exclude_date = exclude_date
+        self._ref_extra = ref_extra or {}
+        self._ref_grade = ref_grade
+        self._cancelled = False
+
+    def cancel(self):
+        self._cancelled = True
+
+    @QtCore.Slot()
+    def run(self):
+        try:
+            stock_df = load_stock_list(self._stocklist_csv)
+            symbols = stock_df["symbol"].tolist()
+            names = dict(zip(stock_df["symbol"], stock_df["name"]))
+            total = len(symbols)
+            detector = _PATTERN_DETECTORS[self._pattern_type]
+            results: list[dict] = []
+            progress_interval = 20
+
+            # 允许的最大评分等级差距：参考等级 ±1 级
+            ref_grade_idx = _GRADE_ORDER.get(self._ref_grade, 2)
+            min_grade_idx = max(0, ref_grade_idx - 1)
+            max_grade_idx = min(4, ref_grade_idx + 1)
+
+            for idx, symbol in enumerate(symbols):
+                if self._cancelled:
+                    break
+
+                try:
+                    df = load_daily_csv(self._stock_daily_data_dir, symbol)
+                except Exception:
+                    if (idx + 1) % progress_interval == 0 or idx + 1 == total:
+                        self.progressChanged.emit({
+                            "current": idx + 1, "total": total,
+                            "symbol": symbol, "found": len(results),
+                        })
+                    continue
+
+                if df.empty or len(df) < 10:
+                    if (idx + 1) % progress_interval == 0 or idx + 1 == total:
+                        self.progressChanged.emit({
+                            "current": idx + 1, "total": total,
+                            "symbol": symbol, "found": len(results),
+                        })
+                    continue
+
+                dates = pd.to_datetime(df["date"], errors="coerce")
+                mask = (dates >= DATE_RANGE_START) & (dates <= DATE_RANGE_END)
+                scan_indices = df.index[mask].tolist()
+
+                if not scan_indices:
+                    if (idx + 1) % progress_interval == 0 or idx + 1 == total:
+                        self.progressChanged.emit({
+                            "current": idx + 1, "total": total,
+                            "symbol": symbol, "found": len(results),
+                        })
+                    continue
+
+                indicators = _calc_indicators(df)
+
+                for i in scan_indices:
+                    if self._cancelled:
+                        break
+
+                    date_val = dates.iloc[i]
+                    if pd.isna(date_val):
+                        continue
+                    date_str = date_val.strftime("%Y-%m-%d")
+
+                    if symbol == self._exclude_symbol and date_str == self._exclude_date:
+                        continue
+
+                    prereq_ok, _ = check_prerequisites(indicators, i)
+                    if not prereq_ok:
+                        continue
+
+                    result = detector(indicators, i)
+                    if not result.matched:
+                        continue
+
+                    if not _is_feature_similar(
+                        self._pattern_type, self._ref_extra, result.extra,
+                    ):
+                        continue
+
+                    common_score, common_items = compute_common_quality_score(
+                        indicators, i, self._pattern_type,
+                    )
+                    risk_penalty, risk_items, risk_details_list = compute_risk_penalty(
+                        indicators, i, self._pattern_type,
+                    )
+                    bd = ScoreBreakdown(
+                        specific_score=result.score,
+                        specific_items=result.extra.get("specific_items", {}),
+                        common_score=common_score,
+                        common_items=common_items,
+                        risk_penalty=risk_penalty,
+                        risk_items=risk_items,
+                    )
+
+                    cand_grade_idx = _GRADE_ORDER.get(bd.grade, 4)
+                    if cand_grade_idx < min_grade_idx or cand_grade_idx > max_grade_idx:
+                        continue
+
+                    if bd.risk_penalty == 0:
+                        risk_text = "无风险"
+                    else:
+                        risk_text = f"{bd.risk_level}({bd.risk_penalty:.0f})"
+
+                    detail_parts = [result.description]
+                    triggered = [r for r in risk_details_list if r.triggered]
+                    if triggered:
+                        risk_descs = "; ".join(r.description for r in triggered)
+                        detail_parts.append(f"风险: {risk_descs}")
+
+                    results.append({
+                        "symbol": symbol,
+                        "name": names.get(symbol, ""),
+                        "date": date_str,
+                        "score": bd.final_score,
+                        "grade": bd.grade,
+                        "risk": risk_text,
+                        "detail": " | ".join(detail_parts),
+                        "tooltip": _build_score_tooltip(bd),
+                    })
+
+                if (idx + 1) % progress_interval == 0 or idx + 1 == total:
+                    self.progressChanged.emit({
+                        "current": idx + 1, "total": total,
+                        "symbol": symbol, "found": len(results),
+                    })
+
+            results.sort(key=lambda r: r["score"], reverse=True)
+            self.finished.emit({
+                "results": results,
+                "pattern_type": self._pattern_type.value,
+            })
+        except Exception as exc:
+            self.errorOccurred.emit(str(exc))
+
+
+class SimilarSearchProgressDialog(QtWidgets.QDialog):
+    stopRequested = QtCore.Signal()
+
+    def __init__(self, pattern_name: str, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(f"查找相似例子 - {pattern_name}")
+        self.resize(420, 160)
+        layout = QtWidgets.QVBoxLayout(self)
+
+        self.progressLabel = QtWidgets.QLabel("准备开始搜索...")
+        self.progressBar = QtWidgets.QProgressBar()
+        self.progressBar.setTextVisible(True)
+        self.statsLabel = QtWidgets.QLabel("已处理: 0  已找到: 0")
+
+        btn_layout = QtWidgets.QHBoxLayout()
+        btn_layout.addStretch()
+        self.stopButton = QtWidgets.QPushButton("停止")
+        self.closeButton = QtWidgets.QPushButton("关闭")
+        self.closeButton.setEnabled(False)
+        btn_layout.addWidget(self.stopButton)
+        btn_layout.addWidget(self.closeButton)
+
+        layout.addWidget(self.progressLabel)
+        layout.addWidget(self.progressBar)
+        layout.addWidget(self.statsLabel)
+        layout.addStretch()
+        layout.addLayout(btn_layout)
+
+        self.stopButton.clicked.connect(self._on_stop)
+        self.closeButton.clicked.connect(self.accept)
+
+    def _on_stop(self):
+        self.stopButton.setEnabled(False)
+        self.progressLabel.setText("正在停止...")
+        self.stopRequested.emit()
+
+    def update_progress(self, payload: dict):
+        current = payload.get("current", 0)
+        total = max(payload.get("total", 1), 1)
+        found = payload.get("found", 0)
+        self.progressBar.setMaximum(total)
+        self.progressBar.setValue(min(current, total))
+        self.progressLabel.setText(f"搜索进度: {current} / {total}")
+        self.statsLabel.setText(f"已处理: {current}  已找到: {found}")
+
+    def mark_finished(self, summary: str = ""):
+        self.stopButton.setEnabled(False)
+        self.closeButton.setEnabled(True)
+        if summary:
+            self.progressLabel.setText(summary)
+
+
+class SimilarPatternResultDialog(QtWidgets.QDialog):
+    def __init__(self, results: list[dict], pattern_name: str,
+                 stock_daily_data_dir: Path, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(f"相似例子 - {pattern_name} (共 {len(results)} 条)")
+        self.resize(1300, 800)
+        self._stock_daily_data_dir = stock_daily_data_dir
+        self._results = results
+
+        splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+
+        self._table = QtWidgets.QTableWidget()
+        headers = ["代码", "名称", "日期", "评分", "等级", "风险", "详情"]
+        self._table.setColumnCount(len(headers))
+        self._table.setHorizontalHeaderLabels(headers)
+        self._table.horizontalHeader().setStretchLastSection(True)
+        self._table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self._table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self._table.setAlternatingRowColors(True)
+        self._table.verticalHeader().setDefaultSectionSize(26)
+        self._table.setColumnWidth(0, 65)
+        self._table.setColumnWidth(1, 80)
+        self._table.setColumnWidth(2, 90)
+        self._table.setColumnWidth(3, 60)
+        self._table.setColumnWidth(4, 45)
+        self._table.setColumnWidth(5, 100)
+
+        self._table.setRowCount(len(results))
+        for row, r in enumerate(results):
+            self._table.setItem(row, 0, QtWidgets.QTableWidgetItem(r["symbol"]))
+            self._table.setItem(row, 1, QtWidgets.QTableWidgetItem(r["name"]))
+            self._table.setItem(row, 2, QtWidgets.QTableWidgetItem(r["date"]))
+            score_item = QtWidgets.QTableWidgetItem(f"{r['score']:.0f}")
+            score_item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self._table.setItem(row, 3, score_item)
+            grade_item = QtWidgets.QTableWidgetItem(r["grade"])
+            grade_item.setTextAlignment(QtCore.Qt.AlignCenter)
+            bg_color = GRADE_COLORS.get(r["grade"], "#FFF")
+            grade_item.setBackground(QtGui.QColor(bg_color))
+            self._table.setItem(row, 4, grade_item)
+            self._table.setItem(row, 5, QtWidgets.QTableWidgetItem(r.get("risk", "")))
+            self._table.setItem(row, 6, QtWidgets.QTableWidgetItem(r.get("detail", "")))
+            tooltip = r.get("tooltip", "")
+            if tooltip:
+                for col in range(len(headers)):
+                    item = self._table.item(row, col)
+                    if item:
+                        item.setToolTip(tooltip)
+
+        self._chart = StockChartWidget()
+
+        splitter.addWidget(self._table)
+        splitter.addWidget(self._chart)
+        splitter.setStretchFactor(0, 2)
+        splitter.setStretchFactor(1, 3)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.addWidget(splitter)
+
+        self._table.selectionModel().currentRowChanged.connect(self._on_row_changed)
+
+        if results:
+            self._table.selectRow(0)
+
+    def _on_row_changed(self, current: QtCore.QModelIndex, _previous: QtCore.QModelIndex):
+        row = current.row()
+        if row < 0 or row >= len(self._results):
+            return
+        r = self._results[row]
+        self._load_chart(r["symbol"], r["date"])
+
+    def _load_chart(self, symbol: str, target_date: str):
+        try:
+            df = load_daily_csv(self._stock_daily_data_dir, symbol)
+        except FileNotFoundError:
+            return
+        if df.empty:
+            return
+
+        df_full = df.copy().reset_index(drop=True)
+        target_index = None
+        for i, row_data in df_full.iterrows():
+            date_val = row_data["date"]
+            date_str = (
+                date_val.strftime("%Y-%m-%d")
+                if hasattr(date_val, "strftime")
+                else str(date_val)[:10]
+            )
+            if date_str <= target_date:
+                target_index = i
+            else:
+                break
+
+        if target_index is None:
+            return
+
+        self._chart.set_daily(df_full)
+
+        half_width = self._chart._item_half_width
+        right_padding = self._chart._right_view_padding
+        x_right = target_index + half_width + right_padding
+        visible_days = min(target_index + 1, 120)
+        x_left = target_index - visible_days + 1 - half_width
+        self._chart.pricePlot.setXRange(x_left, x_right, padding=0)
 
 
 class BrickPatternPage(QtWidgets.QWidget):
@@ -202,7 +609,13 @@ class BrickPatternPage(QtWidgets.QWidget):
         self.table.setColumnWidth(self.COL_SCORE, 80)
         self.table.setColumnWidth(self.COL_RISK, 100)
 
+        self.table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+
         main_layout.addWidget(self.table, 1)
+
+        self._similar_thread: QtCore.QThread | None = None
+        self._similar_worker: SimilarPatternWorker | None = None
+        self._similar_progress_dialog: SimilarSearchProgressDialog | None = None
 
     def _connect_signals(self):
         self.verify_all_btn.clicked.connect(self._on_verify_all)
@@ -212,6 +625,7 @@ class BrickPatternPage(QtWidgets.QWidget):
         self.add_btn.clicked.connect(self._on_add_case)
         self.add_date_input.returnPressed.connect(self._on_add_case)
         self.table.doubleClicked.connect(self._on_row_double_clicked)
+        self.table.customContextMenuRequested.connect(self._on_table_context_menu)
 
     # ── 数据管理 ─────────────────────────────────────────────
 
@@ -260,6 +674,7 @@ class BrickPatternPage(QtWidgets.QWidget):
                     item.setText("")
                     item.setToolTip("")
                     item.setForeground(QtGui.QColor("#000"))
+                    item.setData(QtCore.Qt.UserRole, None)
             for col in range(self.table.columnCount()):
                 item = self.table.item(row, col)
                 if item:
@@ -451,6 +866,14 @@ class BrickPatternPage(QtWidgets.QWidget):
             breakdown=best_breakdown,
         )
 
+        matched_item = self.table.item(row, self.COL_MATCHED)
+        if matched_item:
+            matched_item.setData(QtCore.Qt.UserRole, {
+                "pattern_type": best_match.pattern_type.value,
+                "extra": best_match.extra,
+                "grade": grade,
+            })
+
         if triggered_risks:
             self._verify_stats["risk"] += 1
         else:
@@ -610,3 +1033,99 @@ class BrickPatternPage(QtWidgets.QWidget):
         dialog_layout.addWidget(chart)
 
         dialog.exec()
+
+    # ── 右键菜单：查找相似例子 ───────────────────────────────
+
+    def _on_table_context_menu(self, pos):
+        index = self.table.indexAt(pos)
+        if not index.isValid():
+            return
+        row = index.row()
+
+        matched_item = self.table.item(row, self.COL_MATCHED)
+        if not matched_item:
+            return
+        matched_text = matched_item.text().strip()
+        if not matched_text or matched_text in ("--", "无匹配"):
+            return
+
+        user_data = matched_item.data(QtCore.Qt.UserRole)
+        if not user_data or not isinstance(user_data, dict):
+            return
+
+        menu = QtWidgets.QMenu(self)
+        find_action = menu.addAction("查找相似例子")
+        action = menu.exec(self.table.viewport().mapToGlobal(pos))
+        if action == find_action:
+            self._start_similar_search(row, user_data)
+
+    def _start_similar_search(self, row: int, user_data: dict):
+        pattern_value = user_data.get("pattern_type", "")
+        try:
+            pattern_type = PatternType(pattern_value)
+        except ValueError:
+            return
+
+        code_item = self.table.item(row, self.COL_CODE)
+        date_item = self.table.item(row, self.COL_DATE)
+        exclude_symbol = code_item.text().strip().zfill(6) if code_item else ""
+        exclude_date = date_item.text().strip() if date_item else ""
+
+        self._similar_worker = SimilarPatternWorker(
+            stock_daily_data_dir=self.root / "stock_daily_data",
+            stocklist_csv=self.root / "stocklist.csv",
+            pattern_type=pattern_type,
+            exclude_symbol=exclude_symbol,
+            exclude_date=exclude_date,
+            ref_extra=user_data.get("extra", {}),
+            ref_grade=user_data.get("grade", ""),
+        )
+
+        self._similar_progress_dialog = SimilarSearchProgressDialog(
+            pattern_value, parent=self,
+        )
+        self._similar_progress_dialog.stopRequested.connect(self._similar_worker.cancel)
+
+        self._similar_thread = start_worker(
+            self,
+            self._similar_worker,
+            on_progress=self._on_similar_progress,
+            on_finished=self._on_similar_finished,
+            on_error=self._on_similar_error,
+        )
+
+        self._similar_progress_dialog.show()
+
+    def _on_similar_progress(self, payload: dict):
+        if self._similar_progress_dialog:
+            self._similar_progress_dialog.update_progress(payload)
+
+    def _on_similar_finished(self, payload: dict):
+        if self._similar_progress_dialog:
+            results = payload.get("results", [])
+            pattern_name = payload.get("pattern_type", "")
+            self._similar_progress_dialog.mark_finished(
+                f"搜索完成，共找到 {len(results)} 条相似例子",
+            )
+            self._similar_progress_dialog.accept()
+            self._similar_progress_dialog = None
+
+            if not results:
+                QtWidgets.QMessageBox.information(
+                    self, "查找相似例子",
+                    f"未找到与 {pattern_name} 相似的例子",
+                )
+                return
+
+            dialog = SimilarPatternResultDialog(
+                results=results,
+                pattern_name=pattern_name,
+                stock_daily_data_dir=self.root / "stock_daily_data",
+                parent=self,
+            )
+            dialog.exec()
+
+    def _on_similar_error(self, error_msg: str):
+        if self._similar_progress_dialog:
+            self._similar_progress_dialog.mark_finished(f"搜索出错: {error_msg}")
+        QtWidgets.QMessageBox.warning(self, "错误", f"查找相似例子失败：{error_msg}")
