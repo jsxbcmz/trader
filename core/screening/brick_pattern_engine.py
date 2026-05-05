@@ -1,9 +1,9 @@
-"""砖形图交易定式选股引擎 V2。
+"""砖形图交易定式选股引擎 V3。
 
 独立于 TDX 表达式系统，直接用 Python/NumPy 实现：
 - 3 种交易定式：N型起跳、横盘起跳、上升波段延续
 - 必备前提：绿转红 + 力度达标(≥0.3) + 短趋线>多空线
-- V2 评分：定式专属(70分) + 通用质量(30分) + 风险扣分
+- V3 评分：定式专属(30) + 通用质量(30) + MACD环境(25) + 信号强度(15) + 风险扣分
 - S/A/B/C/D 五级评分
 """
 
@@ -21,6 +21,7 @@ import pandas as pd
 from app.chart_indicators import (
     compute_brick_indicator,
     compute_kdj_indicator,
+    compute_macd_indicator,
     compute_zx_long_short,
     compute_zx_short_trend,
     moving_average,
@@ -63,6 +64,8 @@ def _calc_indicators(df: pd.DataFrame) -> dict[str, np.ndarray]:
 
     kdj = compute_kdj_indicator(high, low, close)
 
+    macd_result = compute_macd_indicator(close)
+
     ma14 = moving_average(close, 14)
     ma28 = moving_average(close, 28)
     ma57 = moving_average(close, 57)
@@ -80,6 +83,10 @@ def _calc_indicators(df: pd.DataFrame) -> dict[str, np.ndarray]:
         "kdj_k": kdj["k"],
         "kdj_d": kdj["d"],
         "kdj_j": kdj["j"],
+        "macd_diff": macd_result["diff"],
+        "macd_dea": macd_result["dea"],
+        "macd_hist": macd_result["macd"],
+        "macd_cross_up": macd_result["cross_up"],
         "ma14": ma14,
         "ma28": ma28,
         "ma57": ma57,
@@ -285,22 +292,20 @@ def _find_prior_uptrend(close: np.ndarray, pullback_start: int) -> tuple[float, 
 
 
 def detect_n_shape_jump(indicators: dict[str, np.ndarray], index: int) -> PatternMatchDetail:
-    """N型起跳检测 V2。
+    """N型起跳检测 V3。
 
-    评分维度：超卖深度(25) + 回调充分度(20) + 价格与黄白线(15) + 前段上涨基础(10) + 缩量附加(±3)
+    评分维度：超卖深度(10) + 回调充分度(10) + 价格与黄白线(5) + 前段上涨基础(5) = 30分
     """
     brick = indicators["brick"]
     close = indicators["close"]
     kdj_j = indicators["kdj_j"]
     short_trend = indicators["short_trend"]
     long_short = indicators["long_short"]
-    volume = indicators["volume"]
 
     if index < 10:
         return PatternMatchDetail(pattern_type=PatternType.N_SHAPE_JUMP, matched=False,
                                   description="数据不足")
 
-    # 前提已确保绿转红，检查是否有回调结构
     pullback_start, max_green, interruptions = _find_pullback_phase(brick, index)
     total_green = sum(1 for i in range(pullback_start, index) if _is_green_brick(brick, i))
 
@@ -308,20 +313,16 @@ def detect_n_shape_jump(indicators: dict[str, np.ndarray], index: int) -> Patter
         return PatternMatchDetail(pattern_type=PatternType.N_SHAPE_JUMP, matched=False,
                                   description="无绿砖回调")
 
-    # ── 超卖深度 (25分) ──
+    # ── 超卖深度 (10分) ──
     prev_j = float(kdj_j[index - 1]) if index >= 1 and np.isfinite(kdj_j[index - 1]) else 50.0
-    if prev_j < -5:
-        oversold_score = 25
-    elif prev_j < 0:
-        oversold_score = 22
-    elif prev_j < 10:
-        oversold_score = 21
+    if prev_j < 10:
+        oversold_score = 10
     elif prev_j < 20:
-        oversold_score = 12
-    elif prev_j < 30:
         oversold_score = 6
+    elif prev_j < 30:
+        oversold_score = 4
     elif prev_j < 40:
-        oversold_score = 3
+        oversold_score = 2
     else:
         oversold_score = 0
 
@@ -329,115 +330,60 @@ def detect_n_shape_jump(indicators: dict[str, np.ndarray], index: int) -> Patter
         return PatternMatchDetail(pattern_type=PatternType.N_SHAPE_JUMP, matched=False,
                                   description=f"J值过高({prev_j:.1f}≥40)不符合N型")
 
-    # ── 回调充分度 (20分) ──
+    # ── 回调充分度 (10分) ──
     if 4 <= max_green <= 6:
-        pullback_score = 20
+        pullback_score = 10
     elif max_green == 7:
-        pullback_score = 16
-    elif max_green == 3:
-        pullback_score = 14
-    elif max_green == 2:
         pullback_score = 8
-    elif max_green == 1:
+    elif max_green == 3:
+        pullback_score = 7
+    elif max_green == 2:
         pullback_score = 4
+    elif max_green == 1:
+        pullback_score = 2
     elif max_green >= 8:
-        pullback_score = 6
+        pullback_score = 3
     else:
         pullback_score = 0
 
     for intr in interruptions:
         if intr == 1:
+            pullback_score -= 1
+        elif intr >= 2:
             pullback_score -= 2
-        elif intr == 2:
-            pullback_score -= 3
     pullback_score = max(0, pullback_score)
 
-    # ── 价格与黄白线 (15分) ──
+    # ── 价格与黄白线 (5分) ──
     st_val = short_trend[index] if np.isfinite(short_trend[index]) else close[index]
     ls_val = long_short[index] if np.isfinite(long_short[index]) else close[index]
     vs_short = (close[index] - st_val) / st_val * 100 if st_val > 0 else 0
     vs_long = (close[index] - ls_val) / ls_val * 100 if ls_val > 0 else 0
 
     if -3 <= vs_short <= 2:
-        price_score = 15
-    elif -5 <= vs_short < -3:
-        price_score = 11
-    elif 2 < vs_short <= 6:
-        price_score = 9
-    elif -8 <= vs_short < -5:
         price_score = 5
-    elif vs_short > 6:
+    elif -5 <= vs_short < -3 or 2 < vs_short <= 6:
         price_score = 3
     else:
-        price_score = 2
+        price_score = 1
 
     if vs_long < 0:
-        price_score = min(price_score, 8)
+        price_score = min(price_score, 2)
 
-    # ── 前段上涨基础 (10分) ──
+    # ── 前段上涨基础 (5分) ──
     rise_pct, duration, quality = _find_prior_uptrend(close, pullback_start)
 
-    if 0.10 <= rise_pct <= 0.25:
-        rise_score = 4
-    elif 0.25 < rise_pct <= 0.40:
-        rise_score = 3
-    elif 0.05 <= rise_pct < 0.10:
-        rise_score = 2
-    elif rise_pct < 0.05:
-        rise_score = 1
-    else:
-        rise_score = 1
+    rise_score = 2 if 0.10 <= rise_pct <= 0.25 else (1 if rise_pct >= 0.05 else 0)
+    dur_score = 1 if 4 <= duration <= 20 else 0
+    qual_score = min(quality, 2)
+    uptrend_score = rise_score + dur_score + qual_score
 
-    if 7 <= duration <= 15:
-        dur_score = 3
-    elif 4 <= duration <= 6 or 16 <= duration <= 25:
-        dur_score = 2
-    else:
-        dur_score = 1
-
-    uptrend_score = rise_score + dur_score + quality
-
-    # ── 缩量附加 (±3分) ──
-    # 绿砖期 = 回调阶段内所有绿砖日
-    green_vol_sum = 0.0
-    green_vol_count = 0
-    for i in range(max(1, pullback_start), index):
-        if _is_green_brick(brick, i):
-            green_vol_sum += volume[i]
-            green_vol_count += 1
-
-    # 红砖期 = 紧邻回调阶段之前的连续红砖段
-    red_vol_sum = 0.0
-    red_vol_count = 0
-    rpos = pullback_start - 1
-    while rpos >= 1 and _is_red_brick(brick, rpos):
-        red_vol_sum += volume[rpos]
-        red_vol_count += 1
-        rpos -= 1
-
-    if red_vol_count > 0 and green_vol_count > 0:
-        vol_ratio = (green_vol_sum / green_vol_count) / (red_vol_sum / red_vol_count)
-    else:
-        vol_ratio = 1.0
-
-    if vol_ratio < 0.5:
-        vol_adj = 3
-    elif vol_ratio < 0.8:
-        vol_adj = 1
-    elif vol_ratio <= 1.2:
-        vol_adj = 0
-    else:
-        vol_adj = -3
-
-    specific_score = min(70, oversold_score + pullback_score + price_score + uptrend_score + vol_adj)
-    specific_score = max(0, specific_score)
+    specific_score = min(30, oversold_score + pullback_score + price_score + uptrend_score)
 
     items = {
         "超卖深度": oversold_score,
         "回调充分度": pullback_score,
         "价格与黄白线": price_score,
         "前段上涨基础": uptrend_score,
-        "缩量附加": vol_adj,
     }
 
     description = f"N型(前日J={prev_j:.1f},最长绿砖段{max_green}天,vs短趋{vs_short:.1f}%)"
@@ -452,7 +398,6 @@ def detect_n_shape_jump(indicators: dict[str, np.ndarray], index: int) -> Patter
             "max_green_segment": max_green,
             "vs_short_trend": round(vs_short, 2),
             "vs_long_short": round(vs_long, 2),
-            "vol_ratio": round(vol_ratio, 2),
             "specific_items": items,
         },
     )
@@ -463,9 +408,9 @@ def detect_n_shape_jump(indicators: dict[str, np.ndarray], index: int) -> Patter
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def detect_sideways_jump(indicators: dict[str, np.ndarray], index: int) -> PatternMatchDetail:
-    """横盘起跳检测 V2。
+    """横盘起跳检测 V3。
 
-    评分维度：蓄势充分度(25+3) + 突破弹性(20) + KDJ动能(15) + 价格强度(10)
+    评分维度：蓄势充分度(12) + 突破弹性(8) + KDJ动能(5) + 价格强度(5) = 30分
     """
     brick = indicators["brick"]
     close = indicators["close"]
@@ -478,7 +423,6 @@ def detect_sideways_jump(indicators: dict[str, np.ndarray], index: int) -> Patte
         return PatternMatchDetail(pattern_type=PatternType.SIDEWAYS_JUMP, matched=False,
                                   description="数据不足")
 
-    # 横盘起跳要求：紧邻信号日前仅1天绿砖
     if index < 2 or not _is_green_brick(brick, index - 1):
         return PatternMatchDetail(pattern_type=PatternType.SIDEWAYS_JUMP, matched=False,
                                   description="前日非绿砖")
@@ -486,73 +430,70 @@ def detect_sideways_jump(indicators: dict[str, np.ndarray], index: int) -> Patte
         return PatternMatchDetail(pattern_type=PatternType.SIDEWAYS_JUMP, matched=False,
                                   description="前2日也是绿砖(非横盘特征)")
 
-    # ── 蓄势充分度 (25+3分) ──
+    # ── 蓄势充分度 (12分) ──
     switches = _count_brick_color_switches(brick, index - 1, window=10)
 
     if 5 <= switches <= 7:
-        charge_score = 25
-    elif switches == 4:
-        charge_score = 20
-    elif switches == 3:
         charge_score = 12
-    elif switches <= 2:
+    elif switches == 4:
+        charge_score = 9
+    elif switches == 3:
         charge_score = 5
+    elif switches <= 2:
+        charge_score = 2
     else:
-        charge_score = 18
+        charge_score = 8
 
-    # 辅助：10日振幅
     amp_start = max(0, index - 10)
     window_high = np.max(high[amp_start:index])
     window_low = np.min(low[amp_start:index])
     amplitude = (window_high - window_low) / window_low * 100 if window_low > 0 else 999
 
     if amplitude < 8:
-        charge_score += 3
-    elif amplitude <= 12:
-        charge_score += 1
+        charge_score = min(13, charge_score + 1)
 
-    # ── 突破弹性 (20分) ──
+    # ── 突破弹性 (8分) ──
     brick_jump = brick[index] - brick[index - 1]
     if brick_jump >= 15:
-        breakout_score = 20
+        breakout_score = 8
     elif brick_jump >= 12:
-        breakout_score = 16
-    elif brick_jump >= 9:
-        breakout_score = 11
-    elif brick_jump >= 6:
         breakout_score = 6
-    else:
+    elif brick_jump >= 9:
+        breakout_score = 4
+    elif brick_jump >= 6:
         breakout_score = 2
+    else:
+        breakout_score = 1
 
-    # ── KDJ动能 (15分) ──
+    # ── KDJ动能 (5分) ──
     j_val = float(kdj_j[index]) if np.isfinite(kdj_j[index]) else 50.0
     if 65 <= j_val <= 85:
-        kdj_score = 15
+        kdj_score = 5
     elif 50 <= j_val < 65:
-        kdj_score = 12
+        kdj_score = 4
     elif 85 < j_val <= 100:
-        kdj_score = 8
+        kdj_score = 3
     elif 30 <= j_val < 50:
-        kdj_score = 6
-    else:
         kdj_score = 2
+    else:
+        kdj_score = 1
 
-    # ── 价格强度 (10分) ──
+    # ── 价格强度 (5分) ──
     ls_val = long_short[index] if np.isfinite(long_short[index]) else close[index]
     vs_long = (close[index] - ls_val) / ls_val * 100 if ls_val > 0 else 0
 
     if 5 <= vs_long <= 15:
-        price_score = 10
+        price_score = 5
     elif 2 <= vs_long < 5:
-        price_score = 7
-    elif 15 < vs_long <= 25:
-        price_score = 6
-    elif vs_long < 2:
         price_score = 3
-    else:
+    elif 15 < vs_long <= 25:
         price_score = 2
+    elif vs_long < 2:
+        price_score = 1
+    else:
+        price_score = 1
 
-    specific_score = min(70, charge_score + breakout_score + kdj_score + price_score)
+    specific_score = min(30, charge_score + breakout_score + kdj_score + price_score)
 
     items = {
         "蓄势充分度": charge_score,
@@ -584,9 +525,9 @@ def detect_sideways_jump(indicators: dict[str, np.ndarray], index: int) -> Patte
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def detect_uptrend_continue(indicators: dict[str, np.ndarray], index: int) -> PatternMatchDetail:
-    """上升波段延续检测 V2。
+    """上升波段延续检测 V3。
 
-    评分维度：趋势连续性(25) + 回调极短性(20) + 砖值绝对水平(15) + KDJ超买动能(10)
+    评分维度：趋势连续性(12) + 回调极短性(8) + 砖值绝对水平(5) + KDJ超买动能(5) = 30分
     """
     brick = indicators["brick"]
     kdj_j = indicators["kdj_j"]
@@ -595,7 +536,6 @@ def detect_uptrend_continue(indicators: dict[str, np.ndarray], index: int) -> Pa
         return PatternMatchDetail(pattern_type=PatternType.UPTREND_CONTINUE, matched=False,
                                   description="数据不足")
 
-    # 统计信号日前连续绿砖数量
     green_count = 0
     scan_pos = index - 1
     while scan_pos >= 1 and _is_green_brick(brick, scan_pos):
@@ -609,7 +549,6 @@ def detect_uptrend_continue(indicators: dict[str, np.ndarray], index: int) -> Pa
             description="无绿砖回调",
         )
 
-    # 绿砖之前应该是连续红砖区间（至少3根）
     red_end = scan_pos
     red_count = 0
     while red_end >= 1 and _is_red_brick(brick, red_end):
@@ -623,52 +562,49 @@ def detect_uptrend_continue(indicators: dict[str, np.ndarray], index: int) -> Pa
             description=f"前方红砖仅{red_count}根(需>=3)",
         )
 
-    # ── 趋势连续性 (25分) ──
+    # ── 趋势连续性 (12分) ──
     if red_count >= 7:
-        trend_score = 25
+        trend_score = 12
     elif red_count >= 5:
-        trend_score = 20
-    elif red_count == 4:
-        trend_score = 15
-    elif red_count == 3:
         trend_score = 9
-    else:
+    elif red_count == 4:
+        trend_score = 6
+    elif red_count == 3:
         trend_score = 3
-
-    # ── 回调极短性 (20分) ──
-    if green_count == 1:
-        short_base = 14
-    elif green_count == 2:
-        short_base = 8
     else:
-        short_base = 2
+        trend_score = 1
 
-    # 绿砖期间砖值下降幅度
+    # ── 回调极短性 (8分) ──
+    if green_count == 1:
+        short_base = 6
+    elif green_count == 2:
+        short_base = 3
+    else:
+        short_base = 1
+
     green_start_brick = brick[index - green_count - 1]
     green_end_brick = brick[index - 1]
     brick_drop = green_start_brick - green_end_brick
 
     if brick_drop < 1:
-        drop_bonus = 6
-    elif brick_drop <= 5:
-        drop_bonus = 4
-    elif brick_drop <= 10:
         drop_bonus = 2
+    elif brick_drop <= 5:
+        drop_bonus = 1
     else:
         drop_bonus = 0
 
     short_score = short_base + drop_bonus
 
-    # ── 砖值绝对水平 (15分) ──
+    # ── 砖值绝对水平 (5分) ──
     brick_val = brick[index]
     if brick_val >= 130:
-        level_score = 15
+        level_score = 5
     elif brick_val >= 115:
-        level_score = 12
-    elif brick_val >= 100:
-        level_score = 9
-    elif brick_val >= 85:
         level_score = 4
+    elif brick_val >= 100:
+        level_score = 3
+    elif brick_val >= 85:
+        level_score = 1
     else:
         level_score = 0
 
@@ -679,20 +615,18 @@ def detect_uptrend_continue(indicators: dict[str, np.ndarray], index: int) -> Pa
             description=f"砖值{brick_val:.1f}<85,不符合波段延续",
         )
 
-    # ── KDJ超买动能 (10分) ──
+    # ── KDJ超买动能 (5分) ──
     j_val = float(kdj_j[index]) if np.isfinite(kdj_j[index]) else 50.0
-    if j_val > 100:
-        kdj_score = 10
-    elif j_val > 95:
-        kdj_score = 10
-    elif j_val > 90:
-        kdj_score = 8
-    elif j_val > 80:
+    if j_val > 95:
         kdj_score = 5
+    elif j_val > 90:
+        kdj_score = 4
+    elif j_val > 80:
+        kdj_score = 3
     else:
         kdj_score = 1
 
-    specific_score = min(70, trend_score + short_score + level_score + kdj_score)
+    specific_score = min(30, trend_score + short_score + level_score + kdj_score)
 
     items = {
         "趋势连续性": trend_score,
@@ -728,9 +662,12 @@ def compute_common_quality_score(
     index: int,
     pattern_type: PatternType,
 ) -> tuple[float, dict[str, float]]:
-    """计算通用质量评分(30分)：翻红质量(15分) + 趋势环境(15分)。"""
+    """计算通用质量评分(30分)：翻红质量 + 趋势环境 + K线形态。"""
     brick = indicators["brick"]
     close = indicators["close"]
+    open_ = indicators["open"]
+    high = indicators["high"]
+    low = indicators["low"]
     short_trend = indicators["short_trend"]
     long_short = indicators["long_short"]
     ma14 = indicators["ma14"]
@@ -740,16 +677,16 @@ def compute_common_quality_score(
 
     items: dict[str, float] = {}
 
-    # ── 翻红力度比 (8分) ──
+    # ── 翻红力度比 (7分) ──
     delta_today = brick[index] - brick[index - 1]
     delta_yesterday = abs(brick[index - 1] - brick[index - 2]) if index >= 2 else 0
     divisor = max(abs(delta_yesterday), 2.0)
     force_ratio = delta_today / divisor
 
     if force_ratio >= 3:
-        items["翻红力度比"] = 8
+        items["翻红力度比"] = 7
     elif force_ratio >= 2:
-        items["翻红力度比"] = 6
+        items["翻红力度比"] = 5
     elif force_ratio >= 1.5:
         items["翻红力度比"] = 4
     elif force_ratio >= 1:
@@ -759,37 +696,37 @@ def compute_common_quality_score(
     else:
         items["翻红力度比"] = 0
 
-    # ── 信号日涨幅 (7分) ──
+    # ── 信号日涨幅 (6分) ──
     prev_close = close[index - 1] if index >= 1 else close[index]
     day_change = (close[index] - prev_close) / prev_close * 100 if prev_close > 0 else 0
 
     if pattern_type == PatternType.N_SHAPE_JUMP:
         if day_change >= 9.5:
-            items["信号日涨幅"] = 6
-        elif day_change >= 5:
-            items["信号日涨幅"] = 7
-        elif day_change >= 3:
-            items["信号日涨幅"] = 6
-        elif day_change >= 1.5:
             items["信号日涨幅"] = 5
+        elif day_change >= 5:
+            items["信号日涨幅"] = 6
+        elif day_change >= 3:
+            items["信号日涨幅"] = 5
+        elif day_change >= 1.5:
+            items["信号日涨幅"] = 4
         else:
             items["信号日涨幅"] = 2
     elif pattern_type == PatternType.SIDEWAYS_JUMP:
         if day_change >= 9.5:
-            items["信号日涨幅"] = 7
+            items["信号日涨幅"] = 6
         elif day_change >= 5:
-            items["信号日涨幅"] = 7
+            items["信号日涨幅"] = 6
         elif day_change >= 3:
-            items["信号日涨幅"] = 5
+            items["信号日涨幅"] = 4
         elif day_change >= 1.5:
             items["信号日涨幅"] = 3
         else:
             items["信号日涨幅"] = 1
     else:  # UPTREND_CONTINUE
         if day_change >= 9.5:
-            items["信号日涨幅"] = 7
-        elif day_change >= 5:
             items["信号日涨幅"] = 6
+        elif day_change >= 5:
+            items["信号日涨幅"] = 5
         elif day_change >= 3:
             items["信号日涨幅"] = 4
         elif day_change >= 1.5:
@@ -816,7 +753,7 @@ def compute_common_quality_score(
     else:
         items["短趋vs多空"] = 3
 
-    # ── 均线排列 (5分) ──
+    # ── 均线排列 (4分) ──
     ma_vals = [
         float(ma14[index]) if np.isfinite(ma14[index]) else 0,
         float(ma28[index]) if np.isfinite(ma28[index]) else 0,
@@ -833,7 +770,7 @@ def compute_common_quality_score(
             ascending_count += 1
 
     if ascending_count == 3:
-        items["均线排列"] = 5
+        items["均线排列"] = 4
     elif ascending_count == 2:
         items["均线排列"] = 3
     elif ascending_count == 1:
@@ -841,7 +778,7 @@ def compute_common_quality_score(
     else:
         items["均线排列"] = 0
 
-    # ── 短趋势斜率 (4分) ──
+    # ── 短趋势斜率 (3分) ──
     trend_window = 10
     trend_start = max(0, index - trend_window + 1)
     trend_slice = short_trend[trend_start:index + 1]
@@ -857,16 +794,216 @@ def compute_common_quality_score(
         slope_pct = 0
 
     if slope_pct >= 0.5:
-        items["短趋斜率"] = 4
-    elif slope_pct >= 0.2:
         items["短趋斜率"] = 3
+    elif slope_pct >= 0.2:
+        items["短趋斜率"] = 2
     elif slope_pct >= 0:
         items["短趋斜率"] = 1
     else:
         items["短趋斜率"] = 0
 
+    # ── K线形态质量 (4分) ──
+    body = abs(close[index] - open_[index])
+    candle_range = high[index] - low[index]
+    upper_shadow = high[index] - max(close[index], open_[index])
+    lower_shadow = min(close[index], open_[index]) - low[index]
+
+    if candle_range > 0.003 * close[index]:
+        shadow_ratio = (upper_shadow + lower_shadow) / candle_range
+        if shadow_ratio < 0.15:
+            items["K线形态"] = 4
+        elif shadow_ratio < 0.30:
+            items["K线形态"] = 3
+        elif shadow_ratio < 0.50:
+            items["K线形态"] = 2
+        else:
+            items["K线形态"] = 0
+    else:
+        items["K线形态"] = 2
+
     total = sum(items.values())
     return total, items
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# MACD 辅助评分
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def _detect_diff_dea_cross(diff: np.ndarray, dea: np.ndarray, index: int, lookback: int = 5) -> tuple[int, int]:
+    """检测近期DIFF/DEA金叉和死叉。返回 (金叉距离, 死叉距离)，-1表示未找到。"""
+    golden_dist = -1
+    dead_dist = -1
+    for d in range(1, lookback + 1):
+        i = index - d
+        if i < 1:
+            break
+        if golden_dist < 0 and diff[i] >= dea[i] and diff[i - 1] < dea[i - 1]:
+            golden_dist = d
+        if dead_dist < 0 and diff[i] < dea[i] and diff[i - 1] >= dea[i - 1]:
+            dead_dist = d
+    if diff[index] >= dea[index] and index >= 1 and diff[index - 1] < dea[index - 1]:
+        golden_dist = 0
+    if diff[index] < dea[index] and index >= 1 and diff[index - 1] >= dea[index - 1]:
+        dead_dist = 0
+    return golden_dist, dead_dist
+
+
+def compute_macd_auxiliary_score(
+    indicators: dict[str, np.ndarray],
+    index: int,
+    pattern_type: PatternType,
+) -> tuple[float, dict[str, float]]:
+    """计算 MACD 环境评分（0~25分）。所有定式类型均生效。"""
+    diff = indicators["macd_diff"]
+    dea = indicators["macd_dea"]
+    hist = indicators["macd_hist"]
+    close = indicators["close"]
+
+    if index < 3 or not np.isfinite(diff[index]) or not np.isfinite(dea[index]):
+        return 0.0, {}
+
+    items: dict[str, float] = {}
+    price_ref = close[index] if close[index] > 0 else 1.0
+    diff_pct = diff[index] / price_ref * 100
+
+    golden_dist, dead_dist = _detect_diff_dea_cross(diff, dea, index, lookback=5)
+
+    if pattern_type != PatternType.UPTREND_CONTINUE:
+        # ── N型起跳/横盘起跳的MACD评分 ──
+
+        # DIFF位置 (0~10)
+        if diff[index] < 0:
+            items["DIFF位置"] = 10
+        elif diff_pct < 0.5:
+            items["DIFF位置"] = 7
+        elif diff[index] > 0 and diff[index] < dea[index]:
+            items["DIFF位置"] = 4
+        elif diff[index] > dea[index] and golden_dist >= 0 and golden_dist <= 5:
+            items["DIFF位置"] = 6
+        else:
+            items["DIFF位置"] = 2
+
+        # MACD柱状态 (0~8)
+        if index >= 1 and hist[index] > 0 and hist[index - 1] < 0:
+            items["MACD柱状态"] = 8
+        elif hist[index] > 0 and index >= 1 and hist[index] > hist[index - 1]:
+            items["MACD柱状态"] = 6
+        elif hist[index] > 0:
+            items["MACD柱状态"] = 3
+        else:
+            items["MACD柱状态"] = 0
+
+        # 金叉确认 (0~7, 可扣分)
+        if golden_dist > 0 and golden_dist <= 5:
+            items["金叉确认"] = 7
+        elif golden_dist == 0:
+            items["金叉确认"] = 4
+        elif diff[index] > dea[index]:
+            items["金叉确认"] = 3
+        else:
+            items["金叉确认"] = 0
+
+        if dead_dist >= 0 and dead_dist <= 3:
+            items["近期死叉"] = -3
+
+    else:
+        # ── 上升波段延续的MACD评分 ──
+
+        # DIFF趋势 (0~10)
+        if diff[index] > dea[index]:
+            diff_rising = index >= 1 and diff[index] > diff[index - 1]
+            diff_flat = index >= 1 and abs(diff[index] - diff[index - 1]) < price_ref * 0.001
+            if diff_rising:
+                items["DIFF趋势"] = 10
+            elif diff_flat:
+                items["DIFF趋势"] = 7
+            else:
+                items["DIFF趋势"] = 3
+        else:
+            items["DIFF趋势"] = 0
+
+        # MACD柱趋势 (0~8)
+        if hist[index] > 0:
+            consecutive_up = 0
+            for d in range(index, max(index - 5, 0), -1):
+                if d >= 1 and hist[d] > hist[d - 1]:
+                    consecutive_up += 1
+                else:
+                    break
+            if consecutive_up >= 2:
+                items["MACD柱趋势"] = 8
+            else:
+                items["MACD柱趋势"] = 4
+        else:
+            items["MACD柱趋势"] = 0
+
+        # DIFF水平 (0~7)
+        if 0 < diff_pct <= 1:
+            items["DIFF水平"] = 7
+        elif diff_pct > 1:
+            items["DIFF水平"] = 4
+        elif diff[index] < 0:
+            items["DIFF水平"] = 1
+        else:
+            items["DIFF水平"] = 3
+
+    total = max(0, sum(items.values()))
+    return total, items
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 信号强度评分 (15分)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def compute_signal_strength_score(
+    indicators: dict[str, np.ndarray],
+    index: int,
+) -> tuple[float, dict[str, float]]:
+    """计算信号强度评分（0~15分）：T日涨幅(10) + 封板质量(5)。"""
+    close = indicators["close"]
+    high = indicators["high"]
+    low = indicators["low"]
+    items: dict[str, float] = {}
+
+    prev_close = close[index - 1] if index >= 1 else close[index]
+    if prev_close <= 0:
+        return 0.0, {}
+
+    day_change = (close[index] - prev_close) / prev_close * 100
+
+    # ── T日涨幅 (10分) ──
+    if day_change >= 9.5:
+        items["T日涨幅"] = 10
+    elif day_change >= 8:
+        items["T日涨幅"] = 8
+    elif 4 <= day_change < 6:
+        items["T日涨幅"] = 6
+    elif 2 <= day_change < 4:
+        items["T日涨幅"] = 4
+    elif 0 <= day_change < 2:
+        items["T日涨幅"] = 3
+    elif 6 <= day_change < 8:
+        items["T日涨幅"] = 1
+    else:
+        items["T日涨幅"] = 0
+
+    # ── 封板质量 (5分, 仅涨幅>=9.5%时) ──
+    if day_change >= 9.5:
+        candle_range = high[index] - low[index]
+        amplitude_pct = candle_range / prev_close * 100 if prev_close > 0 else 999
+        is_sealed = abs(high[index] - close[index]) < 0.01 * close[index]
+
+        if is_sealed and amplitude_pct < 2:
+            items["封板质量"] = 5
+        elif is_sealed:
+            items["封板质量"] = 3
+        elif high[index] > close[index]:
+            items["封板质量"] = 1
+        else:
+            items["封板质量"] = 2
+
+    total = sum(items.values())
+    return min(15.0, total), items
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -915,9 +1052,9 @@ def compute_risk_penalty(
             if dist <= 3:
                 ld_penalty = -50
             elif dist <= 7:
-                ld_penalty = -35
-            else:
                 ld_penalty = -30
+            else:
+                ld_penalty = -20
             ld_triggered = True
             ld_desc = f"前{dist}日一字板跌停(跌{change_pct:.1%})"
             break
@@ -978,12 +1115,11 @@ def compute_risk_penalty(
                 if pre_drop_close > 0 and close[index] >= pre_drop_close * 0.95:
                     continue
 
-                # 判断位置：高点附近(-35) vs 回调中(-15)
                 scan_s = max(0, day - 15)
                 peak_price = float(np.max(high[scan_s:day + 1]))
                 dist_from_peak = (peak_price - close[day]) / peak_price if peak_price > 0 else 0
                 if dist_from_peak < 0.05:
-                    hv_penalty = -35
+                    hv_penalty = -30
                 else:
                     hv_penalty = -15
 
@@ -1017,7 +1153,7 @@ def compute_risk_penalty(
 
     # ── 定式专属风险 ──
 
-    # 追高离心（上升波段延续）
+    # 追高离心（上升波段延续）— 仅>35%才扣分
     if pattern_type == PatternType.UPTREND_CONTINUE:
         st_v = short_trend[index] if np.isfinite(short_trend[index]) else close[index]
         vs_st = (close[index] - st_v) / st_v * 100 if st_v > 0 else 0
@@ -1026,8 +1162,6 @@ def compute_risk_penalty(
             ch_penalty = -20.0
         elif vs_st > 35:
             ch_penalty = -15.0
-        elif vs_st > 25:
-            ch_penalty = -10.0
         else:
             ch_penalty = 0.0
 
@@ -1037,7 +1171,7 @@ def compute_risk_penalty(
             description=f"追高离心(vs短趋{vs_st:.1f}%)" if ch_triggered else "",
             penalty=ch_penalty,
         ))
-        if ch_triggered:
+        if ch_triggered and ch_penalty < 0:
             risk_items["追高离心"] = ch_penalty
 
     # 天量见顶（上升波段延续）
@@ -1083,21 +1217,13 @@ def compute_risk_penalty(
             gv_ratio = 1.0
 
         gv_triggered = gv_ratio > 1.3
-        if gv_ratio > 1.5:
-            gv_penalty = -15.0
-        elif gv_ratio > 1.3:
-            gv_penalty = -5.0
-        else:
-            gv_penalty = 0.0
 
         risk_details.append(RiskFilterDetail(
             filter_type=RiskFilterType.GREEN_VOLUME_UP,
             triggered=gv_triggered,
             description=f"绿砖期放量(比值{gv_ratio:.2f})" if gv_triggered else "",
-            penalty=gv_penalty,
+            penalty=0.0,
         ))
-        if gv_triggered:
-            risk_items["绿砖期放量"] = gv_penalty
 
     # 趋势衰竭（横盘起跳）
     if pattern_type == PatternType.SIDEWAYS_JUMP:
@@ -1115,36 +1241,134 @@ def compute_risk_penalty(
             slope_pct = 0.1
 
         te_triggered = slope_pct <= 0
-        if slope_pct < -0.1:
-            te_penalty = -15.0
-        elif slope_pct <= 0:
-            te_penalty = -10.0
-        else:
-            te_penalty = 0.0
 
         risk_details.append(RiskFilterDetail(
             filter_type=RiskFilterType.TREND_EXHAUST,
             triggered=te_triggered,
             description=f"趋势衰竭(斜率{slope_pct:.2f}%)" if te_triggered else "",
-            penalty=te_penalty,
+            penalty=0.0,
         ))
-        if te_triggered:
-            risk_items["趋势衰竭"] = te_penalty
 
-    # 假横盘（横盘起跳）
+    # 假横盘（横盘起跳）— 仅标签
     if pattern_type == PatternType.SIDEWAYS_JUMP:
         switches = _count_brick_color_switches(brick, index - 1, window=10)
         fs_triggered = switches < 3
-        fs_penalty = -10.0 if fs_triggered else 0.0
 
         risk_details.append(RiskFilterDetail(
             filter_type=RiskFilterType.FAKE_SIDEWAYS,
             triggered=fs_triggered,
             description=f"假横盘(切换{switches}次<3)" if fs_triggered else "",
-            penalty=fs_penalty,
+            penalty=0.0,
         ))
-        if fs_triggered:
-            risk_items["假横盘"] = fs_penalty
+
+    # ── 通用风险4：锤子线禁忌 ──
+    body = abs(close[index] - open_[index])
+    lower_shadow = min(close[index], open_[index]) - low[index]
+    upper_shadow = high[index] - max(close[index], open_[index])
+    candle_range = high[index] - low[index]
+    body_ref = max(body, 0.003 * close[index])
+
+    hm_triggered = lower_shadow >= 2 * body_ref and candle_range > 0.005 * close[index]
+    if hm_triggered:
+        hm_ratio = lower_shadow / body_ref
+        if hm_ratio >= 3:
+            hm_penalty = -25.0
+        else:
+            hm_penalty = -20.0
+        hm_desc = f"锤子线(下影线{lower_shadow / body_ref:.1f}倍实体)"
+    else:
+        hm_penalty = 0.0
+        hm_desc = ""
+
+    risk_details.append(RiskFilterDetail(
+        filter_type=RiskFilterType.HAMMER,
+        triggered=hm_triggered,
+        description=hm_desc,
+        penalty=hm_penalty,
+    ))
+    if hm_triggered:
+        risk_items["锤子线"] = hm_penalty
+
+    # ── 通用风险5：大上影线禁忌 ──
+    lus_triggered = (
+        candle_range > 0.005 * close[index]
+        and upper_shadow >= 2 * body_ref
+        and upper_shadow >= 0.6 * candle_range
+    )
+    if lus_triggered:
+        us_ratio = upper_shadow / body_ref
+        if us_ratio >= 3:
+            lus_penalty = -20.0
+        else:
+            lus_penalty = -15.0
+        lus_desc = f"大上影线(上影{upper_shadow / body_ref:.1f}倍实体,占振幅{upper_shadow / candle_range:.0%})"
+    else:
+        lus_penalty = 0.0
+        lus_desc = ""
+
+    risk_details.append(RiskFilterDetail(
+        filter_type=RiskFilterType.LARGE_UPPER_SHADOW,
+        triggered=lus_triggered,
+        description=lus_desc,
+        penalty=lus_penalty,
+    ))
+    if lus_triggered:
+        risk_items["大上影线"] = lus_penalty
+
+    # ── 通用风险6：三波不做 ──
+    tw_triggered, tw_penalty, tw_desc = _detect_third_wave(brick, close, high, index)
+    risk_details.append(RiskFilterDetail(
+        filter_type=RiskFilterType.THIRD_WAVE,
+        triggered=tw_triggered,
+        description=tw_desc,
+        penalty=tw_penalty,
+    ))
+    if tw_triggered:
+        risk_items["三波追高"] = tw_penalty
+
+    # ── 新增风险7：冲高回落 ──
+    prev_close_val = close[index - 1] if index >= 1 else close[index]
+    if prev_close_val > 0:
+        t_day_change = (close[index] - prev_close_val) / prev_close_val * 100
+        cr_triggered = 6 <= t_day_change < 8
+        cr_penalty = -10.0 if cr_triggered else 0.0
+        cr_desc = f"冲高回落(涨幅{t_day_change:.1f}%在6-8%区间)" if cr_triggered else ""
+    else:
+        cr_triggered = False
+        cr_penalty = 0.0
+        cr_desc = ""
+
+    risk_details.append(RiskFilterDetail(
+        filter_type=RiskFilterType.CHASE_HIGH,
+        triggered=cr_triggered,
+        description=cr_desc,
+        penalty=cr_penalty,
+    ))
+    if cr_triggered:
+        risk_items["冲高回落"] = cr_penalty
+
+    # ── 新增风险8：横盘MACD死叉 ──
+    if pattern_type == PatternType.SIDEWAYS_JUMP:
+        diff = indicators["macd_diff"]
+        dea = indicators["macd_dea"]
+        if np.isfinite(diff[index]) and np.isfinite(dea[index]):
+            _, dead_dist = _detect_diff_dea_cross(diff, dea, index, lookback=3)
+            md_triggered = dead_dist >= 0
+            md_penalty = -15.0 if md_triggered else 0.0
+            md_desc = f"横盘MACD死叉(前{dead_dist}日)" if md_triggered else ""
+        else:
+            md_triggered = False
+            md_penalty = 0.0
+            md_desc = ""
+
+        risk_details.append(RiskFilterDetail(
+            filter_type=RiskFilterType.TREND_EXHAUST,
+            triggered=md_triggered,
+            description=md_desc,
+            penalty=md_penalty,
+        ))
+        if md_triggered:
+            risk_items["横盘MACD死叉"] = md_penalty
 
     total_penalty = sum(risk_items.values())
     return total_penalty, risk_items, risk_details
@@ -1178,6 +1402,78 @@ def _is_in_n_shape_decline(indicators: dict[str, np.ndarray], day: int) -> bool:
     rise_ratio = (peak_price - pre_peak_low) / pre_peak_low if pre_peak_low > 0 else 0
 
     return rise_ratio >= 0.03
+
+
+def _detect_third_wave(
+    brick: np.ndarray,
+    close: np.ndarray,
+    high: np.ndarray,
+    index: int,
+) -> tuple[bool, float, str]:
+    """检测三波追高：如果信号日之前已完成两波上涨-回调，当前是第三波尝试则扣分。
+
+    向前回溯砖形图颜色段：
+    当前信号 = 绿转红（第三波起点），往前找：
+    回调2(绿段) → 上涨2(红段) → 回调1(绿段) → 上涨1(红段)
+    如果四段都存在且实质性（红段>=2砖，绿段>=1砖），判定为三波。
+    """
+    if index < 15:
+        return False, 0.0, ""
+
+    pos = index - 1
+    # 回调2：信号日前的绿砖段
+    green2 = 0
+    while pos >= 1 and _is_green_brick(brick, pos):
+        green2 += 1
+        pos -= 1
+    # 允许横盘起跳型只有1天绿砖
+    if green2 < 1:
+        return False, 0.0, ""
+
+    # 上涨2：绿砖段前的红砖段
+    red2 = 0
+    while pos >= 1 and _is_red_brick(brick, pos):
+        red2 += 1
+        pos -= 1
+    if red2 < 2:
+        return False, 0.0, ""
+
+    # 回调1：第二段红砖前的绿砖段
+    green1 = 0
+    while pos >= 1 and _is_green_brick(brick, pos):
+        green1 += 1
+        pos -= 1
+    if green1 < 1:
+        return False, 0.0, ""
+
+    # 上涨1：第一段绿砖前的红砖段
+    red1 = 0
+    while pos >= 1 and _is_red_brick(brick, pos):
+        red1 += 1
+        pos -= 1
+    if red1 < 2:
+        return False, 0.0, ""
+
+    # 确认处于高位：信号日收盘价接近区间最高价
+    scan_start = max(0, pos)
+    period_high = float(np.max(high[scan_start:index + 1]))
+    if period_high <= 0:
+        return False, 0.0, ""
+    dist_from_high = (period_high - close[index]) / period_high
+    if dist_from_high > 0.10:
+        return False, 0.0, ""
+
+    total_waves_len = red1 + green1 + red2 + green2
+    if total_waves_len > 50:
+        return False, 0.0, ""
+
+    if red1 >= 3 and red2 >= 3:
+        penalty = -25.0
+    else:
+        penalty = -15.0
+
+    desc = f"三波追高({red1}红{green1}绿{red2}红{green2}绿,距高点{dist_from_high:.1%})"
+    return True, penalty, desc
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1223,7 +1519,7 @@ def screen_with_indicators(
     enabled_patterns: tuple[PatternType, ...],
     price_limit: float = 0.0,
 ) -> BrickPatternMatch:
-    """基于已经预计算好的指标执行单日定式检测（V2评分）。"""
+    """基于已经预计算好的指标执行单日定式检测（V3评分）。"""
     close_arr = indicators["close"]
     if index < 0 or index >= len(close_arr) or len(close_arr) < 10:
         return BrickPatternMatch(
@@ -1280,11 +1576,17 @@ def screen_with_indicators(
     best_breakdown = None
     best_final = -1.0
 
+    signal_score, signal_items = compute_signal_strength_score(indicators, index)
+
     for match_r in matched_results:
         specific_score = match_r.score
         specific_items = match_r.extra.get("specific_items", {})
 
         common_score, common_items = compute_common_quality_score(
+            indicators, index, match_r.pattern_type,
+        )
+
+        macd_score, macd_items = compute_macd_auxiliary_score(
             indicators, index, match_r.pattern_type,
         )
 
@@ -1297,6 +1599,10 @@ def screen_with_indicators(
             specific_items=specific_items,
             common_score=common_score,
             common_items=common_items,
+            macd_score=macd_score,
+            macd_items=macd_items,
+            signal_score=signal_score,
+            signal_items=signal_items,
             risk_penalty=risk_penalty,
             risk_items=risk_items,
         )

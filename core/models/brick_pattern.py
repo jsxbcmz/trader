@@ -1,7 +1,7 @@
 """砖形图交易定式选股模型。
 
 定义三种交易定式类型、匹配结果、风险过滤结果等数据结构。
-V2：定式专属(70分) + 通用质量(30分) + 风险扣分，S/A/B/C/D 五级评分。
+V3：定式专属(30分) + 通用质量(30分) + MACD环境(25分) + 信号强度(15分) + 风险扣分。
 """
 
 from __future__ import annotations
@@ -30,6 +30,9 @@ class RiskFilterType(Enum):
     PEAK_VOLUME = "天量见顶"
     TREND_EXHAUST = "趋势衰竭"
     FAKE_SIDEWAYS = "假横盘"
+    HAMMER = "锤子线"
+    LARGE_UPPER_SHADOW = "大上影线"
+    THIRD_WAVE = "三波追高"
 
 
 @dataclass(frozen=True)
@@ -42,12 +45,18 @@ class ScoreBreakdown:
     common_score: float = 0.0
     common_items: dict[str, float] = field(default_factory=dict)
 
+    macd_score: float = 0.0
+    macd_items: dict[str, float] = field(default_factory=dict)
+
+    signal_score: float = 0.0
+    signal_items: dict[str, float] = field(default_factory=dict)
+
     risk_penalty: float = 0.0
     risk_items: dict[str, float] = field(default_factory=dict)
 
     @property
     def base_score(self) -> float:
-        return self.specific_score + self.common_score
+        return self.specific_score + self.common_score + self.macd_score + self.signal_score
 
     @property
     def final_score(self) -> float:
@@ -56,13 +65,13 @@ class ScoreBreakdown:
     @property
     def grade(self) -> str:
         s = self.final_score
-        if s >= 85:
+        if s >= 80:
             return "S"
-        if s >= 70:
+        if s >= 65:
             return "A"
-        if s >= 55:
+        if s >= 50:
             return "B"
-        if s >= 40:
+        if s >= 35:
             return "C"
         return "D"
 
@@ -83,6 +92,10 @@ class ScoreBreakdown:
             "specific_items": dict(self.specific_items),
             "common_score": self.common_score,
             "common_items": dict(self.common_items),
+            "macd_score": self.macd_score,
+            "macd_items": dict(self.macd_items),
+            "signal_score": self.signal_score,
+            "signal_items": dict(self.signal_items),
             "risk_penalty": self.risk_penalty,
             "risk_items": dict(self.risk_items),
             "base_score": self.base_score,
@@ -98,6 +111,10 @@ class ScoreBreakdown:
             specific_items=d.get("specific_items", {}),
             common_score=d.get("common_score", 0.0),
             common_items=d.get("common_items", {}),
+            macd_score=d.get("macd_score", 0.0),
+            macd_items=d.get("macd_items", {}),
+            signal_score=d.get("signal_score", 0.0),
+            signal_items=d.get("signal_items", {}),
             risk_penalty=d.get("risk_penalty", 0.0),
             risk_items=d.get("risk_items", {}),
         )

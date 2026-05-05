@@ -21,7 +21,9 @@ from core.screening.brick_pattern_engine import (
     _calc_indicators,
     check_prerequisites,
     compute_common_quality_score,
+    compute_macd_auxiliary_score,
     compute_risk_penalty,
+    compute_signal_strength_score,
     detect_n_shape_jump,
     detect_sideways_jump,
     detect_uptrend_continue,
@@ -67,16 +69,26 @@ def _format_date(raw: str) -> str:
 def _build_score_tooltip(breakdown: ScoreBreakdown) -> str:
     """构建评分分解的tooltip文本"""
     lines = [f"最终得分: {breakdown.final_score:.0f} ({breakdown.grade}级)"]
-    lines.append(f"基础分: {breakdown.base_score:.0f} = 专属{breakdown.specific_score:.0f} + 通用{breakdown.common_score:.0f}")
+    base_parts = f"专属{breakdown.specific_score:.0f} + 通用{breakdown.common_score:.0f} + MACD{breakdown.macd_score:.0f} + 信号{breakdown.signal_score:.0f}"
+    lines.append(f"基础分: {breakdown.base_score:.0f} = {base_parts}")
     lines.append("")
 
-    lines.append(f"── 定式专属 ({breakdown.specific_score:.0f}/70) ──")
+    lines.append(f"── 定式专属 ({breakdown.specific_score:.0f}/30) ──")
     for k, v in breakdown.specific_items.items():
         lines.append(f"  {k}: {v:+.0f}" if v < 0 else f"  {k}: {v:.0f}")
 
     lines.append(f"── 通用质量 ({breakdown.common_score:.0f}/30) ──")
     for k, v in breakdown.common_items.items():
         lines.append(f"  {k}: {v:.0f}")
+
+    lines.append(f"── MACD环境 ({breakdown.macd_score:.0f}/25) ──")
+    for k, v in breakdown.macd_items.items():
+        lines.append(f"  {k}: {v:+.0f}" if v < 0 else f"  {k}: {v:.0f}")
+
+    if breakdown.signal_items:
+        lines.append(f"── 信号强度 ({breakdown.signal_score:.0f}/15) ──")
+        for k, v in breakdown.signal_items.items():
+            lines.append(f"  {k}: {v:.0f}")
 
     if breakdown.risk_penalty != 0:
         lines.append(f"── 风险扣分 ({breakdown.risk_penalty:.0f}) ──")
@@ -279,14 +291,24 @@ class SimilarPatternWorker(QtCore.QObject):
                     common_score, common_items = compute_common_quality_score(
                         indicators, i, self._pattern_type,
                     )
+                    macd_score, macd_items = compute_macd_auxiliary_score(
+                        indicators, i, self._pattern_type,
+                    )
                     risk_penalty, risk_items, risk_details_list = compute_risk_penalty(
                         indicators, i, self._pattern_type,
+                    )
+                    signal_score, signal_items = compute_signal_strength_score(
+                        indicators, i,
                     )
                     bd = ScoreBreakdown(
                         specific_score=result.score,
                         specific_items=result.extra.get("specific_items", {}),
                         common_score=common_score,
                         common_items=common_items,
+                        macd_score=macd_score,
+                        macd_items=macd_items,
+                        signal_score=signal_score,
+                        signal_items=signal_items,
                         risk_penalty=risk_penalty,
                         risk_items=risk_items,
                     )
@@ -810,8 +832,16 @@ class BrickPatternPage(QtWidgets.QWidget):
                 indicators, index, match_r.pattern_type,
             )
 
+            macd_score, macd_items = compute_macd_auxiliary_score(
+                indicators, index, match_r.pattern_type,
+            )
+
             risk_penalty, risk_items, risk_details_list = compute_risk_penalty(
                 indicators, index, match_r.pattern_type,
+            )
+
+            signal_score, signal_items = compute_signal_strength_score(
+                indicators, index,
             )
 
             breakdown = ScoreBreakdown(
@@ -819,6 +849,10 @@ class BrickPatternPage(QtWidgets.QWidget):
                 specific_items=specific_items,
                 common_score=common_score,
                 common_items=common_items,
+                macd_score=macd_score,
+                macd_items=macd_items,
+                signal_score=signal_score,
+                signal_items=signal_items,
                 risk_penalty=risk_penalty,
                 risk_items=risk_items,
             )

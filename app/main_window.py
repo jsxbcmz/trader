@@ -107,7 +107,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.templatePage.templatesChanged.connect(self.screeningPage.reload_templates)
         self.screeningPage.statusMessageRequested.connect(self._show_status_message)
         self.statsPage.statusMessageRequested.connect(self._show_status_message)
-        self.signalReviewPage.statusMessageRequested.connect(self._show_status_message)
         self.settingsPage.settingsSaveRequested.connect(self._save_settings_from_page)
         self.settingsPage.updateAllRequested.connect(self._request_update_all)
         self.exitAction.triggered.connect(self.close)
