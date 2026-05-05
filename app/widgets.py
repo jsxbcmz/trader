@@ -186,6 +186,7 @@ class StockChartWidget(QtWidgets.QWidget):
 
     onHover = QtCore.Signal(dict)
     visibleDateRangeChanged = QtCore.Signal(str, str)
+    subChartSelectionChanged = QtCore.Signal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -690,6 +691,10 @@ class StockChartWidget(QtWidgets.QWidget):
             self._apply_xrange_limits()
             vb = self.pricePlot.getViewBox()
             self._clamp_xrange(vb, vb.viewRange())
+
+    def _apply_sub_chart_selection(self, types: list[SubChartType]):
+        self.set_visible_sub_charts(types)
+        self.subChartSelectionChanged.emit(list(self._visible_sub_charts))
 
     def _render_newly_visible(self, newly_visible: set[SubChartType]):
         x, o, h, l, c, amount_yi, is_up = self._prepare_daily_arrays(self._df)

@@ -168,6 +168,10 @@ def create_plot_bundle(owner) -> PlotBundle:
     needle20_plot = pg.PlotWidget(axisItems={"bottom": needle20_axis}, viewBox=needle20_viewbox)
     macd_plot = pg.PlotWidget(axisItems={"bottom": macd_axis}, viewBox=macd_viewbox)
 
+    price_viewbox._is_price_panel = True
+    for vb in (vol_viewbox, brick_viewbox, kdj_viewbox, needle20_viewbox, macd_viewbox):
+        vb._is_price_panel = False
+
     for plot in (price_plot, vol_plot, brick_plot, kdj_plot, needle20_plot, macd_plot):
         configure_plot_widget(plot)
         plot_item = plot.getPlotItem()
@@ -507,69 +511,3 @@ def create_macd_items(macd_plot) -> MacdItems:
     )
 
 
-class SubChartSelector(QtWidgets.QToolButton):
-    """副图指标多选下拉框。"""
-
-    selectionChanged = QtCore.Signal(list)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setText("副图指标 ▼")
-        self.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.setStyleSheet(
-            "QToolButton { padding: 4px 8px; }"
-            "QToolButton::menu-indicator { image: none; }"
-        )
-
-        self._menu = QtWidgets.QMenu(self)
-        self._menu.setStyleSheet(
-            "QMenu { padding: 4px; }"
-            "QCheckBox { padding: 4px 8px; spacing: 6px; }"
-        )
-        self._checkboxes: dict[SubChartType, QtWidgets.QCheckBox] = {}
-
-        for chart_type in SubChartType:
-            meta = SUB_CHART_META[chart_type]
-            checkbox = QtWidgets.QCheckBox(meta["label"])
-            checkbox.setChecked(chart_type in DEFAULT_SUB_CHARTS)
-            checkbox.stateChanged.connect(self._on_checkbox_changed)
-
-            action = QtWidgets.QWidgetAction(self._menu)
-            action.setDefaultWidget(checkbox)
-            self._menu.addAction(action)
-            self._checkboxes[chart_type] = checkbox
-
-        self.setMenu(self._menu)
-
-    def _on_checkbox_changed(self):
-        selected = [t for t, cb in self._checkboxes.items() if cb.isChecked()]
-        if not selected:
-            sender = self.sender()
-            if isinstance(sender, QtWidgets.QCheckBox):
-                sender.blockSignals(True)
-                sender.setChecked(True)
-                sender.blockSignals(False)
-            selected = [t for t, cb in self._checkboxes.items() if cb.isChecked()]
-
-        for t, cb in self._checkboxes.items():
-            if len(selected) <= 1 and cb.isChecked():
-                cb.setEnabled(False)
-            else:
-                cb.setEnabled(True)
-
-        self.selectionChanged.emit(selected)
-
-    def get_selected(self) -> list[SubChartType]:
-        return [t for t, cb in self._checkboxes.items() if cb.isChecked()]
-
-    def set_selected(self, types: list[SubChartType]):
-        for t, cb in self._checkboxes.items():
-            cb.blockSignals(True)
-            cb.setChecked(t in types)
-            cb.blockSignals(False)
-        selected = [t for t, cb in self._checkboxes.items() if cb.isChecked()]
-        for t, cb in self._checkboxes.items():
-            if len(selected) <= 1 and cb.isChecked():
-                cb.setEnabled(False)
-            else:
-                cb.setEnabled(True)

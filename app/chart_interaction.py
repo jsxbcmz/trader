@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pyqtgraph as pg
+from PySide6 import QtCore, QtGui, QtWidgets
 
 
 def window_width_for_days(days: int, item_half_width: float, right_view_padding: float, include_right_padding: bool):
@@ -16,6 +17,7 @@ class StockChartViewBox(pg.ViewBox):
     def __init__(self, owner):
         super().__init__()
         self._owner = owner
+        self._is_price_panel = False
 
     def wheelEvent(self, ev, axis=None):
         owner = self._owner
@@ -43,3 +45,52 @@ class StockChartViewBox(pg.ViewBox):
             return
 
         super().wheelEvent(ev, axis=axis)
+
+    def raiseContextMenu(self, ev):
+        if self._is_price_panel:
+            ev.accept()
+            return
+
+        owner = self._owner
+        if owner is None:
+            ev.accept()
+            return
+
+        from .chart_layout import SUB_CHART_META, SubChartType
+
+        menu = QtWidgets.QMenu()
+        menu.setStyleSheet(
+            "QMenu { padding: 4px; }"
+            "QCheckBox { padding: 2px 8px; spacing: 6px; }"
+        )
+
+        current = list(owner._visible_sub_charts)
+        all_types = list(SubChartType)
+
+        checkboxes: dict[SubChartType, QtWidgets.QCheckBox] = {}
+        for chart_type in all_types:
+            meta = SUB_CHART_META[chart_type]
+            cb = QtWidgets.QCheckBox(meta["label"])
+            cb.setChecked(chart_type in current)
+            wa = QtWidgets.QWidgetAction(menu)
+            wa.setDefaultWidget(cb)
+            menu.addAction(wa)
+            checkboxes[chart_type] = cb
+
+        def on_indicator_toggled():
+            selected = [t for t, cb in checkboxes.items() if cb.isChecked()]
+            if not selected:
+                sender = menu.sender()
+                if isinstance(sender, QtWidgets.QCheckBox):
+                    sender.blockSignals(True)
+                    sender.setChecked(True)
+                    sender.blockSignals(False)
+                return
+            owner._apply_sub_chart_selection(selected)
+
+        for cb in checkboxes.values():
+            cb.stateChanged.connect(on_indicator_toggled)
+
+        pos = ev.screenPos() if hasattr(ev, 'screenPos') else ev.globalPos()
+        menu.exec(QtCore.QPoint(int(pos.x()), int(pos.y())))
+        ev.accept()

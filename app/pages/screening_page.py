@@ -410,10 +410,10 @@ class ScreeningPage(QtWidgets.QWidget):
     def _disable_chart_interaction(self):
         """禁用图表的拖动和缩放，仅保留十字光标悬停"""
         for plot in (self.chart.pricePlot, self.chart.volPlot,
-                     self.chart.brickPlot, self.chart.kdjPlot):
+                     self.chart.brickPlot, self.chart.kdjPlot,
+                     self.chart.needle20Plot, self.chart.macdPlot):
             viewbox = plot.getViewBox()
             viewbox.setMouseEnabled(x=False, y=False)
-            viewbox.setMenuEnabled(False)
 
     # ── 信号连接 ─────────────────────────────────────────────
 
@@ -874,7 +874,8 @@ class ScreeningPage(QtWidgets.QWidget):
         self.chart.pricePlot.setXRange(x_left, x_right, padding=0)
 
         for plot in (self.chart.pricePlot, self.chart.volPlot,
-                     self.chart.brickPlot, self.chart.kdjPlot):
+                     self.chart.brickPlot, self.chart.kdjPlot,
+                     self.chart.needle20Plot, self.chart.macdPlot):
             plot.getViewBox().setLimits(
                 xMin=x_left,
                 xMax=x_right,

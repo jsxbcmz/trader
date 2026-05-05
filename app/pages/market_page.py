@@ -23,7 +23,7 @@ from ..data_loader import (
 from ..history_updater import HistoryUpdater
 from ..mini_chart import MiniCandleChart
 from ..tushare_client import TushareClient, TushareClientError
-from ..chart_layout import DEFAULT_SUB_CHARTS, SubChartSelector, SubChartType
+from ..chart_layout import DEFAULT_SUB_CHARTS, SubChartType
 from ..widgets import StockChartWidget, UpdateProgressDialog
 
 
@@ -161,12 +161,10 @@ class MarketPage(QtWidgets.QWidget):
         self.chart.set_visible_day_limits(self._chart_min_visible_days, self._chart_max_visible_days)
         self.chart.onHover.connect(self.on_hover)
 
-        self.subChartSelector = SubChartSelector()
         saved_types = self._load_sub_chart_selection()
         if saved_types:
-            self.subChartSelector.set_selected(saved_types)
             self.chart.set_visible_sub_charts(saved_types)
-        self.subChartSelector.selectionChanged.connect(self._on_sub_chart_changed)
+        self.chart.subChartSelectionChanged.connect(self._on_sub_chart_changed)
 
         self.indexMiniChart = MiniCandleChart()
         self.industryMiniChart = MiniCandleChart()
@@ -177,17 +175,11 @@ class MarketPage(QtWidgets.QWidget):
         miniChartRow.addWidget(self.indexMiniChart, 1)
         miniChartRow.addWidget(self.industryMiniChart, 1)
 
-        chartToolbar = QtWidgets.QHBoxLayout()
-        chartToolbar.setContentsMargins(0, 0, 0, 0)
-        chartToolbar.addStretch(1)
-        chartToolbar.addWidget(self.subChartSelector)
-
         rightWidget = QtWidgets.QWidget()
         rightLayout = QtWidgets.QVBoxLayout(rightWidget)
         rightLayout.setContentsMargins(0, 0, 0, 0)
         rightLayout.setSpacing(2)
         rightLayout.addLayout(miniChartRow)
-        rightLayout.addLayout(chartToolbar)
         rightLayout.addWidget(self.chart, 1)
 
         splitter = QtWidgets.QSplitter()
@@ -215,7 +207,6 @@ class MarketPage(QtWidgets.QWidget):
         self.chart.set_visible_day_limits(self._chart_min_visible_days, self._chart_max_visible_days)
 
     def _on_sub_chart_changed(self, selected: list[SubChartType]):
-        self.chart.set_visible_sub_charts(selected)
         from PySide6.QtCore import QSettings
         settings = QSettings()
         settings.setValue("chart/visible_sub_charts", ",".join(str(t) for t in selected))

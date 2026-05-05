@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .pages import BrickPatternPage, CurveMatchPage, MarketPage, ScreeningPage, SettingsPage, StatsPage, TemplatePage
+from .pages import BacktestPage, BrickPatternPage, CurveMatchPage, MarketPage, ScreeningPage, SettingsPage, StatsPage, TemplatePage
 from .services import AppSettings, SettingsService
 
 
@@ -60,6 +60,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statsPage = StatsPage(self.root)
         self.brickPatternPage = BrickPatternPage(self.root)
         self.curveMatchPage = CurveMatchPage(self.root)
+        self.backtestPage = BacktestPage(self.root)
 
         self.pageStack.addWidget(self.marketPage)
         self.pageStack.addWidget(self.templatePage)
@@ -68,6 +69,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pageStack.addWidget(self.statsPage)
         self.pageStack.addWidget(self.brickPatternPage)
         self.pageStack.addWidget(self.curveMatchPage)
+        self.pageStack.addWidget(self.backtestPage)
 
         layout.addWidget(self.pageStack, 1)
 
@@ -87,6 +89,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openStatsAction = view_menu.addAction("打开统计页")
         self.openBrickPatternAction = view_menu.addAction("打开定式验证页")
         self.openCurveMatchAction = view_menu.addAction("打开曲线匹配页")
+        self.openBacktestAction = view_menu.addAction("打开回测分析页")
 
         data_menu = menu_bar.addMenu("数据")
         self.updateAllAction = data_menu.addAction("更新全部股票")
@@ -117,6 +120,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openBrickPatternAction.triggered.connect(lambda: self.switch_page(5))
         self.curveMatchPage.statusMessageRequested.connect(self._show_status_message)
         self.openCurveMatchAction.triggered.connect(lambda: self.switch_page(6))
+        self.backtestPage.statusMessageRequested.connect(self._show_status_message)
+        self.openBacktestAction.triggered.connect(lambda: self.switch_page(7))
         self.updateAllAction.triggered.connect(self._request_update_all)
         self.newTemplateAction.triggered.connect(self._open_new_template_dialog)
         self.aboutAction.triggered.connect(self._show_about_dialog)
