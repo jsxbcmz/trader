@@ -1,0 +1,45 @@
+{
+  "_comment": "自选股配置文件。修改后直接运行 collect.py 即可，不用每次传 --stocks 参数。",
+
+  "default": {
+    "_desc": "默认自选股池，运行 collect.py premarket 时使用",
+    "stocks": [
+      "600519",
+      "300750",
+      "002594",
+      "601318",
+      "000858",
+      "600900",
+      "688599"
+    ]
+  },
+
+  "core_index": {
+    "_desc": "核心宽基 ETF 观察池（沪深300/中证500/创业板/科创50）",
+    "stocks": [
+      "510300",
+      "510500",
+      "159915",
+      "588000"
+    ]
+  },
+
+  "sector_etf": {
+    "_desc": "行业 ETF 观察池",
+    "stocks": [
+      "512980",
+      "512690",
+      "159869",
+      "512880",
+      "512010"
+    ]
+  },
+
+  "watchlist_rules": {
+    "max_stocks":        20,
+    "min_mktcap_yi":     50,
+    "exclude_st":        true,
+    "exclude_near_limit": true,
+    "note": "这些规则目前为说明用途，collect.py 不直接读取 rules 字段，请用 --stocks 或 default.stocks 控制标的"
+  }
+}
