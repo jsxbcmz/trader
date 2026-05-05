@@ -9,15 +9,21 @@ from .chart_indicators import (
     calc_brick_threshold_price,
     compute_brick_indicator,
     compute_kdj_indicator,
+    compute_macd_indicator,
+    compute_needle20_indicator,
     compute_zx_long_short,
     compute_zx_short_trend,
 )
 from .chart_interaction import window_width_for_days
 from .chart_layout import (
+    DEFAULT_SUB_CHARTS,
     FIXED_Y_AXIS_WIDTH,
+    SubChartType,
     create_brick_items,
     create_chart_layout,
     create_kdj_items,
+    create_macd_items,
+    create_needle20_items,
     create_plot_bundle,
     create_price_items,
     create_volume_items,
@@ -27,6 +33,8 @@ from .chart_overlays import (
     build_indicator_label_html,
     build_info_box_html,
     build_kdj_label_html,
+    build_macd_label_html,
+    build_needle20_label_html,
     build_y_value_html,
 )
 from .chart_primitives import CandlestickItem
@@ -177,6 +185,7 @@ class StockChartWidget(QtWidgets.QWidget):
     DEFAULT_MAX_VISIBLE_DAYS = 150
 
     onHover = QtCore.Signal(dict)
+    visibleDateRangeChanged = QtCore.Signal(str, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -196,6 +205,12 @@ class StockChartWidget(QtWidgets.QWidget):
         self._kdj_k_values = np.array([])
         self._kdj_d_values = np.array([])
         self._kdj_j_values = np.array([])
+        self._needle20_short_values = np.array([])
+        self._needle20_mid_values = np.array([])
+        self._needle20_long_values = np.array([])
+        self._macd_diff_values = np.array([])
+        self._macd_dea_values = np.array([])
+        self._macd_macd_values = np.array([])
         self._last_hover_index: int | None = None
         self._last_hover_y: float | None = None
         self._last_visible_range_indices: tuple[int, int] | None = None
@@ -213,21 +228,39 @@ class StockChartWidget(QtWidgets.QWidget):
         self.volAxis = bundle.vol_axis
         self.brickAxis = bundle.brick_axis
         self.kdjAxis = bundle.kdj_axis
+        self.needle20Axis = bundle.needle20_axis
+        self.macdAxis = bundle.macd_axis
         self.priceViewBox = bundle.price_viewbox
         self.volViewBox = bundle.vol_viewbox
         self.brickViewBox = bundle.brick_viewbox
         self.kdjViewBox = bundle.kdj_viewbox
+        self.needle20ViewBox = bundle.needle20_viewbox
+        self.macdViewBox = bundle.macd_viewbox
         self.pricePlot = bundle.price_plot
         self.volPlot = bundle.vol_plot
         self.brickPlot = bundle.brick_plot
         self.kdjPlot = bundle.kdj_plot
+        self.needle20Plot = bundle.needle20_plot
+        self.macdPlot = bundle.macd_plot
 
-        self.chartContainer, self.chartLayout, layout, date_bar_items = create_chart_layout(
+        self._visible_sub_charts: list[SubChartType] = list(DEFAULT_SUB_CHARTS)
+        self._type_to_plot: dict[SubChartType, pg.PlotWidget] = {
+            SubChartType.VOLUME: self.volPlot,
+            SubChartType.BRICK: self.brickPlot,
+            SubChartType.KDJ: self.kdjPlot,
+            SubChartType.NEEDLE20: self.needle20Plot,
+            SubChartType.MACD: self.macdPlot,
+        }
+        self._type_to_vline: dict[SubChartType, pg.InfiniteLine] = {}
+
+        self.chartContainer, self.chartLayout, layout, date_bar_items, self._separators = create_chart_layout(
             self,
             self.pricePlot,
             self.volPlot,
             self.brickPlot,
             self.kdjPlot,
+            self.needle20Plot,
+            self.macdPlot,
         )
         self.dateBar = date_bar_items.date_bar
         self.leftDateLabel = date_bar_items.left_date_label
@@ -266,6 +299,42 @@ class StockChartWidget(QtWidgets.QWidget):
         self.kdjVLine = kdj_items.kdj_v_line
         self.kdjLabel = kdj_items.kdj_label
 
+        needle20_items = create_needle20_items(self.needle20Plot)
+        self.needle20ShortCurve = needle20_items.short_curve
+        self.needle20MidCurve = needle20_items.mid_curve
+        self.needle20LongCurve = needle20_items.long_curve
+        self.needle20LowLine = needle20_items.low_line
+        self.needle20HighLine = needle20_items.high_line
+        self.needle20VLine = needle20_items.v_line
+        self.needle20Label = needle20_items.label
+
+        macd_items = create_macd_items(self.macdPlot)
+        self.macdDiffCurve = macd_items.diff_curve
+        self.macdDeaCurve = macd_items.dea_curve
+        self.macdZeroLine = macd_items.zero_line
+        self.macdVLine = macd_items.v_line
+        self.macdLabel = macd_items.label
+
+        self._type_to_vline = {
+            SubChartType.VOLUME: self.volVLine,
+            SubChartType.BRICK: self.brickVLine,
+            SubChartType.KDJ: self.kdjVLine,
+            SubChartType.NEEDLE20: self.needle20VLine,
+            SubChartType.MACD: self.macdVLine,
+        }
+        self._type_to_separator: dict[SubChartType, QtWidgets.QWidget] = {
+            SubChartType.VOLUME: self._separators.vol_separator,
+            SubChartType.BRICK: self._separators.brick_separator,
+            SubChartType.KDJ: self._separators.kdj_separator,
+            SubChartType.NEEDLE20: self._separators.needle20_separator,
+            SubChartType.MACD: self._separators.macd_separator,
+        }
+
+        for chart_type in SubChartType:
+            if chart_type not in self._visible_sub_charts:
+                self._type_to_plot[chart_type].hide()
+                self._type_to_separator[chart_type].hide()
+
         self._proxy = pg.SignalProxy(
             self.pricePlot.scene().sigMouseMoved,
             rateLimit=30,
@@ -286,10 +355,42 @@ class StockChartWidget(QtWidgets.QWidget):
             rateLimit=30,
             slot=lambda evt: self._on_mouse_moved(self.kdjPlot, evt),
         )
+        self._needle20Proxy = pg.SignalProxy(
+            self.needle20Plot.scene().sigMouseMoved,
+            rateLimit=30,
+            slot=lambda evt: self._on_mouse_moved(self.needle20Plot, evt),
+        )
+        self._macdProxy = pg.SignalProxy(
+            self.macdPlot.scene().sigMouseMoved,
+            rateLimit=30,
+            slot=lambda evt: self._on_mouse_moved(self.macdPlot, evt),
+        )
 
-        # Clamp panning/zooming to shared data range no matter which subplot initiates it
-        for plot in (self.pricePlot, self.volPlot, self.brickPlot, self.kdjPlot):
+        for plot in (self.pricePlot, self.volPlot, self.brickPlot, self.kdjPlot, self.needle20Plot, self.macdPlot):
             plot.getViewBox().sigRangeChanged.connect(self._clamp_xrange)
+
+        # 用于在 widget 首次真正显示后修正 Y 轴范围。
+        # 弹窗等场景里 set_daily 会在 widget 还没有有效 viewport 尺寸时被调用，
+        # 此时 pyqtgraph 内部的 setYRange 写入的 targetRange 会在 widget 首次
+        # show/resize 时被 ViewBox 自身的 autoRange 行为覆盖，导致主图上方被遮挡。
+        self._initial_yrange_fixed = False
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        # widget 首次显示后，pyqtgraph 才拿到真实 viewport 尺寸。
+        # 延迟到下一个事件循环再修正一次 Y 轴范围，确保覆盖 ViewBox resize
+        # 时可能的 autoRange 行为。
+        if not self._initial_yrange_fixed and self._df is not None and len(self._df) > 0:
+            self._initial_yrange_fixed = True
+            QtCore.QTimer.singleShot(0, self._refresh_visible_yrange)
+
+    def _refresh_visible_yrange(self):
+        """强制基于当前 X 视图重算 Y 轴范围，绕过缓存短路。"""
+        if self._df is None or len(self._df) == 0:
+            return
+        (x0, x1), _ = self.pricePlot.getViewBox().viewRange()
+        self._last_visible_range_indices = None
+        self._update_visible_yrange(x0, x1)
 
     def _update_indicator_label_values(self, idx: int):
         if idx < 0 or idx >= len(self._short_trend_values) or idx >= len(self._long_short_values):
@@ -340,6 +441,38 @@ class StockChartWidget(QtWidgets.QWidget):
         self.kdjLabel.adjustSize()
         self.kdjLabel.show()
 
+    def _update_needle20_label_values(self, idx: int):
+        if (idx < 0 or idx >= len(self._needle20_short_values)
+                or idx >= len(self._needle20_mid_values)
+                or idx >= len(self._needle20_long_values)):
+            self.needle20Label.hide()
+            return
+
+        text = build_needle20_label_html(
+            float(self._needle20_short_values[idx]),
+            float(self._needle20_mid_values[idx]),
+            float(self._needle20_long_values[idx]),
+        )
+        self.needle20Label.setText(text)
+        self.needle20Label.adjustSize()
+        self.needle20Label.show()
+
+    def _update_macd_label_values(self, idx: int):
+        if (idx < 0 or idx >= len(self._macd_diff_values)
+                or idx >= len(self._macd_dea_values)
+                or idx >= len(self._macd_macd_values)):
+            self.macdLabel.hide()
+            return
+
+        text = build_macd_label_html(
+            float(self._macd_diff_values[idx]),
+            float(self._macd_dea_values[idx]),
+            float(self._macd_macd_values[idx]),
+        )
+        self.macdLabel.setText(text)
+        self.macdLabel.adjustSize()
+        self.macdLabel.show()
+
     def _hide_hover_artifacts(self):
         self.infoText.hide()
         self.yValueText.hide()
@@ -348,12 +481,12 @@ class StockChartWidget(QtWidgets.QWidget):
         self._last_y_text = None
 
     def _is_in_any_plot(self, pos) -> bool:
-        return (
-            self.pricePlot.sceneBoundingRect().contains(pos)
-            or self.volPlot.sceneBoundingRect().contains(pos)
-            or self.brickPlot.sceneBoundingRect().contains(pos)
-            or self.kdjPlot.sceneBoundingRect().contains(pos)
-        )
+        if self.pricePlot.sceneBoundingRect().contains(pos):
+            return True
+        for chart_type in self._visible_sub_charts:
+            if self._type_to_plot[chart_type].sceneBoundingRect().contains(pos):
+                return True
+        return False
 
     def _update_hover_for_index(self, idx: int, y: float, show_price_overlay: bool):
         snapped_x = float(idx)
@@ -390,8 +523,14 @@ class StockChartWidget(QtWidgets.QWidget):
         self._last_hover_index = idx
 
         self._update_indicator_label_values(idx)
-        self._update_brick_delta_label(idx, self._brick_values)
-        self._update_kdj_label_values(idx)
+        if SubChartType.BRICK in self._visible_sub_charts:
+            self._update_brick_delta_label(idx, self._brick_values)
+        if SubChartType.KDJ in self._visible_sub_charts:
+            self._update_kdj_label_values(idx)
+        if SubChartType.NEEDLE20 in self._visible_sub_charts:
+            self._update_needle20_label_values(idx)
+        if SubChartType.MACD in self._visible_sub_charts:
+            self._update_macd_label_values(idx)
 
         row = self._df.iloc[idx]
         o = float(row["open"])
@@ -430,16 +569,24 @@ class StockChartWidget(QtWidgets.QWidget):
     def _set_date_axis(self, dates: list[str]):
         """Update bottom axis date strings without recreating plots."""
         self._dates = dates
-        for axis in (self.priceAxis, self.volAxis, self.brickAxis, self.kdjAxis):
+        type_to_axis = {
+            SubChartType.VOLUME: self.volAxis,
+            SubChartType.BRICK: self.brickAxis,
+            SubChartType.KDJ: self.kdjAxis,
+            SubChartType.NEEDLE20: self.needle20Axis,
+            SubChartType.MACD: self.macdAxis,
+        }
+        axes = [self.priceAxis] + [type_to_axis[t] for t in self._visible_sub_charts]
+        for axis in axes:
             self._set_axes_dates(axis)
-        for plot in (self.pricePlot, self.volPlot, self.brickPlot, self.kdjPlot):
+        plots = [self.pricePlot] + [self._type_to_plot[t] for t in self._visible_sub_charts]
+        for plot in plots:
             self._reset_axis_picture(plot)
 
     def _set_crosshair_x(self, x: float):
         self.vLine.setPos(x)
-        self.volVLine.setPos(x)
-        self.brickVLine.setPos(x)
-        self.kdjVLine.setPos(x)
+        for chart_type in self._visible_sub_charts:
+            self._type_to_vline[chart_type].setPos(x)
         self._update_crosshair_date(int(round(x)))
 
     def _update_crosshair_date(self, idx: int):
@@ -453,10 +600,11 @@ class StockChartWidget(QtWidgets.QWidget):
         self.crosshairDateLabel.adjustSize()
         self.crosshairDateLabel.show()
 
-        view_box = self.kdjPlot.getViewBox()
+        bottom_plot = self._type_to_plot.get(self._visible_sub_charts[-1], self.pricePlot)
+        view_box = bottom_plot.getViewBox()
         scene_point = view_box.mapViewToScene(QtCore.QPointF(float(idx), 0))
-        widget_point = self.kdjPlot.mapFromScene(scene_point)
-        global_point = self.kdjPlot.mapToGlobal(widget_point)
+        widget_point = bottom_plot.mapFromScene(scene_point)
+        global_point = bottom_plot.mapToGlobal(widget_point)
         local_point = self.dateBar.mapFromGlobal(global_point)
 
         label_width = self.crosshairDateLabel.sizeHint().width()
@@ -483,7 +631,8 @@ class StockChartWidget(QtWidgets.QWidget):
         if max_width < min_width:
             max_width = min_width
 
-        for plot in (self.pricePlot, self.volPlot, self.brickPlot, self.kdjPlot):
+        plots = [self.pricePlot] + [self._type_to_plot[t] for t in self._visible_sub_charts]
+        for plot in plots:
             plot.getViewBox().setLimits(
                 xMin=x_min_allowed,
                 xMax=x_max_allowed,
@@ -504,6 +653,62 @@ class StockChartWidget(QtWidgets.QWidget):
         viewbox = self.pricePlot.getViewBox()
         current_range = viewbox.viewRange()
         self._clamp_xrange(viewbox, current_range)
+
+    def set_visible_sub_charts(self, types: list[SubChartType]):
+        """设置可见的副图面板，动态调整布局。"""
+        if not types:
+            return
+        types = [t for t in SubChartType if t in types]
+        if not types:
+            return
+        old_visible = set(self._visible_sub_charts)
+        self._visible_sub_charts = types
+
+        visible_count = len(types)
+        price_stretch = 6 - visible_count
+
+        self.chartLayout.setStretchFactor(self.pricePlot, price_stretch)
+
+        for chart_type in SubChartType:
+            plot = self._type_to_plot[chart_type]
+            separator = self._type_to_separator[chart_type]
+            if chart_type in types:
+                separator.show()
+                plot.show()
+                self.chartLayout.setStretchFactor(plot, 1)
+            else:
+                separator.hide()
+                plot.hide()
+                self.chartLayout.setStretchFactor(plot, 0)
+
+        self._relink_x_axes()
+
+        if self._df is not None and len(self._df) > 0:
+            newly_visible = set(types) - old_visible
+            if newly_visible:
+                self._render_newly_visible(newly_visible)
+            self._apply_xrange_limits()
+            vb = self.pricePlot.getViewBox()
+            self._clamp_xrange(vb, vb.viewRange())
+
+    def _render_newly_visible(self, newly_visible: set[SubChartType]):
+        x, o, h, l, c, amount_yi, is_up = self._prepare_daily_arrays(self._df)
+        if SubChartType.VOLUME in newly_visible:
+            self._update_volume_panel(x, is_up, amount_yi)
+        if SubChartType.BRICK in newly_visible:
+            self._update_brick_panel(x, h, l, c)
+        if SubChartType.KDJ in newly_visible:
+            self._update_kdj_panel(x, h, l, c)
+        if SubChartType.NEEDLE20 in newly_visible:
+            self._update_needle20_panel(x, h, l, c)
+        if SubChartType.MACD in newly_visible:
+            self._update_macd_panel(x, c)
+
+    def _relink_x_axes(self):
+        for plot in (self.volPlot, self.brickPlot, self.kdjPlot, self.needle20Plot, self.macdPlot):
+            plot.setXLink(None)
+        for chart_type in self._visible_sub_charts:
+            self._type_to_plot[chart_type].setXLink(self.pricePlot)
 
     def _prepare_daily_arrays(self, df):
         x = np.arange(len(df), dtype=float)
@@ -695,6 +900,101 @@ class StockChartWidget(QtWidgets.QWidget):
         else:
             self.kdjPlot.setYRange(-5, 105, padding=0)
 
+    def _update_needle20_panel(self, x, h, l, c):
+        self.needle20Plot.clear()
+        self.needle20Plot.addItem(self.needle20ShortCurve)
+        self.needle20Plot.addItem(self.needle20MidCurve)
+        self.needle20Plot.addItem(self.needle20LongCurve)
+        self.needle20Plot.addItem(self.needle20LowLine, ignoreBounds=True)
+        self.needle20LowLine.setPos(20)
+        self.needle20Plot.addItem(self.needle20HighLine, ignoreBounds=True)
+        self.needle20HighLine.setPos(80)
+        self.needle20Plot.addItem(self.needle20VLine, ignoreBounds=True)
+        self.needle20VLine.show()
+
+        result = compute_needle20_indicator(h, l, c)
+        self._needle20_short_values = result["short"]
+        self._needle20_mid_values = result["mid"]
+        self._needle20_long_values = result["long"]
+        self.needle20ShortCurve.setData(x, self._needle20_short_values)
+        self.needle20MidCurve.setData(x, self._needle20_mid_values)
+        self.needle20LongCurve.setData(x, self._needle20_long_values)
+
+        all_vals = np.concatenate([
+            self._needle20_short_values[np.isfinite(self._needle20_short_values)],
+            self._needle20_mid_values[np.isfinite(self._needle20_mid_values)],
+            self._needle20_long_values[np.isfinite(self._needle20_long_values)],
+        ])
+        if len(all_vals) > 0:
+            n20_min = float(np.min(all_vals))
+            n20_max = float(np.max(all_vals))
+            n20_min = min(n20_min, 0.0)
+            n20_max = max(n20_max, 100.0)
+            n20_pad = max((n20_max - n20_min) * 0.06, 1.0)
+            self.needle20Plot.setYRange(n20_min - n20_pad, n20_max + n20_pad, padding=0)
+        else:
+            self.needle20Plot.setYRange(-5, 105, padding=0)
+
+    def _update_macd_panel(self, x, c):
+        self.macdPlot.clear()
+        self.macdPlot.addItem(self.macdDiffCurve)
+        self.macdPlot.addItem(self.macdDeaCurve)
+        self.macdPlot.addItem(self.macdZeroLine, ignoreBounds=True)
+        self.macdZeroLine.setPos(0)
+        self.macdPlot.addItem(self.macdVLine, ignoreBounds=True)
+        self.macdVLine.show()
+
+        result = compute_macd_indicator(c)
+        self._macd_diff_values = result["diff"]
+        self._macd_dea_values = result["dea"]
+        self._macd_macd_values = result["macd"]
+        cross_up = result["cross_up"]
+        cross_down = result["cross_down"]
+
+        self.macdDiffCurve.setData(x, self._macd_diff_values)
+        self.macdDeaCurve.setData(x, self._macd_dea_values)
+
+        macd_vals = self._macd_macd_values
+        cross_mask = cross_up | cross_down
+        normal_mask = ~cross_mask
+
+        normal_pos = normal_mask & (macd_vals >= 0)
+        normal_neg = normal_mask & (macd_vals < 0)
+        if np.any(normal_pos):
+            self.macdPlot.addItem(pg.BarGraphItem(
+                x=x[normal_pos], height=macd_vals[normal_pos], width=0.3,
+                brush=pg.mkBrush(220, 0, 0, 200), pen=None,
+            ))
+        if np.any(normal_neg):
+            self.macdPlot.addItem(pg.BarGraphItem(
+                x=x[normal_neg], height=macd_vals[normal_neg], width=0.3,
+                brush=pg.mkBrush(0, 170, 0, 200), pen=None,
+            ))
+
+        cross_pos = cross_mask & (macd_vals >= 0)
+        cross_neg = cross_mask & (macd_vals < 0)
+        if np.any(cross_pos):
+            self.macdPlot.addItem(pg.BarGraphItem(
+                x=x[cross_pos], height=macd_vals[cross_pos], width=0.7,
+                brush=pg.mkBrush(220, 0, 0, 200), pen=None,
+            ))
+        if np.any(cross_neg):
+            self.macdPlot.addItem(pg.BarGraphItem(
+                x=x[cross_neg], height=macd_vals[cross_neg], width=0.7,
+                brush=pg.mkBrush(0, 170, 0, 200), pen=None,
+            ))
+
+        all_vals = np.concatenate([
+            self._macd_diff_values[np.isfinite(self._macd_diff_values)],
+            self._macd_dea_values[np.isfinite(self._macd_dea_values)],
+            macd_vals[np.isfinite(macd_vals)],
+        ])
+        if len(all_vals) > 0:
+            macd_min = float(np.min(all_vals))
+            macd_max = float(np.max(all_vals))
+            macd_pad = max((macd_max - macd_min) * 0.06, 0.1)
+            self.macdPlot.setYRange(macd_min - macd_pad, macd_max + macd_pad, padding=0)
+
     def _reset_initial_view(self, df, brick_values):
         initial_data_idx = max(0, len(df) - 1)
         initial_x0 = max(self._x_min, len(df) - 100 - self._item_half_width)
@@ -709,6 +1009,8 @@ class StockChartWidget(QtWidgets.QWidget):
         self._update_indicator_label_values(initial_data_idx)
         self._update_brick_delta_label(initial_data_idx, brick_values)
         self._update_kdj_label_values(initial_data_idx)
+        self._update_needle20_label_values(initial_data_idx)
+        self._update_macd_label_values(initial_data_idx)
         self.infoText.hide()
         self.yValueText.hide()
 
@@ -757,6 +1059,10 @@ class StockChartWidget(QtWidgets.QWidget):
         self._last_visible_range_indices = visible_indices
 
         left, right = visible_indices
+        if self._dates:
+            d0 = self._dates[max(0, left)]
+            d1 = self._dates[min(right, len(self._dates) - 1)]
+            self.visibleDateRangeChanged.emit(d0, d1)
         visible_low = self._low_values[left:right + 1]
         visible_high = self._high_values[left:right + 1]
         y_range = padded_min_max(visible_low, visible_high)
@@ -767,7 +1073,7 @@ class StockChartWidget(QtWidgets.QWidget):
         self.pricePlot.setYRange(ymin, ymax, padding=0)
         self._update_price_guide_lines(ymin, ymax)
 
-        if len(self._amount_yi_values) > 0:
+        if SubChartType.VOLUME in self._visible_sub_charts and len(self._amount_yi_values) > 0:
             visible_amount = self._amount_yi_values[left:right + 1]
             finite_amount = visible_amount[np.isfinite(visible_amount)]
             if len(finite_amount) > 0:
@@ -775,7 +1081,7 @@ class StockChartWidget(QtWidgets.QWidget):
                 vol_pad = vol_max * 0.02
                 self.volPlot.setYRange(0, vol_max + vol_pad, padding=0)
 
-        if len(self._brick_values) > 0:
+        if SubChartType.BRICK in self._visible_sub_charts and len(self._brick_values) > 0:
             visible_brick = self._brick_values[left:right + 1]
             finite_brick = visible_brick[np.isfinite(visible_brick)]
             if len(finite_brick) > 0:
@@ -794,6 +1100,36 @@ class StockChartWidget(QtWidgets.QWidget):
                     brick_max = float(np.max(finite_highs))
                     brick_pad = max((brick_max - brick_min) * 0.08, 0.1)
                     self.brickPlot.setYRange(brick_min - brick_pad, brick_max + brick_pad, padding=0)
+
+        if SubChartType.NEEDLE20 in self._visible_sub_charts:
+            vis_short = self._needle20_short_values[left:right + 1] if len(self._needle20_short_values) > 0 else np.array([])
+            vis_mid = self._needle20_mid_values[left:right + 1] if len(self._needle20_mid_values) > 0 else np.array([])
+            vis_long = self._needle20_long_values[left:right + 1] if len(self._needle20_long_values) > 0 else np.array([])
+            all_vis = np.concatenate([
+                vis_short[np.isfinite(vis_short)] if len(vis_short) > 0 else np.array([]),
+                vis_mid[np.isfinite(vis_mid)] if len(vis_mid) > 0 else np.array([]),
+                vis_long[np.isfinite(vis_long)] if len(vis_long) > 0 else np.array([]),
+            ])
+            if len(all_vis) > 0:
+                n20_min = min(float(np.min(all_vis)), 0.0)
+                n20_max = max(float(np.max(all_vis)), 100.0)
+                n20_pad = max((n20_max - n20_min) * 0.06, 1.0)
+                self.needle20Plot.setYRange(n20_min - n20_pad, n20_max + n20_pad, padding=0)
+
+        if SubChartType.MACD in self._visible_sub_charts:
+            vis_diff = self._macd_diff_values[left:right + 1] if len(self._macd_diff_values) > 0 else np.array([])
+            vis_dea = self._macd_dea_values[left:right + 1] if len(self._macd_dea_values) > 0 else np.array([])
+            vis_macd = self._macd_macd_values[left:right + 1] if len(self._macd_macd_values) > 0 else np.array([])
+            all_vis = np.concatenate([
+                vis_diff[np.isfinite(vis_diff)] if len(vis_diff) > 0 else np.array([]),
+                vis_dea[np.isfinite(vis_dea)] if len(vis_dea) > 0 else np.array([]),
+                vis_macd[np.isfinite(vis_macd)] if len(vis_macd) > 0 else np.array([]),
+            ])
+            if len(all_vis) > 0:
+                macd_min = float(np.min(all_vis))
+                macd_max = float(np.max(all_vis))
+                macd_pad = max((macd_max - macd_min) * 0.06, 0.1)
+                self.macdPlot.setYRange(macd_min - macd_pad, macd_max + macd_pad, padding=0)
 
         if len(self._dates) > 0:
             left_date = self._dates[left] if left < len(self._dates) else ""
@@ -853,10 +1189,42 @@ class StockChartWidget(QtWidgets.QWidget):
 
             x, o, h, l, c, amount_yi, is_up = self._prepare_daily_arrays(df)
             self._update_price_panel(x, o, h, l, c, is_up)
-            self._update_volume_panel(x, is_up, amount_yi)
-            brick_values = self._update_brick_panel(x, h, l, c)
+
+            if SubChartType.VOLUME in self._visible_sub_charts:
+                self._update_volume_panel(x, is_up, amount_yi)
+
+            if SubChartType.BRICK in self._visible_sub_charts:
+                brick_values = self._update_brick_panel(x, h, l, c)
+            else:
+                brick_result = compute_brick_indicator(h, l, c)
+                brick_values = brick_result["brick"]
+                self._brick_values = brick_values
             self._update_brick_green_thresholds(h, l, c, brick_values)
-            self._update_kdj_panel(x, h, l, c)
+
+            if SubChartType.KDJ in self._visible_sub_charts:
+                self._update_kdj_panel(x, h, l, c)
+            else:
+                kdj_result = compute_kdj_indicator(h, l, c)
+                self._kdj_k_values = kdj_result["k"]
+                self._kdj_d_values = kdj_result["d"]
+                self._kdj_j_values = kdj_result["j"]
+
+            if SubChartType.NEEDLE20 in self._visible_sub_charts:
+                self._update_needle20_panel(x, h, l, c)
+            else:
+                n20_result = compute_needle20_indicator(h, l, c)
+                self._needle20_short_values = n20_result["short"]
+                self._needle20_mid_values = n20_result["mid"]
+                self._needle20_long_values = n20_result["long"]
+
+            if SubChartType.MACD in self._visible_sub_charts:
+                self._update_macd_panel(x, c)
+            else:
+                macd_result = compute_macd_indicator(c)
+                self._macd_diff_values = macd_result["diff"]
+                self._macd_dea_values = macd_result["dea"]
+                self._macd_macd_values = macd_result["macd"]
+
             self._reset_initial_view(df, brick_values)
         finally:
             self._loading_plot = False

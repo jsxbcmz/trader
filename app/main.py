@@ -15,6 +15,8 @@ def main():
         root = Path(__file__).resolve().parents[1]
 
     app = QtWidgets.QApplication(sys.argv)
+    app.setOrganizationName("StockViewer")
+    app.setApplicationName("StockViewer")
     w = MainWindow(root)
     w.show()
     sys.exit(app.exec())

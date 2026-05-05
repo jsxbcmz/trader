@@ -21,6 +21,16 @@ def get_daily_csv_path(stock_daily_data_dir: Path, symbol: str) -> Path:
     return stock_daily_data_dir / f"{normalize_symbol(symbol)}.csv"
 
 
+def get_index_csv_path(stock_daily_data_dir: Path, ts_code: str) -> Path:
+    tag = ts_code.replace(".", "_")
+    return stock_daily_data_dir / f"index_{tag}.csv"
+
+
+def get_industry_csv_path(industry_data_dir: Path, ts_code: str) -> Path:
+    tag = ts_code.replace(".", "_")
+    return industry_data_dir / f"{tag}.csv"
+
+
 def load_stock_list(stocklist_csv: Path) -> pd.DataFrame:
     """Load stock list CSV.
 
@@ -148,3 +158,51 @@ def load_daily_csv(stock_daily_data_dir: Path, symbol: str) -> pd.DataFrame:
 def clear_daily_data_cache():
     """清除数据缓存"""
     _daily_data_cache.clear()
+
+
+def load_index_csv(stock_daily_data_dir: Path, ts_code: str) -> pd.DataFrame:
+    fp = get_index_csv_path(stock_daily_data_dir, ts_code)
+    if not fp.exists():
+        return pd.DataFrame(columns=DAILY_COLUMNS)
+
+    df = pd.read_csv(fp)
+    required = {"date", "open", "close", "high", "low"}
+    miss = required - set(df.columns)
+    if miss:
+        return pd.DataFrame(columns=DAILY_COLUMNS)
+
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.sort_values("date").reset_index(drop=True)
+    for c in ["open", "high", "low", "close"]:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    df = df.dropna(subset=["open", "high", "low", "close"])
+    return df
+
+
+def load_industry_csv(industry_data_dir: Path, ts_code: str) -> pd.DataFrame:
+    fp = get_industry_csv_path(industry_data_dir, ts_code)
+    if not fp.exists():
+        return pd.DataFrame(columns=DAILY_COLUMNS)
+
+    df = pd.read_csv(fp)
+    required = {"date", "open", "close", "high", "low"}
+    miss = required - set(df.columns)
+    if miss:
+        return pd.DataFrame(columns=DAILY_COLUMNS)
+
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.sort_values("date").reset_index(drop=True)
+    for c in ["open", "high", "low", "close"]:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    df = df.dropna(subset=["open", "high", "low", "close"])
+    return df
+
+
+def load_industry_mapping(root: Path) -> dict[str, str]:
+    import json
+    fp = root / "industry_mapping.json"
+    if not fp.exists():
+        return {}
+    with open(fp, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return {k: v for k, v in data.items() if not k.startswith("_")}

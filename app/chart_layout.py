@@ -1,12 +1,32 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 
 import pyqtgraph as pg
 from PySide6 import QtCore, QtWidgets
 
 from .chart_primitives import BrickDeltaItem, CandlestickItem, DateAxisItem
 from .chart_interaction import StockChartViewBox
+
+
+class SubChartType(str, Enum):
+    VOLUME = "volume"
+    BRICK = "brick"
+    KDJ = "kdj"
+    NEEDLE20 = "needle20"
+    MACD = "macd"
+
+
+SUB_CHART_META = {
+    SubChartType.VOLUME:   {"label": "成交额",   "order": 0},
+    SubChartType.BRICK:    {"label": "砖型差值", "order": 1},
+    SubChartType.KDJ:      {"label": "KDJ",      "order": 2},
+    SubChartType.NEEDLE20: {"label": "单针下20", "order": 3},
+    SubChartType.MACD:     {"label": "MACD",     "order": 4},
+}
+
+DEFAULT_SUB_CHARTS = [SubChartType.VOLUME, SubChartType.BRICK, SubChartType.KDJ]
 
 
 @dataclass
@@ -16,14 +36,20 @@ class PlotBundle:
     vol_axis: DateAxisItem
     brick_axis: DateAxisItem
     kdj_axis: DateAxisItem
+    needle20_axis: DateAxisItem
+    macd_axis: DateAxisItem
     price_viewbox: StockChartViewBox
     vol_viewbox: StockChartViewBox
     brick_viewbox: StockChartViewBox
     kdj_viewbox: StockChartViewBox
+    needle20_viewbox: StockChartViewBox
+    macd_viewbox: StockChartViewBox
     price_plot: pg.PlotWidget
     vol_plot: pg.PlotWidget
     brick_plot: pg.PlotWidget
     kdj_plot: pg.PlotWidget
+    needle20_plot: pg.PlotWidget
+    macd_plot: pg.PlotWidget
 
 
 @dataclass
@@ -71,6 +97,38 @@ class KdjItems:
 
 
 @dataclass
+class Needle20Items:
+    """单针下20面板的图形项集合。"""
+    short_curve: pg.PlotDataItem
+    mid_curve: pg.PlotDataItem
+    long_curve: pg.PlotDataItem
+    low_line: pg.InfiniteLine
+    high_line: pg.InfiniteLine
+    v_line: pg.InfiniteLine
+    label: QtWidgets.QLabel
+
+
+@dataclass
+class MacdItems:
+    """MACD 面板的图形项集合。"""
+    diff_curve: pg.PlotDataItem
+    dea_curve: pg.PlotDataItem
+    zero_line: pg.InfiniteLine
+    v_line: pg.InfiniteLine
+    label: QtWidgets.QLabel
+
+
+@dataclass
+class SubChartSeparators:
+    """副图与主图之间的分隔线。"""
+    vol_separator: QtWidgets.QWidget
+    brick_separator: QtWidgets.QWidget
+    kdj_separator: QtWidgets.QWidget
+    needle20_separator: QtWidgets.QWidget
+    macd_separator: QtWidgets.QWidget
+
+
+@dataclass
 class DateBarItems:
     """底部时间标注栏的组件集合。"""
     date_bar: QtWidgets.QWidget
@@ -93,20 +151,25 @@ def create_plot_bundle(owner) -> PlotBundle:
     vol_axis = DateAxisItem([], orientation="bottom")
     brick_axis = DateAxisItem([], orientation="bottom")
     kdj_axis = DateAxisItem([], orientation="bottom")
+    needle20_axis = DateAxisItem([], orientation="bottom")
+    macd_axis = DateAxisItem([], orientation="bottom")
 
     price_viewbox = StockChartViewBox(owner)
     vol_viewbox = StockChartViewBox(owner)
     brick_viewbox = StockChartViewBox(owner)
     kdj_viewbox = StockChartViewBox(owner)
+    needle20_viewbox = StockChartViewBox(owner)
+    macd_viewbox = StockChartViewBox(owner)
 
     price_plot = pg.PlotWidget(axisItems={"bottom": price_axis}, viewBox=price_viewbox)
     vol_plot = pg.PlotWidget(axisItems={"bottom": vol_axis}, viewBox=vol_viewbox)
     brick_plot = pg.PlotWidget(axisItems={"bottom": brick_axis}, viewBox=brick_viewbox)
     kdj_plot = pg.PlotWidget(axisItems={"bottom": kdj_axis}, viewBox=kdj_viewbox)
+    needle20_plot = pg.PlotWidget(axisItems={"bottom": needle20_axis}, viewBox=needle20_viewbox)
+    macd_plot = pg.PlotWidget(axisItems={"bottom": macd_axis}, viewBox=macd_viewbox)
 
-    for plot in (price_plot, vol_plot, brick_plot, kdj_plot):
+    for plot in (price_plot, vol_plot, brick_plot, kdj_plot, needle20_plot, macd_plot):
         configure_plot_widget(plot)
-        # Hide the "A" auto-range button shown on hover
         plot_item = plot.getPlotItem()
         plot_item.hideButtons()
         plot.getAxis("bottom").setStyle(showValues=False)
@@ -119,23 +182,38 @@ def create_plot_bundle(owner) -> PlotBundle:
     price_plot.setXLink(vol_plot)
     brick_plot.setXLink(price_plot)
     kdj_plot.setXLink(price_plot)
+    needle20_plot.setXLink(price_plot)
+    macd_plot.setXLink(price_plot)
 
     return PlotBundle(
         price_axis=price_axis,
         vol_axis=vol_axis,
         brick_axis=brick_axis,
         kdj_axis=kdj_axis,
+        needle20_axis=needle20_axis,
+        macd_axis=macd_axis,
         price_viewbox=price_viewbox,
         vol_viewbox=vol_viewbox,
         brick_viewbox=brick_viewbox,
         kdj_viewbox=kdj_viewbox,
+        needle20_viewbox=needle20_viewbox,
+        macd_viewbox=macd_viewbox,
         price_plot=price_plot,
         vol_plot=vol_plot,
         brick_plot=brick_plot,
         kdj_plot=kdj_plot,
+        needle20_plot=needle20_plot,
+        macd_plot=macd_plot,
     )
 
-def create_chart_layout(owner, price_plot, vol_plot, brick_plot, kdj_plot):
+def _create_separator() -> QtWidgets.QWidget:
+    sep = QtWidgets.QWidget()
+    sep.setFixedHeight(1)
+    sep.setStyleSheet("background-color: #4a4a4a;")
+    return sep
+
+
+def create_chart_layout(owner, price_plot, vol_plot, brick_plot, kdj_plot, needle20_plot, macd_plot):
     chart_container = QtWidgets.QWidget()
     chart_layout = QtWidgets.QVBoxLayout(chart_container)
     chart_layout.setContentsMargins(0, 0, 16, 0)
@@ -143,32 +221,42 @@ def create_chart_layout(owner, price_plot, vol_plot, brick_plot, kdj_plot):
 
     chart_layout.addWidget(price_plot, 3)
 
-    sep1 = QtWidgets.QWidget()
-    sep1.setFixedHeight(1)
-    sep1.setStyleSheet("background-color: #4a4a4a;")
-    chart_layout.addWidget(sep1, 0)
+    vol_sep = _create_separator()
+    chart_layout.addWidget(vol_sep, 0)
     chart_layout.addWidget(vol_plot, 1)
 
-    sep2 = QtWidgets.QWidget()
-    sep2.setFixedHeight(1)
-    sep2.setStyleSheet("background-color: #4a4a4a;")
-    chart_layout.addWidget(sep2, 0)
+    brick_sep = _create_separator()
+    chart_layout.addWidget(brick_sep, 0)
     chart_layout.addWidget(brick_plot, 1)
 
-    sep3 = QtWidgets.QWidget()
-    sep3.setFixedHeight(1)
-    sep3.setStyleSheet("background-color: #4a4a4a;")
-    chart_layout.addWidget(sep3, 0)
+    kdj_sep = _create_separator()
+    chart_layout.addWidget(kdj_sep, 0)
     chart_layout.addWidget(kdj_plot, 1)
+
+    needle20_sep = _create_separator()
+    chart_layout.addWidget(needle20_sep, 0)
+    chart_layout.addWidget(needle20_plot, 1)
+
+    macd_sep = _create_separator()
+    chart_layout.addWidget(macd_sep, 0)
+    chart_layout.addWidget(macd_plot, 1)
 
     date_bar_items = _create_date_bar()
     chart_layout.addWidget(date_bar_items.date_bar, 0)
+
+    separators = SubChartSeparators(
+        vol_separator=vol_sep,
+        brick_separator=brick_sep,
+        kdj_separator=kdj_sep,
+        needle20_separator=needle20_sep,
+        macd_separator=macd_sep,
+    )
 
     layout = QtWidgets.QVBoxLayout(owner)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.addWidget(chart_container)
 
-    return chart_container, chart_layout, layout, date_bar_items
+    return chart_container, chart_layout, layout, date_bar_items, separators
 
 
 def _create_date_bar() -> DateBarItems:
@@ -356,3 +444,132 @@ def create_kdj_items(kdj_plot) -> KdjItems:
         kdj_v_line=kdj_v_line,
         kdj_label=kdj_label,
     )
+
+
+def create_needle20_items(needle20_plot) -> Needle20Items:
+    short_curve = needle20_plot.plot(pen=pg.mkPen((255, 255, 255), width=1.5), name="短期")
+    mid_curve = needle20_plot.plot(pen=pg.mkPen((255, 215, 0), width=1.5), name="中期")
+    long_curve = needle20_plot.plot(pen=pg.mkPen((255, 0, 255), width=1.5), name="长期")
+
+    low_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen((0, 176, 80), width=1, style=QtCore.Qt.DotLine))
+    needle20_plot.addItem(low_line, ignoreBounds=True)
+    low_line.setPos(20)
+
+    high_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen((255, 0, 0), width=1, style=QtCore.Qt.DotLine))
+    needle20_plot.addItem(high_line, ignoreBounds=True)
+    high_line.setPos(80)
+
+    v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen((200, 200, 200), width=1))
+    needle20_plot.addItem(v_line, ignoreBounds=True)
+    v_line.hide()
+
+    label = QtWidgets.QLabel(needle20_plot)
+    label.setStyleSheet("color: white; background: transparent; border: none; padding: 0px; margin: 0px;")
+    label.setTextFormat(QtCore.Qt.RichText)
+    label.move(40, 2)
+    label.hide()
+
+    return Needle20Items(
+        short_curve=short_curve,
+        mid_curve=mid_curve,
+        long_curve=long_curve,
+        low_line=low_line,
+        high_line=high_line,
+        v_line=v_line,
+        label=label,
+    )
+
+
+def create_macd_items(macd_plot) -> MacdItems:
+    diff_curve = macd_plot.plot(pen=pg.mkPen((255, 255, 255), width=1.5), name="DIFF")
+    dea_curve = macd_plot.plot(pen=pg.mkPen((255, 215, 0), width=1.5), name="DEA")
+
+    zero_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen((120, 120, 120), width=1, style=QtCore.Qt.DashLine))
+    macd_plot.addItem(zero_line, ignoreBounds=True)
+    zero_line.setPos(0)
+
+    v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen((200, 200, 200), width=1))
+    macd_plot.addItem(v_line, ignoreBounds=True)
+    v_line.hide()
+
+    label = QtWidgets.QLabel(macd_plot)
+    label.setStyleSheet("color: white; background: transparent; border: none; padding: 0px; margin: 0px;")
+    label.setTextFormat(QtCore.Qt.RichText)
+    label.move(40, 2)
+    label.hide()
+
+    return MacdItems(
+        diff_curve=diff_curve,
+        dea_curve=dea_curve,
+        zero_line=zero_line,
+        v_line=v_line,
+        label=label,
+    )
+
+
+class SubChartSelector(QtWidgets.QToolButton):
+    """副图指标多选下拉框。"""
+
+    selectionChanged = QtCore.Signal(list)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setText("副图指标 ▼")
+        self.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        self.setStyleSheet(
+            "QToolButton { padding: 4px 8px; }"
+            "QToolButton::menu-indicator { image: none; }"
+        )
+
+        self._menu = QtWidgets.QMenu(self)
+        self._menu.setStyleSheet(
+            "QMenu { padding: 4px; }"
+            "QCheckBox { padding: 4px 8px; spacing: 6px; }"
+        )
+        self._checkboxes: dict[SubChartType, QtWidgets.QCheckBox] = {}
+
+        for chart_type in SubChartType:
+            meta = SUB_CHART_META[chart_type]
+            checkbox = QtWidgets.QCheckBox(meta["label"])
+            checkbox.setChecked(chart_type in DEFAULT_SUB_CHARTS)
+            checkbox.stateChanged.connect(self._on_checkbox_changed)
+
+            action = QtWidgets.QWidgetAction(self._menu)
+            action.setDefaultWidget(checkbox)
+            self._menu.addAction(action)
+            self._checkboxes[chart_type] = checkbox
+
+        self.setMenu(self._menu)
+
+    def _on_checkbox_changed(self):
+        selected = [t for t, cb in self._checkboxes.items() if cb.isChecked()]
+        if not selected:
+            sender = self.sender()
+            if isinstance(sender, QtWidgets.QCheckBox):
+                sender.blockSignals(True)
+                sender.setChecked(True)
+                sender.blockSignals(False)
+            selected = [t for t, cb in self._checkboxes.items() if cb.isChecked()]
+
+        for t, cb in self._checkboxes.items():
+            if len(selected) <= 1 and cb.isChecked():
+                cb.setEnabled(False)
+            else:
+                cb.setEnabled(True)
+
+        self.selectionChanged.emit(selected)
+
+    def get_selected(self) -> list[SubChartType]:
+        return [t for t, cb in self._checkboxes.items() if cb.isChecked()]
+
+    def set_selected(self, types: list[SubChartType]):
+        for t, cb in self._checkboxes.items():
+            cb.blockSignals(True)
+            cb.setChecked(t in types)
+            cb.blockSignals(False)
+        selected = [t for t, cb in self._checkboxes.items() if cb.isChecked()]
+        for t, cb in self._checkboxes.items():
+            if len(selected) <= 1 and cb.isChecked():
+                cb.setEnabled(False)
+            else:
+                cb.setEnabled(True)

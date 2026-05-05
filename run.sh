@@ -6,4 +6,5 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Change to the project directory and run
 cd "$SCRIPT_DIR"
-python3 run.py
+source .venv/bin/activate
+python run.py

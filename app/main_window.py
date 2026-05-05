@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .pages import BacktestPage, MarketPage, ScreeningPage, SettingsPage, SignalReviewPage, StatsPage, TemplatePage
+from .pages import BrickPatternPage, CurveMatchPage, MarketPage, ScreeningPage, SettingsPage, StatsPage, TemplatePage
 from .services import AppSettings, SettingsService
 
 
@@ -34,7 +34,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, root: Path):
         super().__init__()
         self.setWindowTitle("StockViewer")
-        self.resize(1200, 800)
+        self.resize(1400, 950)
         self.root = root
         self.settingsService = SettingsService()
 
@@ -57,17 +57,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settingsPage = SettingsPage(self.settingsService)
         self.screeningPage = ScreeningPage(self.root)
 
-        self.backtestPage = BacktestPage(self.root)
         self.statsPage = StatsPage(self.root)
-        self.signalReviewPage = SignalReviewPage(self.root)
+        self.brickPatternPage = BrickPatternPage(self.root)
+        self.curveMatchPage = CurveMatchPage(self.root)
 
         self.pageStack.addWidget(self.marketPage)
         self.pageStack.addWidget(self.templatePage)
         self.pageStack.addWidget(self.settingsPage)
         self.pageStack.addWidget(self.screeningPage)
-        self.pageStack.addWidget(self.backtestPage)
         self.pageStack.addWidget(self.statsPage)
-        self.pageStack.addWidget(self.signalReviewPage)
+        self.pageStack.addWidget(self.brickPatternPage)
+        self.pageStack.addWidget(self.curveMatchPage)
 
         layout.addWidget(self.pageStack, 1)
 
@@ -84,9 +84,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openTemplateAction = view_menu.addAction("打开模板页")
         self.openSettingsAction = view_menu.addAction("打开设置页")
         self.openScreeningAction = view_menu.addAction("打开选股页")
-        self.openBacktestAction = view_menu.addAction("打开回测页")
         self.openStatsAction = view_menu.addAction("打开统计页")
-        self.openSignalReviewAction = view_menu.addAction("打开信号回顾页")
+        self.openBrickPatternAction = view_menu.addAction("打开定式验证页")
+        self.openCurveMatchAction = view_menu.addAction("打开曲线匹配页")
 
         data_menu = menu_bar.addMenu("数据")
         self.updateAllAction = data_menu.addAction("更新全部股票")
@@ -101,12 +101,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.marketPage.statusMessageRequested.connect(self._show_status_message)
         self.marketPage.updateRunningChanged.connect(self._on_update_running_changed)
         self.templatePage.statusMessageRequested.connect(self._show_status_message)
-        self.templatePage.templatesChanged.connect(self.marketPage.reload_templates)
         self.templatePage.templatesChanged.connect(self.screeningPage.reload_templates)
-        self.templatePage.templatesChanged.connect(self.backtestPage.reload_templates)
-        self.templatePage.backtestRequested.connect(self._on_backtest_requested)
         self.screeningPage.statusMessageRequested.connect(self._show_status_message)
-        self.backtestPage.statusMessageRequested.connect(self._show_status_message)
         self.statsPage.statusMessageRequested.connect(self._show_status_message)
         self.signalReviewPage.statusMessageRequested.connect(self._show_status_message)
         self.settingsPage.settingsSaveRequested.connect(self._save_settings_from_page)
@@ -116,9 +112,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openTemplateAction.triggered.connect(lambda: self.switch_page(1))
         self.openSettingsAction.triggered.connect(lambda: self.switch_page(2))
         self.openScreeningAction.triggered.connect(lambda: self.switch_page(3))
-        self.openBacktestAction.triggered.connect(lambda: self.switch_page(4))
-        self.openStatsAction.triggered.connect(lambda: self.switch_page(5))
-        self.openSignalReviewAction.triggered.connect(lambda: self.switch_page(6))
+        self.openStatsAction.triggered.connect(lambda: self.switch_page(4))
+        self.brickPatternPage.statusMessageRequested.connect(self._show_status_message)
+        self.openBrickPatternAction.triggered.connect(lambda: self.switch_page(5))
+        self.curveMatchPage.statusMessageRequested.connect(self._show_status_message)
+        self.openCurveMatchAction.triggered.connect(lambda: self.switch_page(6))
         self.updateAllAction.triggered.connect(self._request_update_all)
         self.newTemplateAction.triggered.connect(self._open_new_template_dialog)
         self.aboutAction.triggered.connect(self._show_about_dialog)
@@ -132,10 +130,6 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.Slot(str, int)
     def _show_status_message(self, message: str, timeout: int = 0):
         self.statusBar().showMessage(message, timeout)
-
-    def _on_backtest_requested(self, template_id: str):
-        self.backtestPage.prefill_template(template_id)
-        self.switch_page(4)
 
     def _open_new_template_dialog(self):
         self.switch_page(1)

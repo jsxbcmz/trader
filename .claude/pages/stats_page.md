@@ -1,6 +1,6 @@
 # 统计页 StatsPage
 
-**文件：** `app/pages/stats_page.py` (~1309 行)
+**文件：** `app/pages/stats_page.py` (~1316 行)
 
 ## 页面定位
 
@@ -32,6 +32,15 @@
 **信号：**
 - `stockDoubleClicked(str, str)` — (code, name)
 - `rateDetailRequested(str, str, str)` — (code, op, name)
+
+### RateDetailDialog(QtWidgets.QDialog)
+收益率详情弹窗，展示某只股票各操作类型下用户的收益率分布。
+
+**功能：**
+- 按操作类型分组显示用户收益率列表
+- 操作类型标签切换（建仓/加仓/减仓等）
+- 收益率分布图表（直方图+可拖动分位线）
+- 用户列表排序显示
 
 ### StatsPage(QtWidgets.QWidget)
 
@@ -73,7 +82,7 @@
 1. 顶部操作栏：采集按钮 + 搜索框 + 操作筛选标签流
 2. API 进度卡片区（采集时显示）
 3. 持仓数据表格（代码、名称、操作、持有人数、收益详情按钮）
-4. 收益详情弹窗：StockChartWidget K线图 + 收益率标注
+4. 收益详情弹窗：RateDetailDialog（操作类型切换+收益率列表+分布图）
 
 ## 核心方法
 
@@ -85,14 +94,14 @@
 | `_apply_filter(op_code)` | 按操作类型筛选 |
 | `_on_search_changed(text)` | 按代码/名称/拼音搜索 |
 | `_on_stock_double_clicked(code, name)` | 双击股票 → 弹出图表 |
-| `_on_rate_detail(code, op, name)` | 收益详情 → 弹出图表+收益标注 |
+| `_on_rate_detail(code, op, name)` | 收益详情 → 弹出 RateDetailDialog |
 
 ## 数据流
 
 ```
 采集 → CollectWorker → ApiRequester → DataStorage(output/*.json)
 展示 → _load_positions_data() → PositionsTable → 筛选/搜索/排序
-详情 → StockChartWidget + load_daily_csv → 收益率计算 + 图表标注
+详情 → RateDetailDialog → 操作类型切换 + 收益率分布图
 ```
 
 ## 模块依赖

@@ -4,10 +4,10 @@
 
 | 文件 | 行数 | 职责 |
 |------|------|------|
-| `app/main_window.py` | ~165 | 主窗口，6页面切换+信号中枢 |
-| `app/services/settings_service.py` | ~96 | QSettings 持久化 |
-| `app/components/settings_form.py` | ~41 | 设置表单复用组件 |
-| `app/dialogs/template_editor_dialog.py` | - | 模板编辑弹窗 |
+| `app/main_window.py` | ~159 | 主窗口，6页面切换+信号中枢 |
+| `app/services/settings_service.py` | ~116 | QSettings 持久化 |
+| `app/components/settings_form.py` | ~40 | 设置表单复用组件 |
+| `app/dialogs/template_editor_dialog.py` | ~75 | 模板编辑弹窗 |
 | `app/utils/thread_manager.py` | ~47 | 后台线程启动工具 |
 | `app/stats/` | - | 数据采集统计子系统 |
 | `app/main.py` | - | 应用入口 |
@@ -17,12 +17,12 @@
 ## main_window.py — MainWindow(QMainWindow)
 
 ### 页面管理
-- `pageStack: QStackedWidget` 管理 6 个页面
-- Index 0: MarketPage, 1: TemplatePage, 2: SettingsPage, 3: ScreeningPage, 4: BacktestPage, 5: StatsPage
+- `pageStack: QStackedWidget` 管理页面
+- Index 0: MarketPage, 1: TemplatePage, 2: SettingsPage, 3: ScreeningPage, 4: StatsPage, 5: BrickPatternPage
 
 ### 菜单结构
 - 文件：退出
-- 视图：打开看盘页/模板页/设置页/选股页/回测页/统计页
+- 视图：打开看盘页/模板页/设置页/选股页/统计页/定式验证页
 - 数据：更新全部股票
 - 工具：新建模板
 - 帮助：关于
@@ -30,12 +30,7 @@
 ### 信号连接链（核心跨页通信）
 
 ```
-templatePage.templatesChanged → marketPage.reload_templates()
 templatePage.templatesChanged → screeningPage.reload_templates()
-templatePage.templatesChanged → backtestPage.reload_templates()
-
-templatePage.backtestRequested(template_id) → _on_backtest_requested()
-  → backtestPage.prefill_template() + switch_page(4)
 
 settingsPage.settingsSaveRequested → _save_settings_from_page()
   → SettingsService.save() → MarketPage.apply_settings()
@@ -56,7 +51,6 @@ marketPage.updateRunningChanged → _on_update_running_changed()
 | `switch_page(index)` | 切换页面 |
 | `_save_settings_from_page(app_settings)` | 保存设置并同步 |
 | `_request_update_all()` | 转发更新请求 |
-| `_on_backtest_requested(template_id)` | 模板页跳转回测页 |
 | `_open_new_template_dialog()` | 跳转模板页并打开新建弹窗 |
 | `closeEvent(event)` | 关闭时持久化状态 |
 
@@ -81,13 +75,14 @@ marketPage.updateRunningChanged → _on_update_running_changed()
 |------|------|
 | `load() -> AppSettings` | 读取（含边界修正） |
 | `save(settings) -> AppSettings` | 正规化后写入 |
-| `validate_settings(min, max)` | 校验规则 |
+| `validate_settings(token, min, max)` | 校验规则 |
 | `normalize_settings(...)` | 类型转换+校验+构造 |
 | `get_last_selected_symbol()` | 读取上次选中代码 |
 | `save_last_selected_symbol(symbol)` | 持久化代码（补零6位） |
+| `get_tushare_token()` | 读取 Tushare Token |
 | `get_chart_limits()` | 返回 (min, max) |
 
-**存储 Key：** `chart/min_visible_days`, `chart/max_visible_days`, `last_selected_symbol`
+**存储 Key：** `tushare_token`, `chart/min_visible_days`, `chart/max_visible_days`, `last_selected_symbol`
 
 ---
 

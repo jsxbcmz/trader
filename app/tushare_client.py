@@ -45,6 +45,40 @@ class TushareClient:
             return pd.DataFrame()
         return df.copy()
 
+    def fetch_index_daily(self, ts_code: str, start_date: str | None = None, end_date: str | None = None) -> pd.DataFrame:
+        try:
+            pro = self._get_pro()
+            df = pro.index_daily(ts_code=ts_code, start_date=start_date, end_date=end_date)
+        except Exception as exc:  # pragma: no cover
+            raise TushareClientError(f"拉取指数 {ts_code} 日线数据失败: {exc}") from exc
+
+        if df is None or df.empty:
+            return pd.DataFrame()
+        return df.copy()
+
+    def fetch_sw_index_list(self) -> pd.DataFrame:
+        try:
+            pro = self._get_pro()
+            df = pro.index_basic(market='SW')
+        except Exception as exc:  # pragma: no cover
+            raise TushareClientError(f"拉取申万指数列表失败: {exc}") from exc
+
+        if df is None or df.empty:
+            return pd.DataFrame()
+        df = df[(df['category'] == '一级行业指数') & (~df['name'].str.contains('退市'))]
+        return df[['ts_code', 'name']].reset_index(drop=True)
+
+    def fetch_sw_daily(self, ts_code: str, start_date: str | None = None, end_date: str | None = None) -> pd.DataFrame:
+        try:
+            pro = self._get_pro()
+            df = pro.sw_daily(ts_code=ts_code, start_date=start_date, end_date=end_date)
+        except Exception as exc:  # pragma: no cover
+            raise TushareClientError(f"拉取申万行业 {ts_code} 日线数据失败: {exc}") from exc
+
+        if df is None or df.empty:
+            return pd.DataFrame()
+        return df.copy()
+
     def fetch_daily_basic(self, ts_code: str, start_date: str | None = None, end_date: str | None = None) -> pd.DataFrame:
         try:
             pro = self._get_pro()

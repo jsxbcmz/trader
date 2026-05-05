@@ -47,6 +47,32 @@ def build_kdj_label_html(k: float, d: float, j: float):
     )
 
 
+def build_macd_label_html(diff: float, dea: float, macd: float):
+    if np.isfinite(macd) and macd >= 0:
+        macd_color = "#ff4d4f"
+    elif np.isfinite(macd) and macd < 0:
+        macd_color = "#00b050"
+    else:
+        macd_color = "#d9d9d9"
+    return (
+        f"<span style='color: #ffffff;'>DIFF: {format_numeric(float(diff))}</span>"
+        "&nbsp;&nbsp;"
+        f"<span style='color: #ffd700;'>DEA: {format_numeric(float(dea))}</span>"
+        "&nbsp;&nbsp;"
+        f"<span style='color: {macd_color};'>MACD: {format_numeric(float(macd))}</span>"
+    )
+
+
+def build_needle20_label_html(short: float, mid: float, long: float):
+    return (
+        f"<span style='color: #ffffff;'>短期: {format_numeric(float(short))}</span>"
+        "&nbsp;&nbsp;"
+        f"<span style='color: #ffd700;'>中期: {format_numeric(float(mid))}</span>"
+        "&nbsp;&nbsp;"
+        f"<span style='color: #ff00ff;'>长期: {format_numeric(float(long))}</span>"
+    )
+
+
 def build_y_value_html(text: str):
     return HTML_Y_VALUE.format(text=text)
 

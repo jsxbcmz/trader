@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS system_config (
+    key   VARCHAR(64) PRIMARY KEY,
+    value VARCHAR(256) NOT NULL
+);

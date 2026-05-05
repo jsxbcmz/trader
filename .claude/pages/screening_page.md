@@ -1,6 +1,6 @@
 # 选股页 ScreeningPage
 
-**文件：** `app/pages/screening_page.py` (~1117 行)
+**文件：** `app/pages/screening_page.py` (~1202 行)
 
 ## 页面定位
 
@@ -43,7 +43,7 @@
 
 ### 结果态（页面 1），三栏布局
 - 左栏：选股结果列表 + 持有股票列表 + 返回按钮
-- 中栏：StockChartWidget 四联图（禁用拖动缩放，仅保留 hover）
+- 中栏：StockChartWidget 图表（禁用拖动缩放，仅保留 hover）
 - 右栏：模拟交易操作面板
 
 ## 模拟交易核心方法
@@ -51,10 +51,15 @@
 | 方法 | 说明 |
 |------|------|
 | `_on_advance_day()` | 日推进：开盘 → 收盘 → 下一天开盘循环 |
+| `_advance_to_next_open()` | 推进到下一天开盘 |
+| `_advance_to_close()` | 推进到当天收盘 |
 | `_execute_buy(price_field, price_label)` | 统一买入（检查资金 → simulator.buy() → 刷新持仓） |
 | `_on_sell()` | 卖出（含 T+1 检查 → simulator.sell()） |
 | `_on_settle()` | 结算全部持仓，显示明细弹窗 |
 | `_redraw_trade_markers()` | 在图表上绘制 B 三角/S 倒三角标记 |
+| `_refresh_holding_table()` | 刷新持仓列表表格 |
+| `_refresh_trade_summary()` | 刷新交易统计摘要 |
+| `_update_holding_prices()` | 更新持仓当前价格 |
 
 ## 模拟交易规则
 
@@ -74,9 +79,12 @@
 | `_on_confirm()` | 点击"开始选股" → 启动 Worker |
 | `_on_screening_finished()` | 收集结果 → 切换到结果面板 |
 | `_on_stock_selected()` | 选股结果选中 → 加载图表 |
+| `_on_holding_selected()` | 持仓列表选中 → 加载图表 |
 | `_load_chart_for_current_symbol()` | 加载日线截止模拟日期，渲染图表 |
+| `_set_chart_visible_range(df_up_to_date)` | 设置图表 X 轴可见范围为最后 CHART_FIXED_DAYS 天 |
 | `_on_random_date()` | 随机选取合法交易日 |
 | `_on_back_to_config()` | 返回配置面板（有持仓时弹窗确认） |
+| `_on_reset()` | 重置模拟交易状态 |
 
 ## 模块依赖
 
