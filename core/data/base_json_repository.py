@@ -19,11 +19,13 @@ class BaseJsonRepository:
         self.file_path = Path(file_path)
 
     def _read_json(self) -> Any | None:
-        """读取 JSON 文件内容。文件不存在时返回 None。"""
+        """读取 JSON 文件内容。文件不存在或为空时返回 None。"""
         if not self.file_path.exists():
             return None
-        with self.file_path.open("r", encoding="utf-8") as fp:
-            return json.load(fp)
+        text = self.file_path.read_text(encoding="utf-8").strip()
+        if not text:
+            return None
+        return json.loads(text)
 
     def _write_json(self, data: Any) -> None:
         """原子写入 JSON 文件（先写临时文件再 rename）。"""

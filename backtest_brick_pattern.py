@@ -1,6 +1,6 @@
 """砖形图定式评分系统回测脚本。
 
-扫描 2025-01-01 ~ 2026-03-31 期间所有股票，
+扫描 2025-01-01 ~ 2026-04-30 期间所有股票，
 记录每次定式命中的 T/T+1/T+2 收益率，按评分等级统计有效性。
 """
 
@@ -31,7 +31,7 @@ from core.screening.brick_pattern_engine import (
 )
 
 START_DATE = "2025-01-01"
-END_DATE = "2026-03-31"
+END_DATE = "2026-04-30"
 
 ENABLED_PATTERNS = (
     PatternType.N_SHAPE_JUMP,
@@ -387,8 +387,91 @@ def generate_report(df: pd.DataFrame):
             corr2 = valid_df2[col].corr(valid_df2["ret_t2"]) if len(valid_df2) > 10 else 0
             report_lines.append(f"| {col} | {corr0:.4f} | {corr1:.4f} | {corr2:.4f} |")
 
-    # ── 10. 结论 ──
-    report_lines.append("\n## 10. 结论与建议\n")
+    # ── 10. 评分分布分析（分数为何偏低） ──
+    report_lines.append("\n## 10. 评分分布分析 — 分数为何偏低？\n")
+
+    report_lines.append("### 10.1 各维度得分率\n")
+    report_lines.append("| 维度 | 满分 | 平均得分 | 中位数 | 得分率 | 说明 |")
+    report_lines.append("|------|------|----------|--------|--------|------|")
+
+    dim_info = [
+        ("specific_score", 30, "定式专属"),
+        ("common_score", 30, "通用质量"),
+        ("macd_score", 25, "MACD环境"),
+        ("signal_score", 15, "信号强度"),
+    ]
+    for col, full, label in dim_info:
+        avg = df[col].mean()
+        med = df[col].median()
+        rate = avg / full * 100
+        report_lines.append(f"| {label} | {full} | {avg:.1f} | {med:.1f} | {rate:.1f}% | — |")
+
+    avg_penalty = df["risk_penalty"].mean()
+    med_penalty = df["risk_penalty"].median()
+    report_lines.append(f"| 风险扣分 | — | {avg_penalty:.1f} | {med_penalty:.1f} | — | 平均拖累 |")
+
+    report_lines.append("\n### 10.2 基础分(扣分前)分布\n")
+    df["base_score"] = df["specific_score"] + df["common_score"] + df["macd_score"] + df["signal_score"]
+    avg_base = df["base_score"].mean()
+    report_lines.append(f"- 平均基础分: {avg_base:.1f}/100")
+    report_lines.append(f"- 基础分中位数: {df['base_score'].median():.1f}/100")
+
+    base_bins = [(0, 40), (40, 50), (50, 60), (60, 70), (70, 80), (80, 100)]
+    report_lines.append("\n| 基础分段 | 数量 | 占比 |")
+    report_lines.append("|----------|------|------|")
+    for lo, hi in base_bins:
+        cnt = len(df[(df["base_score"] >= lo) & (df["base_score"] < hi)])
+        pct = cnt / len(df) * 100 if len(df) > 0 else 0
+        report_lines.append(f"| [{lo},{hi}) | {cnt} | {pct:.1f}% |")
+
+    report_lines.append("\n### 10.3 风险扣分统计\n")
+    has_penalty = df[df["risk_penalty"] < 0]
+    no_penalty = df[df["risk_penalty"] == 0]
+    penalty_ratio = len(has_penalty) / len(df) * 100 if len(df) > 0 else 0
+    report_lines.append(f"- 被扣分的信号: {len(has_penalty)}/{len(df)} ({penalty_ratio:.1f}%)")
+    if len(has_penalty) > 0:
+        report_lines.append(f"- 平均扣分: {has_penalty['risk_penalty'].mean():.1f}")
+        report_lines.append(f"- 最大扣分: {has_penalty['risk_penalty'].min():.1f}")
+
+    report_lines.append("\n### 10.4 按定式类型的维度得分率\n")
+    report_lines.append("| 定式 | 专属(30) | 通用(30) | MACD(25) | 信号(15) | 风险扣分 | 最终均分 |")
+    report_lines.append("|------|----------|----------|----------|----------|----------|----------|")
+    for pt_name, grp in df.groupby("pattern"):
+        sp = grp["specific_score"].mean()
+        cm = grp["common_score"].mean()
+        mc = grp["macd_score"].mean()
+        sg = grp["signal_score"].mean()
+        rk = grp["risk_penalty"].mean()
+        fs = grp["final_score"].mean()
+        report_lines.append(
+            f"| {pt_name} | {sp:.1f}({sp/30*100:.0f}%) | {cm:.1f}({cm/30*100:.0f}%) | "
+            f"{mc:.1f}({mc/25*100:.0f}%) | {sg:.1f}({sg/15*100:.0f}%) | {rk:.1f} | {fs:.1f} |"
+        )
+
+    report_lines.append("\n### 10.5 低分成因诊断\n")
+    report_lines.append("根据以上数据，分数偏低的主要原因：\n")
+
+    dim_rates = []
+    for col, full, label in dim_info:
+        rate = df[col].mean() / full * 100
+        dim_rates.append((label, rate, full, df[col].mean()))
+
+    dim_rates.sort(key=lambda x: x[1])
+    for i, (label, rate, full, avg) in enumerate(dim_rates):
+        if rate < 50:
+            report_lines.append(f"{i+1}. **{label}得分率仅 {rate:.0f}%**（平均 {avg:.1f}/{full}）: 该维度内部条件较严，大多数信号难以拿到高分")
+        elif rate < 65:
+            report_lines.append(f"{i+1}. **{label}得分率 {rate:.0f}%**（平均 {avg:.1f}/{full}）: 得分中等偏低")
+        else:
+            report_lines.append(f"{i+1}. {label}得分率 {rate:.0f}%（平均 {avg:.1f}/{full}）: 相对正常")
+
+    if penalty_ratio > 40:
+        report_lines.append(f"{len(dim_rates)+1}. **风险扣分面过广**（{penalty_ratio:.0f}% 信号被扣分，平均 {avg_penalty:.1f}），严重拉低最终分")
+    elif penalty_ratio > 20:
+        report_lines.append(f"{len(dim_rates)+1}. 风险扣分影响中等（{penalty_ratio:.0f}% 信号被扣分，平均 {avg_penalty:.1f}）")
+
+    # ── 11. 结论 ──
+    report_lines.append("\n## 11. 结论与建议\n")
 
     overall_t0_wr = (valid_t0 > 0).mean() if len(valid_t0) > 0 else 0
     overall_t0_mean = valid_t0.mean() if len(valid_t0) > 0 else 0

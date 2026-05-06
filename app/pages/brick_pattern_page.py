@@ -6,8 +6,10 @@
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from PySide6 import QtCore, QtGui, QtWidgets
 
@@ -19,6 +21,7 @@ from core.data.time_index import locate_time_index
 from core.models.brick_pattern import PatternType, ScoreBreakdown
 from core.screening.brick_pattern_engine import (
     _calc_indicators,
+    backtest_stock_history,
     check_prerequisites,
     compute_common_quality_score,
     compute_macd_auxiliary_score,
@@ -31,23 +34,15 @@ from core.screening.brick_pattern_engine import (
 
 # ── 文档中的默认案例数据 ──────────────────────────────────────
 DEFAULT_CASES: list[tuple[str, str, str]] = [
-    # N型起跳
-    ("002444", "20251231", "N型起跳"),
-    ("600693", "20241225", "N型起跳"),
-    ("000833", "20241105", "N型起跳"),
-    ("002792", "20251124", "N型起跳"),
-    ("600366", "20250806", "N型起跳"),
-    ("601778", "20260403", "N型起跳"),
-    # 横盘起跳
-    ("600893", "20260212", "横盘起跳"),
-    ("600744", "20260224", "横盘起跳"),
-    ("600389", "20250815", "横盘起跳"),
-    ("002846", "20250620", "横盘起跳"),
-    # 上升波段延续
-    ("600410", "20250811", "上升波段延续"),
-    ("600363", "20241029", "上升波段延续"),
-    ("002402", "20250916", "上升波段延续"),
-    ("002536", "20260417", "上升波段延续"),
+    ("603278", "", ""),
+    ("600821", "", ""),
+    ("002272", "", ""),
+    ("600699", "", ""),
+    ("002491", "", ""),
+    ("000037", "", ""),
+    ("002536", "", ""),
+    ("000823", "", ""),
+    ("002183", "", ""),
 ]
 
 GRADE_COLORS = {
@@ -181,6 +176,128 @@ def _is_feature_similar(
             return False
 
     return True
+
+
+def _find_score_range(score: float) -> str:
+    for lo, hi in [(0, 30), (30, 40), (40, 55), (55, 70), (70, 85), (85, 101)]:
+        if lo <= score < hi:
+            return f"{lo}-{hi}"
+    return "85-101"
+
+
+def _calc_percentile(all_scores: list[float], current_score: float) -> float:
+    if not all_scores:
+        return 0
+    below = sum(1 for s in all_scores if s < current_score)
+    return below / len(all_scores) * 100
+
+
+def _build_backtest_tooltip(
+    backtest_stats: dict, pattern_name: str, grade: str, current_score: float,
+) -> str:
+    lines = [f"该股历史定式命中总计: {backtest_stats['total_signals']}次"]
+
+    all_scores = backtest_stats.get("all_scores", [])
+    if all_scores:
+        pct = _calc_percentile(all_scores, current_score)
+        lines.append(f"当前{current_score:.0f}分 超过历史{pct:.0f}%的信号")
+    lines.append("")
+
+    lines.append("── 各等级 T+1 胜率 ──")
+    for g in ("S", "A", "B", "C", "D"):
+        gs = backtest_stats["by_grade"].get(g, {})
+        cnt = gs.get("count", 0)
+        if cnt > 0:
+            wr = gs.get("t1_win_rate", 0)
+            mn = gs.get("t1_mean", 0)
+            marker = " ◀ 当前" if g == grade else ""
+            lines.append(f"  {g}级: 胜率{wr:.0f}% 均值{mn:+.2f}% ({cnt}次){marker}")
+        else:
+            lines.append(f"  {g}级: 无数据")
+
+    sr_key = _find_score_range(current_score)
+    by_sr = backtest_stats.get("by_score_range", {})
+    sr_stats = by_sr.get(sr_key, {})
+    if sr_stats.get("count", 0) > 0:
+        lines.append("")
+        lines.append(f"── 当前分数区间 [{sr_key}) ──")
+        lines.append(f"  T+1: 胜率{sr_stats['t1_win_rate']:.0f}% 均值{sr_stats['t1_mean']:+.2f}% ({sr_stats['count']}次)")
+        lines.append(f"  T+2: 胜率{sr_stats['t2_win_rate']:.0f}% 均值{sr_stats['t2_mean']:+.2f}%")
+
+    key = f"{pattern_name}_{grade}"
+    pg = backtest_stats["by_pattern_grade"].get(key, {})
+    if pg.get("count", 0) > 0:
+        lines.append("")
+        lines.append(f"── {pattern_name} {grade}级 ──")
+        lines.append(f"  T+1: 胜率{pg['t1_win_rate']:.0f}% 均值{pg['t1_mean']:+.2f}% ({pg['count']}次)")
+        lines.append(f"  T+2: 胜率{pg['t2_win_rate']:.0f}% 均值{pg['t2_mean']:+.2f}%")
+
+    return "\n".join(lines)
+
+
+def _generate_advice(
+    grade: str,
+    backtest_stats: dict,
+    pattern_name: str,
+    indicators: dict,
+    index: int,
+    risk_penalty: float,
+    current_score: float,
+) -> tuple[str, str]:
+    """生成回测文本和建议文本。
+
+    优先级：分数区间统计 > 定式×等级统计 > 等级统计 > 全量统计。
+    """
+    sr_key = _find_score_range(current_score)
+    sr_stats = backtest_stats.get("by_score_range", {}).get(sr_key, {})
+    pg_key = f"{pattern_name}_{grade}"
+    pg_stats = backtest_stats["by_pattern_grade"].get(pg_key, {})
+    grade_stats = backtest_stats["by_grade"].get(grade, {})
+
+    if sr_stats.get("count", 0) >= 3:
+        ref_stats = sr_stats
+    elif pg_stats.get("count", 0) >= 3:
+        ref_stats = pg_stats
+    elif grade_stats.get("count", 0) >= 3:
+        ref_stats = grade_stats
+    else:
+        all_count = backtest_stats["total_signals"]
+        if all_count == 0:
+            return "无历史信号", "数据不足"
+        all_t1 = [r["ret_t1"] for r in backtest_stats["records"] if not np.isnan(r["ret_t1"])]
+        wr = sum(1 for v in all_t1 if v > 0) / len(all_t1) * 100 if all_t1 else 0
+        return f"T+1胜率{wr:.0f}%({all_count}次)", "数据不足"
+
+    count = ref_stats["count"]
+    t1_wr = ref_stats["t1_win_rate"]
+    t1_mean = ref_stats["t1_mean"]
+
+    all_scores = backtest_stats.get("all_scores", [])
+    pct = _calc_percentile(all_scores, current_score)
+    backtest_text = f"T+1胜率{t1_wr:.0f}%({count}次) 前{100 - pct:.0f}%"
+
+    short_trend = indicators["short_trend"]
+    long_short = indicators["long_short"]
+    close = indicators["close"]
+
+    st_val = float(short_trend[index]) if np.isfinite(short_trend[index]) else close[index]
+    ls_val = float(long_short[index]) if np.isfinite(long_short[index]) else close[index]
+    close_val = float(close[index])
+
+    if risk_penalty <= -25:
+        return backtest_text, "回避(高风险)"
+
+    if grade in ("S", "A") and t1_wr >= 60:
+        buy_price = min(close_val, st_val * 1.02)
+        stop_loss = ls_val * 0.98
+        return backtest_text, f"建议买入 ≤{buy_price:.2f} 止损{stop_loss:.2f}"
+    elif grade in ("S", "A", "B") and t1_wr >= 50:
+        buy_price = st_val
+        return backtest_text, f"谨慎买入 ≤{buy_price:.2f}"
+    elif t1_wr < 40:
+        return backtest_text, "回避(胜率低)"
+    else:
+        return backtest_text, "观望"
 
 
 class SimilarPatternWorker(QtCore.QObject):
@@ -513,6 +630,133 @@ class SimilarPatternResultDialog(QtWidgets.QDialog):
         self._chart.pricePlot.setXRange(x_left, x_right, padding=0)
 
 
+class BacktestDetailDialog(QtWidgets.QDialog):
+    def __init__(self, symbol: str, backtest_data: dict, current_score: str, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(f"{symbol} 历史回测详情")
+        self.resize(900, 600)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+
+        header = QtWidgets.QLabel(
+            f"股票 {symbol}  当前评分: {current_score}  "
+            f"历史命中总计: {backtest_data.get('total_signals', 0)}次"
+        )
+        header_font = header.font()
+        header_font.setPointSize(14)
+        header_font.setBold(True)
+        header.setFont(header_font)
+        layout.addWidget(header)
+
+        # ── 各等级统计表 ──
+        grade_group = QtWidgets.QGroupBox("各评分等级胜率统计")
+        grade_layout = QtWidgets.QVBoxLayout(grade_group)
+        grade_table = QtWidgets.QTableWidget()
+        grade_headers = ["等级", "命中次数", "T+1胜率", "T+1均值", "T+2胜率", "T+2均值"]
+        grade_table.setColumnCount(len(grade_headers))
+        grade_table.setHorizontalHeaderLabels(grade_headers)
+        grade_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        grade_table.horizontalHeader().setStretchLastSection(True)
+        grade_table.verticalHeader().setVisible(False)
+        grade_table.setAlternatingRowColors(True)
+
+        by_grade = backtest_data.get("by_grade", {})
+        grade_table.setRowCount(5)
+        for row_idx, g in enumerate(("S", "A", "B", "C", "D")):
+            gs = by_grade.get(g, {})
+            cnt = gs.get("count", 0)
+            grade_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(g))
+            grade_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(cnt)))
+            if cnt > 0:
+                grade_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(f"{gs['t1_win_rate']:.1f}%"))
+                grade_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(f"{gs['t1_mean']:+.2f}%"))
+                grade_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(f"{gs['t2_win_rate']:.1f}%"))
+                grade_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(f"{gs['t2_mean']:+.2f}%"))
+            else:
+                for c in range(2, 6):
+                    grade_table.setItem(row_idx, c, QtWidgets.QTableWidgetItem("--"))
+
+        grade_table.setMaximumHeight(180)
+        grade_layout.addWidget(grade_table)
+        layout.addWidget(grade_group)
+
+        # ── 分数区间统计表 ──
+        by_sr = backtest_data.get("by_score_range", {})
+        if by_sr:
+            sr_group = QtWidgets.QGroupBox("各分数区间胜率统计")
+            sr_layout = QtWidgets.QVBoxLayout(sr_group)
+            sr_table = QtWidgets.QTableWidget()
+            sr_headers = ["分数区间", "命中次数", "T+1胜率", "T+1均值", "T+2胜率", "T+2均值"]
+            sr_table.setColumnCount(len(sr_headers))
+            sr_table.setHorizontalHeaderLabels(sr_headers)
+            sr_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+            sr_table.horizontalHeader().setStretchLastSection(True)
+            sr_table.verticalHeader().setVisible(False)
+            sr_table.setAlternatingRowColors(True)
+
+            score_ranges = ["0-30", "30-40", "40-55", "55-70", "70-85", "85-101"]
+            filled = [(k, by_sr[k]) for k in score_ranges if k in by_sr]
+            sr_table.setRowCount(len(filled))
+            for row_idx, (rng, st) in enumerate(filled):
+                sr_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(f"[{rng})"))
+                sr_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(str(st["count"])))
+                sr_table.setItem(row_idx, 2, QtWidgets.QTableWidgetItem(f"{st['t1_win_rate']:.1f}%"))
+                sr_table.setItem(row_idx, 3, QtWidgets.QTableWidgetItem(f"{st['t1_mean']:+.2f}%"))
+                sr_table.setItem(row_idx, 4, QtWidgets.QTableWidgetItem(f"{st['t2_win_rate']:.1f}%"))
+                sr_table.setItem(row_idx, 5, QtWidgets.QTableWidgetItem(f"{st['t2_mean']:+.2f}%"))
+
+            sr_table.setMaximumHeight(min(180, 30 + len(filled) * 28))
+            sr_layout.addWidget(sr_table)
+            layout.addWidget(sr_group)
+
+        # ── 历史命中明细表 ──
+        detail_group = QtWidgets.QGroupBox("历史命中明细")
+        detail_layout = QtWidgets.QVBoxLayout(detail_group)
+        detail_table = QtWidgets.QTableWidget()
+        detail_headers = ["日期", "定式类型", "评分", "等级", "T+1收益", "T+2收益"]
+        detail_table.setColumnCount(len(detail_headers))
+        detail_table.setHorizontalHeaderLabels(detail_headers)
+        detail_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        detail_table.horizontalHeader().setStretchLastSection(True)
+        detail_table.verticalHeader().setVisible(False)
+        detail_table.setAlternatingRowColors(True)
+        detail_table.setColumnWidth(0, 100)
+        detail_table.setColumnWidth(1, 100)
+        detail_table.setColumnWidth(2, 60)
+        detail_table.setColumnWidth(3, 50)
+        detail_table.setColumnWidth(4, 90)
+        detail_table.setColumnWidth(5, 90)
+
+        records = backtest_data.get("records", [])
+        records_sorted = sorted(records, key=lambda r: r["date"], reverse=True)
+        detail_table.setRowCount(len(records_sorted))
+        for row_idx, rec in enumerate(records_sorted):
+            detail_table.setItem(row_idx, 0, QtWidgets.QTableWidgetItem(rec["date"]))
+            detail_table.setItem(row_idx, 1, QtWidgets.QTableWidgetItem(rec["pattern"]))
+            score_item = QtWidgets.QTableWidgetItem(f"{rec['score']:.0f}")
+            score_item.setTextAlignment(QtCore.Qt.AlignCenter)
+            detail_table.setItem(row_idx, 2, score_item)
+            grade_item = QtWidgets.QTableWidgetItem(rec["grade"])
+            grade_item.setTextAlignment(QtCore.Qt.AlignCenter)
+            bg = GRADE_COLORS.get(rec["grade"], "#FFF")
+            grade_item.setBackground(QtGui.QColor(bg))
+            detail_table.setItem(row_idx, 3, grade_item)
+
+            for col, val in [(4, rec["ret_t1"]), (5, rec["ret_t2"])]:
+                if math.isnan(val):
+                    detail_table.setItem(row_idx, col, QtWidgets.QTableWidgetItem("--"))
+                else:
+                    ret_item = QtWidgets.QTableWidgetItem(f"{val:+.2f}%")
+                    ret_item.setForeground(
+                        QtGui.QColor("#FF4D4F") if val < 0 else QtGui.QColor("#52C41A"),
+                    )
+                    detail_table.setItem(row_idx, col, ret_item)
+
+        detail_layout.addWidget(detail_table)
+        layout.addWidget(detail_group, 1)
+
+
 class BrickPatternPage(QtWidgets.QWidget):
     """砖形图交易定式批量验证页面"""
 
@@ -525,8 +769,10 @@ class BrickPatternPage(QtWidgets.QWidget):
     COL_MATCHED = 4
     COL_SCORE = 5
     COL_RISK = 6
-    COL_DETAIL = 7
-    COLUMN_HEADERS = ["代码", "日期", "期望定式", "前提", "匹配定式", "评分", "风险", "详情"]
+    COL_BACKTEST = 7
+    COL_ADVICE = 8
+    COL_DETAIL = 9
+    COLUMN_HEADERS = ["代码", "日期", "期望定式", "前提", "匹配定式", "评分", "风险", "历史回测", "建议", "详情"]
 
     def __init__(self, root: Path, parent: QtWidgets.QWidget | None = None):
         super().__init__(parent)
@@ -534,7 +780,6 @@ class BrickPatternPage(QtWidgets.QWidget):
         self.repository = StockRepository(root)
         self._setup_ui()
         self._connect_signals()
-        self._load_default_cases()
 
     # ── UI 构建 ──────────────────────────────────────────────
 
@@ -630,6 +875,8 @@ class BrickPatternPage(QtWidgets.QWidget):
         self.table.setColumnWidth(self.COL_MATCHED, 90)
         self.table.setColumnWidth(self.COL_SCORE, 80)
         self.table.setColumnWidth(self.COL_RISK, 100)
+        self.table.setColumnWidth(self.COL_BACKTEST, 140)
+        self.table.setColumnWidth(self.COL_ADVICE, 120)
 
         self.table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 
@@ -653,8 +900,10 @@ class BrickPatternPage(QtWidgets.QWidget):
 
     def _load_default_cases(self):
         self.table.setRowCount(0)
+        today = QtCore.QDate.currentDate().toString("yyyy-MM-dd")
         for code, date_raw, expected in DEFAULT_CASES:
-            self._append_row(code, _format_date(date_raw), expected)
+            date_str = _format_date(date_raw) if date_raw.strip() else today
+            self._append_row(code, date_str, expected)
         self._update_stats()
 
     def _append_row(self, code: str, date_str: str, expected: str):
@@ -663,7 +912,8 @@ class BrickPatternPage(QtWidgets.QWidget):
         self.table.setItem(row, self.COL_CODE, QtWidgets.QTableWidgetItem(code.zfill(6)))
         self.table.setItem(row, self.COL_DATE, QtWidgets.QTableWidgetItem(date_str))
         self.table.setItem(row, self.COL_EXPECTED, QtWidgets.QTableWidgetItem(expected))
-        for col in (self.COL_PREREQ, self.COL_MATCHED, self.COL_SCORE, self.COL_RISK, self.COL_DETAIL):
+        for col in (self.COL_PREREQ, self.COL_MATCHED, self.COL_SCORE, self.COL_RISK,
+                    self.COL_BACKTEST, self.COL_ADVICE, self.COL_DETAIL):
             self.table.setItem(row, col, QtWidgets.QTableWidgetItem(""))
 
     def _on_add_case(self):
@@ -690,7 +940,8 @@ class BrickPatternPage(QtWidgets.QWidget):
 
     def _clear_results(self):
         for row in range(self.table.rowCount()):
-            for col in (self.COL_PREREQ, self.COL_MATCHED, self.COL_SCORE, self.COL_RISK, self.COL_DETAIL):
+            for col in (self.COL_PREREQ, self.COL_MATCHED, self.COL_SCORE, self.COL_RISK,
+                        self.COL_BACKTEST, self.COL_ADVICE, self.COL_DETAIL):
                 item = self.table.item(row, col)
                 if item:
                     item.setText("")
@@ -889,6 +1140,16 @@ class BrickPatternPage(QtWidgets.QWidget):
 
         row_color = GRADE_COLORS.get(grade, "#FFF")
 
+        # ── 历史回测 ──
+        backtest_stats = backtest_stock_history(df, indicators)
+        backtest_text, advice_text = _generate_advice(
+            grade, backtest_stats, best_match.pattern_type.value,
+            indicators, index, best_breakdown.risk_penalty, final_score,
+        )
+        backtest_tooltip = _build_backtest_tooltip(
+            backtest_stats, best_match.pattern_type.value, grade, final_score,
+        )
+
         self._set_row_result(
             row,
             prereq="OK",
@@ -898,6 +1159,10 @@ class BrickPatternPage(QtWidgets.QWidget):
             detail=" | ".join(detail_parts),
             row_color=row_color,
             breakdown=best_breakdown,
+            backtest_text=backtest_text,
+            advice_text=advice_text,
+            backtest_tooltip=backtest_tooltip,
+            backtest_data=backtest_stats,
         )
 
         matched_item = self.table.item(row, self.COL_MATCHED)
@@ -925,11 +1190,17 @@ class BrickPatternPage(QtWidgets.QWidget):
         detail: str,
         row_color: str = "",
         breakdown: ScoreBreakdown | None = None,
+        backtest_text: str = "",
+        advice_text: str = "",
+        backtest_tooltip: str = "",
+        backtest_data: dict | None = None,
     ):
         self.table.item(row, self.COL_PREREQ).setText(prereq)
         self.table.item(row, self.COL_MATCHED).setText(matched)
         self.table.item(row, self.COL_SCORE).setText(score)
         self.table.item(row, self.COL_RISK).setText(risk)
+        self.table.item(row, self.COL_BACKTEST).setText(backtest_text)
+        self.table.item(row, self.COL_ADVICE).setText(advice_text)
         self.table.item(row, self.COL_DETAIL).setText(detail)
 
         if row_color:
@@ -948,6 +1219,28 @@ class BrickPatternPage(QtWidgets.QWidget):
             detail_item = self.table.item(row, self.COL_DETAIL)
             if detail_item:
                 detail_item.setToolTip(tooltip)
+
+        # 回测列tooltip和数据
+        if backtest_tooltip:
+            bt_item = self.table.item(row, self.COL_BACKTEST)
+            if bt_item:
+                bt_item.setToolTip(backtest_tooltip)
+        if backtest_data:
+            bt_item = self.table.item(row, self.COL_BACKTEST)
+            if bt_item:
+                bt_item.setData(QtCore.Qt.UserRole, backtest_data)
+
+        # 建议列颜色
+        advice_item = self.table.item(row, self.COL_ADVICE)
+        if advice_item and advice_text:
+            if advice_text.startswith("建议买入"):
+                advice_item.setForeground(QtGui.QColor("#52C41A"))
+            elif advice_text.startswith("谨慎买入"):
+                advice_item.setForeground(QtGui.QColor("#FAAD14"))
+            elif advice_text.startswith("观望"):
+                advice_item.setForeground(QtGui.QColor("#999"))
+            elif advice_text.startswith("回避"):
+                advice_item.setForeground(QtGui.QColor("#FF4D4F"))
 
         # 匹配列颜色
         matched_item = self.table.item(row, self.COL_MATCHED)
@@ -968,6 +1261,8 @@ class BrickPatternPage(QtWidgets.QWidget):
         self.table.item(row, self.COL_MATCHED).setText("--")
         self.table.item(row, self.COL_SCORE).setText("--")
         self.table.item(row, self.COL_RISK).setText("--")
+        self.table.item(row, self.COL_BACKTEST).setText("--")
+        self.table.item(row, self.COL_ADVICE).setText("--")
         self.table.item(row, self.COL_DETAIL).setText(message)
 
         bg = QtGui.QColor("#FFF2E8")
@@ -1089,9 +1384,22 @@ class BrickPatternPage(QtWidgets.QWidget):
 
         menu = QtWidgets.QMenu(self)
         find_action = menu.addAction("查找相似例子")
+
+        backtest_action = None
+        bt_item = self.table.item(row, self.COL_BACKTEST)
+        bt_data = bt_item.data(QtCore.Qt.UserRole) if bt_item else None
+        if bt_data and isinstance(bt_data, dict) and bt_data.get("total_signals", 0) > 0:
+            backtest_action = menu.addAction("查看回测详情")
+
         action = menu.exec(self.table.viewport().mapToGlobal(pos))
         if action == find_action:
             self._start_similar_search(row, user_data)
+        elif action is not None and action == backtest_action:
+            code_item = self.table.item(row, self.COL_CODE)
+            code = code_item.text().strip() if code_item else ""
+            score_item = self.table.item(row, self.COL_SCORE)
+            score_text = score_item.text().strip() if score_item else ""
+            self._show_backtest_detail(code, bt_data, score_text)
 
     def _start_similar_search(self, row: int, user_data: dict):
         pattern_value = user_data.get("pattern_type", "")
@@ -1163,3 +1471,7 @@ class BrickPatternPage(QtWidgets.QWidget):
         if self._similar_progress_dialog:
             self._similar_progress_dialog.mark_finished(f"搜索出错: {error_msg}")
         QtWidgets.QMessageBox.warning(self, "错误", f"查找相似例子失败：{error_msg}")
+
+    def _show_backtest_detail(self, symbol: str, backtest_data: dict, current_score: str):
+        dialog = BacktestDetailDialog(symbol, backtest_data, current_score, parent=self)
+        dialog.exec()

@@ -4,7 +4,7 @@
       "id": "template-volume-2x-prev",
       "name": "砖形图",
       "description": "当日成交量大于昨日成交量的 2 倍。",
-      "tdx_source": "VAR1A:=(HHV(HIGH,4)-CLOSE)/(HHV(HIGH,4)-LLV(LOW,4))*100-90;\nVAR2A:=SMA(VAR1A,4,1)+100;\nVAR3A:=(CLOSE-LLV(LOW,4))/(HHV(HIGH,4)-LLV(LOW,4))*100;\nVAR4A:=SMA(VAR3A,6,1);\nVAR5A:=SMA(VAR4A,6,1)+100;\nVAR6A:=VAR5A-VAR2A;\n砖型图:=IF(VAR6A>4,VAR6A-4,0),COLORRED;\n\n{基础变量定义}\n当日收盘价:=C;\n短趋线:=EMA(EMA(当日收盘价,10),10);\n多空线:=(MA(当日收盘价,14) + MA(当日收盘价,28) +MA(当日收盘价,57) + MA(当日收盘价,114))/4;\n\n{绿转红核心前提}\nAA:= REF(砖型图,1) < 砖型图;{当日是红柱}\n绿转红:=REF(AA,1) = 0 AND AA = 1;{前一天非红柱，当天红柱}\n\n{有效红柱/绿柱}\n有效红柱:=砖型图 > 0;\n当天红柱高:=砖型图 - REF(砖型图,1);\n有效绿柱:=REF(砖型图,2) - REF(砖型图,1) AND (REF(砖型图,2) - REF(砖型图,1)) > 0;{前一天绿柱高度>0}\n前绿柱高:=REF(砖型图,2) - REF(砖型图,1);\n\n{红柱>=绿柱 70%}\n绿柱70%:=前绿柱高 * 0.7;\n长度条件:=当天红柱高 > 绿柱70%;\n\n{股价区间约束}\n短趋线上限:= 短趋线 * 1.02;\n{连续两天站多空线}\n当日站线:=当日收盘价 > 多空线;\n前日站线:=REF(当日收盘价,1) > REF(多空线,1);\n连两日站线:=当日站线 AND 前日站线;\n\n股价区间:=连两日站线 AND 当日收盘价 < 短趋线上限;\n趋势条件:=短趋线 > 多空线;\n\n价格条件:=当日收盘价 < 60;\n\n选股:绿转红 AND 有效红柱 AND 有效绿柱 AND 长度条件 AND 股价区间  AND 趋势条件 AND 价格条件;",
+      "tdx_source": "VAR1A:=(HHV(HIGH,4)-CLOSE)/(HHV(HIGH,4)-LLV(LOW,4))*100-90;\nVAR2A:=SMA(VAR1A,4,1)+100;\nVAR3A:=(CLOSE-LLV(LOW,4))/(HHV(HIGH,4)-LLV(LOW,4))*100;\nVAR4A:=SMA(VAR3A,6,1);\nVAR5A:=SMA(VAR4A,6,1)+100;\nVAR6A:=VAR5A-VAR2A;\n砖型图:=IF(VAR6A>4,VAR6A-4,0);\n\n短趋线:=EMA(EMA(CLOSE,10),10);\n多空线:=(MA(CLOSE,14) + MA(CLOSE,28) + MA(CLOSE,57) + MA(CLOSE,114))/4;\n\n{绿转红}\nAA:= REF(砖型图,1) < 砖型图;\n绿转红:=REF(AA,1) = 0 AND AA = 1;\n\n{短趋线在多空线之上}\n趋势条件:=短趋线 > 多空线;\n\n选股:绿转红 AND 趋势条件;",
       "default_time_mode": "exact",
       "stock_pool_name": "default",
       "include_debug": false,

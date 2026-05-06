@@ -65,13 +65,13 @@ class ScoreBreakdown:
     @property
     def grade(self) -> str:
         s = self.final_score
-        if s >= 80:
+        if s >= 85:
             return "S"
-        if s >= 65:
+        if s >= 70:
             return "A"
-        if s >= 50:
+        if s >= 55:
             return "B"
-        if s >= 35:
+        if s >= 40:
             return "C"
         return "D"
 

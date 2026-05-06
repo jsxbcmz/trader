@@ -21,6 +21,7 @@ from core.screening.brick_pattern_engine import (
     detect_sideways_jump,
     detect_uptrend_continue,
 )
+from core.screening.cache_models import compute_tdx_source_hash
 from core.screening.service import ScreeningService
 from core.templates import TemplateService
 from core.trade.simulator import TradeSimulator
@@ -215,8 +216,8 @@ class ScreeningPage(QtWidgets.QWidget):
         left_layout.addWidget(result_label)
 
         self.result_table = QtWidgets.QTableWidget()
-        self.result_table.setColumnCount(4)
-        self.result_table.setHorizontalHeaderLabels(["代码", "名称", "评分", "原因"])
+        self.result_table.setColumnCount(5)
+        self.result_table.setHorizontalHeaderLabels(["代码", "名称", "评分", "原因", "风险"])
         self.result_table.horizontalHeader().setStretchLastSection(True)
         self.result_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.result_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -577,6 +578,7 @@ class ScreeningPage(QtWidgets.QWidget):
         )
 
         # 收集命中的股票
+        self._last_screening_request = result.request
         self._screening_matches = [
             match for match in result.matches if match.matched
         ]
@@ -739,15 +741,19 @@ class ScreeningPage(QtWidgets.QWidget):
             score_info = self._compute_brick_score(str(match.symbol), self._target_date)
             self._score_results.append(score_info)
 
-        scored_pairs = list(zip(self._screening_matches, self._score_results))
+        scored_pairs = [
+            (match, score_info)
+            for match, score_info in zip(self._screening_matches, self._score_results)
+            if score_info["breakdown"] and score_info["breakdown"].base_score >= 70
+        ]
         scored_pairs.sort(
-            key=lambda p: (
-                p[1]["breakdown"].final_score if p[1]["breakdown"] else -1
-            ),
+            key=lambda p: p[1]["breakdown"].final_score,
             reverse=True,
         )
         self._screening_matches = [p[0] for p in scored_pairs]
         self._score_results = [p[1] for p in scored_pairs]
+
+        self._update_cache_with_final_results()
 
         self.result_table.setRowCount(len(self._screening_matches))
         for row, (match, score_info) in enumerate(
@@ -767,10 +773,21 @@ class ScreeningPage(QtWidgets.QWidget):
             self.result_table.setItem(row, 3, reason_item)
 
             breakdown = score_info.get("breakdown")
+
+            risk_text = ""
+            if breakdown and breakdown.risk_penalty < 0:
+                risk_parts = [f"{k}({v:.0f})" for k, v in breakdown.risk_items.items()]
+                risk_text = ", ".join(risk_parts)
+            risk_item = QtWidgets.QTableWidgetItem(risk_text)
+            if risk_text:
+                risk_item.setForeground(QtGui.QColor("#FF4D4F"))
+            self.result_table.setItem(row, 4, risk_item)
+
             if breakdown:
                 tooltip = self._build_score_tooltip(breakdown)
                 score_item.setToolTip(tooltip)
                 reason_item.setToolTip(tooltip)
+                risk_item.setToolTip(tooltip)
 
             grade = score_info.get("grade", "")
             if grade and grade in GRADE_COLORS:
@@ -795,6 +812,25 @@ class ScreeningPage(QtWidgets.QWidget):
         # 默认选中第一只股票
         if self.result_table.rowCount() > 0:
             self.result_table.selectRow(0)
+
+    def _update_cache_with_final_results(self):
+        """用评分过滤后的最终结果覆盖缓存，使缓存只保存页面展示的数据。"""
+        request = getattr(self, "_last_screening_request", None)
+        if request is None:
+            return
+        tdx_hash = compute_tdx_source_hash(request.tdx_source)
+        entry = self.screening_service.cache_repository.find(
+            target_date=request.target_date,
+            template_id=request.template_id,
+            tdx_source_hash=tdx_hash,
+        )
+        if entry is None:
+            return
+        entry.matched_symbols = [
+            {"symbol": str(m.symbol), "name": str(m.name or "")}
+            for m in self._screening_matches
+        ]
+        self.screening_service.cache_repository.upsert(entry)
 
     def _on_stock_selected(self):
         """点击选股结果列表项，加载该股票数据并刷新图表"""

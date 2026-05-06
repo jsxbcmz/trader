@@ -323,7 +323,6 @@ class MarketPage(QtWidgets.QWidget):
         return ""
 
     def _on_visible_date_range_changed(self, start_date: str, end_date: str):
-        print(f"[sync] {start_date} ~ {end_date}, index_keys={len(self.indexMiniChart._date_keys)}, industry_keys={len(self.industryMiniChart._date_keys)}", flush=True)
         self.indexMiniChart.sync_date_range(start_date, end_date)
         self.industryMiniChart.sync_date_range(start_date, end_date)
 
