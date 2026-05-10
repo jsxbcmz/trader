@@ -279,3 +279,62 @@ def compute_needle20_indicator(high: np.ndarray, low: np.ndarray, close: np.ndar
     long = (close - llv_l20) / safe20 * 100.0
 
     return {"short": short, "mid": mid, "long": long}
+
+
+def compute_oamv(
+    open_prices: np.ndarray,
+    high_prices: np.ndarray,
+    low_prices: np.ndarray,
+    close_prices: np.ndarray,
+    amount: np.ndarray,
+    period: int = 10,
+    fit_coefficient: float = 0.937,
+    amount_divisor: float = 1000.0,
+) -> dict[str, np.ndarray]:
+    """计算 OAMV（活跃市值）虚拟K线。
+
+    Args:
+        open_prices: 开盘价序列
+        high_prices: 最高价序列
+        low_prices: 最低价序列
+        close_prices: 收盘价序列
+        amount: 成交额序列
+        period: 成交额均量周期，默认10
+        fit_coefficient: 拟合系数，默认0.937（中证A股930903推荐值）
+        amount_divisor: 成交额缩放除数。
+            930903 指数 CSV 的 volume 单位千元，用 1000；
+            个股 CSV 的 volume 单位万元，用 100。
+
+    Returns:
+        字典，包含 oamv_open / oamv_high / oamv_low / oamv_close 四个数组
+    """
+    length = len(close_prices)
+    empty_result = {
+        "oamv_open": np.full(length, np.nan),
+        "oamv_high": np.full(length, np.nan),
+        "oamv_low": np.full(length, np.nan),
+        "oamv_close": np.full(length, np.nan),
+    }
+
+    if length < period + 5:
+        return empty_result
+
+    # OAMVV1: SMA(AMOUNT, N, 1) / divisor
+    smoothed_amount = tdx_sma(amount, period, 1) / amount_divisor
+
+    # OAMVV3: MA(REF(CLOSE, 1), 5) — 昨收的5日均线
+    prev_close = np.empty_like(close_prices)
+    prev_close[0] = np.nan
+    prev_close[1:] = close_prices[:-1]
+    prev_close_ma5 = moving_average(prev_close, 5)
+
+    # 虚拟四价 = OAMVV1 * price / OAMVV3 * 0.1 * K
+    safe_ma5 = np.where(np.abs(prev_close_ma5) < 1e-12, np.nan, prev_close_ma5)
+    scale = smoothed_amount / safe_ma5 * 0.1 * fit_coefficient
+
+    return {
+        "oamv_open": scale * open_prices,
+        "oamv_high": scale * high_prices,
+        "oamv_low": scale * low_prices,
+        "oamv_close": scale * close_prices,
+    }

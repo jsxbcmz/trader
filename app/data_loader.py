@@ -179,6 +179,26 @@ def load_index_csv(stock_daily_data_dir: Path, ts_code: str) -> pd.DataFrame:
     return df
 
 
+def load_oamv_csv(stock_daily_data_dir: Path) -> pd.DataFrame:
+    """加载 OAMV 活跃市值 CSV（基于中证A股 930903 计算的虚拟K线）。"""
+    fp = stock_daily_data_dir / "oamv_930903_CSI.csv"
+    if not fp.exists():
+        return pd.DataFrame(columns=DAILY_COLUMNS)
+
+    df = pd.read_csv(fp)
+    required = {"date", "open", "close", "high", "low"}
+    miss = required - set(df.columns)
+    if miss:
+        return pd.DataFrame(columns=DAILY_COLUMNS)
+
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.sort_values("date").reset_index(drop=True)
+    for col in ["open", "high", "low", "close"]:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    df = df.dropna(subset=["open", "high", "low", "close"])
+    return df
+
+
 def load_industry_csv(industry_data_dir: Path, ts_code: str) -> pd.DataFrame:
     fp = get_industry_csv_path(industry_data_dir, ts_code)
     if not fp.exists():

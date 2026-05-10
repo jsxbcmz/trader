@@ -18,6 +18,7 @@ from ..data_loader import (
     load_index_csv,
     load_industry_csv,
     load_industry_mapping,
+    load_oamv_csv,
     load_stock_list,
 )
 from ..history_updater import HistoryUpdater
@@ -167,12 +168,14 @@ class MarketPage(QtWidgets.QWidget):
         self.chart.subChartSelectionChanged.connect(self._on_sub_chart_changed)
 
         self.indexMiniChart = MiniCandleChart()
+        self.oamvMiniChart = MiniCandleChart()
         self.industryMiniChart = MiniCandleChart()
 
         miniChartRow = QtWidgets.QHBoxLayout()
         miniChartRow.setContentsMargins(0, 0, 16, 0)
         miniChartRow.setSpacing(8)
         miniChartRow.addWidget(self.indexMiniChart, 1)
+        miniChartRow.addWidget(self.oamvMiniChart, 1)
         miniChartRow.addWidget(self.industryMiniChart, 1)
 
         rightWidget = QtWidgets.QWidget()
@@ -310,6 +313,7 @@ class MarketPage(QtWidgets.QWidget):
             self._show_status_message(f"{symbol} 暂无本地日线，可先执行更新", 3000)
 
         self._update_index_mini_chart()
+        self._update_oamv_mini_chart()
         self._update_industry_mini_chart(symbol)
 
     def _find_stock_name(self, symbol: str) -> str:
@@ -324,7 +328,16 @@ class MarketPage(QtWidgets.QWidget):
 
     def _on_visible_date_range_changed(self, start_date: str, end_date: str):
         self.indexMiniChart.sync_date_range(start_date, end_date)
+        self.oamvMiniChart.sync_date_range(start_date, end_date)
         self.industryMiniChart.sync_date_range(start_date, end_date)
+
+    def _update_oamv_mini_chart(self):
+        """加载预计算的 OAMV 活跃市值 CSV 并展示。"""
+        try:
+            df = load_oamv_csv(self.stock_daily_data_dir)
+            self.oamvMiniChart.set_data(df, "OAMV活跃市值")
+        except Exception:
+            self.oamvMiniChart.set_data(None, "OAMV活跃市值")
 
     def _update_index_mini_chart(self):
         try:

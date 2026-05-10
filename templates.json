@@ -5,11 +5,20 @@
       "name": "砖形图",
       "description": "当日成交量大于昨日成交量的 2 倍。",
       "tdx_source": "VAR1A:=(HHV(HIGH,4)-CLOSE)/(HHV(HIGH,4)-LLV(LOW,4))*100-90;\nVAR2A:=SMA(VAR1A,4,1)+100;\nVAR3A:=(CLOSE-LLV(LOW,4))/(HHV(HIGH,4)-LLV(LOW,4))*100;\nVAR4A:=SMA(VAR3A,6,1);\nVAR5A:=SMA(VAR4A,6,1)+100;\nVAR6A:=VAR5A-VAR2A;\n砖型图:=IF(VAR6A>4,VAR6A-4,0);\n\n短趋线:=EMA(EMA(CLOSE,10),10);\n多空线:=(MA(CLOSE,14) + MA(CLOSE,28) + MA(CLOSE,57) + MA(CLOSE,114))/4;\n\n{绿转红}\nAA:= REF(砖型图,1) < 砖型图;\n绿转红:=REF(AA,1) = 0 AND AA = 1;\n\n{短趋线在多空线之上}\n趋势条件:=短趋线 > 多空线;\n\n选股:绿转红 AND 趋势条件;",
-      "default_time_mode": "exact",
       "stock_pool_name": "default",
       "include_debug": false,
       "created_at": "",
       "updated_at": "2026-03-31T22:21:59"
+    },
+    {
+      "id": "custom-6279ef41a40d467489bcd3d864c730b4",
+      "name": "b1",
+      "description": "",
+      "tdx_source": "{=== B1战法选股公式（改进版） ===}\n{依据：20250712 B1战法实操拆解 + 20250903 B1买点实战解读}\n\n{--- 1: K线分类 ---}\nJYZY_T:=C>O AND C<REF(C,1);\nJYZY2_T:=C<O AND C>REF(C,1);\nREAL_YANG:=C>O AND NOT(C<REF(C,1));\nREAL_YIN :=C<O AND NOT(C>REF(C,1));\n\n{--- 2: KDJ超卖（J<=20，L4档位放宽） ---}\nRSV:=(C-LLV(L,9))/(HHV(H,9)-LLV(L,9))*100;\nK:=SMA(RSV,3,1);\nD:=SMA(K,3,1);\nJ:=3*K-2*D;\nJ_OK:=J<=20;\n\n{--- 3: 阳量 vs 阴量（放宽倍数） ---}\nVOL_YANG1:=SUM(VOL*REAL_YANG,28);\nVOL_YIN1 :=SUM(VOL*REAL_YIN ,28);\nVOL_YANG2:=SUM(VOL*REAL_YANG,14);\nVOL_YIN2 :=SUM(VOL*REAL_YIN ,14);\nYANGYIN_OK1:=VOL_YANG1>1.4*VOL_YIN1;\nYANGYIN_OK2:=VOL_YANG2>1.8*VOL_YIN2;\n\n{--- 4: 市值过滤（已由 stocklist.csv 股票池管控，公式内不再重复过滤） ---}\nMVOK:=1;\n\n{--- 5: 排除28日内\"高位放量阴线\"（出货特征） ---}\nO85:=LLV(O,28)+0.95*(HHV(O,28)-LLV(O,28));\nTOP15O:=O>=O85;\nFD15:=C<REF(C,1) AND C<=O AND VOL>=1.15*REF(VOL,1);\nCNT28:=COUNT(TOP15O AND FD15,28);\nGOOD28:=CNT28<=0;\n\n{--- 6: 主力放量启动痕迹（放宽倍数） ---}\nAVG40:=MA(VOL,40);\nPLRY:=VOL>1.5*REF(VOL,1) AND C>O AND VOL>AVG40;\nPLRY_CNT:=COUNT(PLRY,14)>=2 OR COUNT(PLRY,28)>=3;\nPLRY_FIRST:=PLRY AND NOT(REF(PLRY,1));\nPLRY_CONT:=PLRY AND REF(PLRY,1);\nPRE_NOT_REALYIN:=NOT(REF(REAL_YIN,1));\nHALF_DOWN:=PRE_NOT_REALYIN AND C<REF(C,1) AND VOL<=0.5*REF(VOL,1);\nCNT_FIRST:=COUNT(PLRY_FIRST,28);\nCNT_CONT :=COUNT(PLRY_CONT ,28);\nCNT_HALF :=COUNT(HALF_DOWN ,28);\nTHREE_SUM_OK:=(CNT_FIRST+CNT_CONT+CNT_HALF)>=3;\n\n{--- 7: 28日最高量不能是阴线（最高量必须是阳线=主力吸筹） ---}\nMAXVOL28:=HHV(VOL,28);\nMAX28_BAD:=VOL=MAXVOL28 AND REAL_YIN;\nMAX28_OK:=COUNT(MAX28_BAD,28)=0;\n\n{=== 原A1：历史结构合格 ===}\nA1:= (PLRY_CNT AND YANGYIN_OK1 AND J_OK AND MVOK AND GOOD28 AND THREE_SUM_OK AND MAX28_OK)\n  OR (PLRY_CNT AND YANGYIN_OK2 AND J_OK AND MVOK AND GOOD28 AND MAX28_OK);\n\n{=== 新增A：当日\"分歧转一致\"小K线 ===}\n{文档要求：实体在 -2%~+2%，主板振幅<=4%（这里用4.5%兼容创业板部分情况）}\nTODAY_BODY := ABS(C-O)/REF(C,1) <= 0.02;\nTODAY_CHG  := ABS(C/REF(C,1)-1) <= 0.025;\nTODAY_AMP  := (H-L)/REF(C,1) <= 0.045;\nTODAY_SMALL := TODAY_BODY AND TODAY_CHG AND TODAY_AMP;\n\n{=== 新增B：当日缩量（适度放宽） ===}\nTODAY_SHRINK := VOL<=0.9*REF(VOL,1) AND VOL<=1.5*LLV(VOL,20);\n\n{=== 新增C：位置感（黄线之上 + 接近白线） ===}\n{黄线=MA250（大哥线，硬约束），白线=MA60（回调到白线附近）}\nPOS_ABOVE_HUANG := C > MA(C,250);\nPOS_NEAR_BAI    := ABS(C/MA(C,60)-1) <= 0.06;\nPOS_OK := POS_ABOVE_HUANG AND POS_NEAR_BAI;\n\n{=== 新增D：时序——最近5日是回调段，不是正在放量拉升 ===}\nQUIET_OK := COUNT(PLRY,5) = 0;\n\n{=== 辅助：综合均线（保留原QL作为弱约束） ===}\nQL:=0.4*MA(C,20)+0.3*MA(C,60)+0.2*MA(C,120)+0.1*MA(C,250);\nQL_OK := C > 0.99*QL;\n\n{=== 最终B1：历史结构 + 当日反转K线 + 位置感 + 时序 ===}\nB1 := A1 AND TODAY_SMALL AND TODAY_SHRINK AND POS_OK AND QUIET_OK AND QL_OK;\nB1;",
+      "stock_pool_name": "default",
+      "include_debug": false,
+      "created_at": "2026-05-07T21:26:21",
+      "updated_at": "2026-05-07T21:37:55"
     }
   ]
 }

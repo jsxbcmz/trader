@@ -1,0 +1,82 @@
+{=== B1战法选股公式（改进版） ===}
+{依据：20250712 B1战法实操拆解 + 20250903 B1买点实战解读}
+
+{--- 1: K线分类 ---}
+JYZY_T:=C>O AND C<REF(C,1);
+JYZY2_T:=C<O AND C>REF(C,1);
+REAL_YANG:=C>O AND NOT(C<REF(C,1));
+REAL_YIN :=C<O AND NOT(C>REF(C,1));
+
+{--- 2: KDJ超卖（J<=20，L4档位放宽） ---}
+RSV:=(C-LLV(L,9))/(HHV(H,9)-LLV(L,9))*100;
+K:=SMA(RSV,3,1);
+D:=SMA(K,3,1);
+J:=3*K-2*D;
+J_OK:=J<=20;
+
+{--- 3: 阳量 vs 阴量（放宽倍数） ---}
+VOL_YANG1:=SUM(VOL*REAL_YANG,28);
+VOL_YIN1 :=SUM(VOL*REAL_YIN ,28);
+VOL_YANG2:=SUM(VOL*REAL_YANG,14);
+VOL_YIN2 :=SUM(VOL*REAL_YIN ,14);
+YANGYIN_OK1:=VOL_YANG1>1.4*VOL_YIN1;
+YANGYIN_OK2:=VOL_YANG2>1.8*VOL_YIN2;
+
+{--- 4: 市值过滤（已由 stocklist.csv 股票池管控，公式内不再重复过滤） ---}
+MVOK:=1;
+
+{--- 5: 排除28日内"高位放量阴线"（出货特征） ---}
+O85:=LLV(O,28)+0.95*(HHV(O,28)-LLV(O,28));
+TOP15O:=O>=O85;
+FD15:=C<REF(C,1) AND C<=O AND VOL>=1.15*REF(VOL,1);
+CNT28:=COUNT(TOP15O AND FD15,28);
+GOOD28:=CNT28<=0;
+
+{--- 6: 主力放量启动痕迹（放宽倍数） ---}
+AVG40:=MA(VOL,40);
+PLRY:=VOL>1.5*REF(VOL,1) AND C>O AND VOL>AVG40;
+PLRY_CNT:=COUNT(PLRY,14)>=2 OR COUNT(PLRY,28)>=3;
+PLRY_FIRST:=PLRY AND NOT(REF(PLRY,1));
+PLRY_CONT:=PLRY AND REF(PLRY,1);
+PRE_NOT_REALYIN:=NOT(REF(REAL_YIN,1));
+HALF_DOWN:=PRE_NOT_REALYIN AND C<REF(C,1) AND VOL<=0.5*REF(VOL,1);
+CNT_FIRST:=COUNT(PLRY_FIRST,28);
+CNT_CONT :=COUNT(PLRY_CONT ,28);
+CNT_HALF :=COUNT(HALF_DOWN ,28);
+THREE_SUM_OK:=(CNT_FIRST+CNT_CONT+CNT_HALF)>=3;
+
+{--- 7: 28日最高量不能是阴线（最高量必须是阳线=主力吸筹） ---}
+MAXVOL28:=HHV(VOL,28);
+MAX28_BAD:=VOL=MAXVOL28 AND REAL_YIN;
+MAX28_OK:=COUNT(MAX28_BAD,28)=0;
+
+{=== 原A1：历史结构合格 ===}
+A1:= (PLRY_CNT AND YANGYIN_OK1 AND J_OK AND MVOK AND GOOD28 AND THREE_SUM_OK AND MAX28_OK)
+  OR (PLRY_CNT AND YANGYIN_OK2 AND J_OK AND MVOK AND GOOD28 AND MAX28_OK);
+
+{=== 新增A：当日"分歧转一致"小K线 ===}
+{文档要求：实体在 -2%~+2%，主板振幅<=4%（这里用4.5%兼容创业板部分情况）}
+TODAY_BODY := ABS(C-O)/REF(C,1) <= 0.02;
+TODAY_CHG  := ABS(C/REF(C,1)-1) <= 0.025;
+TODAY_AMP  := (H-L)/REF(C,1) <= 0.045;
+TODAY_SMALL := TODAY_BODY AND TODAY_CHG AND TODAY_AMP;
+
+{=== 新增B：当日缩量（适度放宽） ===}
+TODAY_SHRINK := VOL<=0.9*REF(VOL,1) AND VOL<=1.5*LLV(VOL,20);
+
+{=== 新增C：位置感（黄线之上 + 接近白线） ===}
+{黄线=MA250（大哥线，硬约束），白线=MA60（回调到白线附近）}
+POS_ABOVE_HUANG := C > MA(C,250);
+POS_NEAR_BAI    := ABS(C/MA(C,60)-1) <= 0.06;
+POS_OK := POS_ABOVE_HUANG AND POS_NEAR_BAI;
+
+{=== 新增D：时序——最近5日是回调段，不是正在放量拉升 ===}
+QUIET_OK := COUNT(PLRY,5) = 0;
+
+{=== 辅助：综合均线（保留原QL作为弱约束） ===}
+QL:=0.4*MA(C,20)+0.3*MA(C,60)+0.2*MA(C,120)+0.1*MA(C,250);
+QL_OK := C > 0.99*QL;
+
+{=== 最终B1：历史结构 + 当日反转K线 + 位置感 + 时序 ===}
+B1 := A1 AND TODAY_SMALL AND TODAY_SHRINK AND POS_OK AND QUIET_OK AND QL_OK;
+B1;

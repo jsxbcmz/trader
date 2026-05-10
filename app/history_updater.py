@@ -9,11 +9,15 @@ from typing import Callable
 
 import pandas as pd
 
+import numpy as np
+
+from .chart_indicators import compute_oamv
 from .data_loader import (
     DAILY_COLUMNS,
     get_index_csv_path,
     get_industry_csv_path,
     get_last_trade_date,
+    load_index_csv,
     load_raw_daily_csv,
     load_stock_list,
     normalize_daily_dataframe,
@@ -251,7 +255,7 @@ class HistoryUpdater:
         except Exception as exc:
             return UpdateResult(symbol, meta["name"], "failed", 0, 0, f"更新失败: {exc}", time.perf_counter() - start_ts)
 
-    INDEX_CODES = [("000001.SH", "上证指数")]
+    INDEX_CODES = [("000001.SH", "上证指数"), ("930903.CSI", "中证A股")]
 
     def _map_index_daily_to_local(self, df_remote: pd.DataFrame) -> pd.DataFrame:
         if df_remote is None or df_remote.empty:
@@ -311,11 +315,50 @@ class HistoryUpdater:
             temp_path.replace(csv_path)
 
             written = max(0, len(normalized) - before_count)
+
+            if ts_code == "930903.CSI" and written > 0:
+                self._rebuild_oamv_csv()
+
             return UpdateResult(ts_code, name, "updated", len(mapped_df), written, "更新成功", time.perf_counter() - start_ts)
         except TushareClientError as exc:
             return UpdateResult(ts_code, name, "failed", 0, 0, str(exc), time.perf_counter() - start_ts)
         except Exception as exc:
             return UpdateResult(ts_code, name, "failed", 0, 0, f"更新失败: {exc}", time.perf_counter() - start_ts)
+
+    def _rebuild_oamv_csv(self):
+        """读取 930903 指数数据，计算 OAMV 虚拟K线，写入独立 CSV。"""
+        df = load_index_csv(self.stock_daily_data_dir, "930903.CSI")
+        if df.empty or len(df) < 16:
+            return
+
+        result = compute_oamv(
+            open_prices=df["open"].to_numpy(np.float64),
+            high_prices=df["high"].to_numpy(np.float64),
+            low_prices=df["low"].to_numpy(np.float64),
+            close_prices=df["close"].to_numpy(np.float64),
+            amount=df["volume"].to_numpy(np.float64),
+            amount_divisor=1000.0,
+        )
+
+        oamv_df = pd.DataFrame({
+            "date": df["date"],
+            "open": result["oamv_open"],
+            "high": result["oamv_high"],
+            "low": result["oamv_low"],
+            "close": result["oamv_close"],
+        }).dropna(subset=["open", "high", "low", "close"]).reset_index(drop=True)
+
+        if oamv_df.empty:
+            return
+
+        oamv_df["date"] = oamv_df["date"].dt.strftime("%Y-%m-%d")
+        oamv_path = self.stock_daily_data_dir / "oamv_930903_CSI.csv"
+
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", delete=False, suffix=".csv", dir=self.stock_daily_data_dir, encoding="utf-8-sig", newline="") as tmp:
+            oamv_df.to_csv(tmp.name, index=False)
+            temp_path = Path(tmp.name)
+        temp_path.replace(oamv_path)
 
     def _load_sw_industry_list(self) -> list[tuple[str, str]]:
         if self._sw_industry_list is not None:
