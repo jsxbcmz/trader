@@ -3,7 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Callable, Literal
 
-from . import builtin, tdx_compat
+from core.indicators import algorithms
+from core.indicators import builtin
 
 ReturnKind = Literal["series", "multi_series"]
 
@@ -29,7 +30,7 @@ FUNCTION_SPECS: tuple[FunctionSpec, ...] = (
     # 移动平均类
     FunctionSpec("MA", builtin.ma, 2, 2, aliases=("ma",)),
     FunctionSpec("EMA", builtin.ema, 2, 2, aliases=("ema",)),
-    FunctionSpec("SMA", tdx_compat.tdx_sma, 2, 3, aliases=("sma", "TDX_SMA", "tdx_sma")),
+    FunctionSpec("SMA", builtin.sma, 2, 3, aliases=("sma", "TDX_SMA", "tdx_sma")),
     # 极值类
     FunctionSpec("HHV", builtin.hhv, 2, 2, aliases=("hhv",)),
     FunctionSpec("LLV", builtin.llv, 2, 2, aliases=("llv",)),
@@ -50,10 +51,13 @@ FUNCTION_SPECS: tuple[FunctionSpec, ...] = (
     FunctionSpec("EVERY", builtin.every, 2, 2, aliases=("every",)),
     FunctionSpec("EXIST", builtin.exist, 2, 2, aliases=("exist",)),
     FunctionSpec("BARSLAST", builtin.barslast, 1, 1, aliases=("barslast",)),
-    # 复合指标
-    FunctionSpec("KDJ", tdx_compat.kdj, 3, 3, return_kind="multi_series", aliases=("kdj",)),
-    FunctionSpec("ZX_SHORT_TREND", tdx_compat.zx_short_trend, 1, 1, aliases=("zx_short_trend",)),
-    FunctionSpec("ZX_LONG_SHORT", tdx_compat.zx_long_short, 1, 2, aliases=("zx_long_short",)),
+    # 复合指标（直接复用 algorithms 内的实现）
+    FunctionSpec("KDJ", algorithms.compute_kdj_indicator, 3, 3,
+                 return_kind="multi_series", aliases=("kdj",)),
+    FunctionSpec("ZX_SHORT_TREND", algorithms.compute_zx_short_trend, 1, 1,
+                 aliases=("zx_short_trend",)),
+    FunctionSpec("ZX_LONG_SHORT", algorithms.compute_zx_long_short, 1, 2,
+                 aliases=("zx_long_short",)),
 )
 
 

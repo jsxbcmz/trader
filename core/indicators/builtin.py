@@ -3,11 +3,11 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from app.chart_indicators import ema as _ema
-from app.chart_indicators import moving_average as _moving_average
-from app.chart_indicators import rolling_max as _rolling_max
-from app.chart_indicators import rolling_min as _rolling_min
-from app.chart_indicators import tdx_sma as _tdx_sma
+from core.indicators.algorithms import ema as _ema
+from core.indicators.algorithms import moving_average as _moving_average
+from core.indicators.algorithms import rolling_max as _rolling_max
+from core.indicators.algorithms import rolling_min as _rolling_min
+from core.indicators.algorithms import tdx_sma as _tdx_sma
 
 
 def _to_float_array(values) -> np.ndarray:

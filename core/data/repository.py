@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from app.data_loader import get_daily_csv_path, load_daily_csv, load_stock_list, normalize_daily_dataframe
+from core.data.io import get_daily_csv_path, load_daily_csv, load_stock_list, normalize_daily_dataframe
 from core.models.market import StockInfo
 
 
