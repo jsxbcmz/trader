@@ -9,7 +9,6 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from core.data.repository import StockRepository
 from core.data.time_index import locate_time_index
 from core.models.brick_pattern import ScoreBreakdown
-from core.models.trade import TradeAction
 from core.screening.brick_pattern_engine import (
     _calc_indicators,
     check_prerequisites,
@@ -24,11 +23,11 @@ from core.screening.brick_pattern_engine import (
 from core.screening.cache_models import compute_tdx_source_hash
 from core.screening.service import ScreeningService
 from core.templates import TemplateService
-from core.trade.simulator import TradeSimulator
 
 from ..data_loader import load_daily_csv, load_stock_list
 from ..utils import start_worker
 from ..widgets import ScreeningProgressDialog, StockChartWidget
+from .screening_trade_controller import ScreeningTradeController
 
 GRADE_COLORS = {
     "S": "#D5F5D5",
@@ -90,16 +89,11 @@ class ScreeningPage(QtWidgets.QWidget):
         self._screening_matches: list = []
         self._target_date: str = ""
 
-        # ── 模拟交易状态 ──
-        self._simulator = TradeSimulator()
-        self._initial_capital: int = 100_000
-        self._available_capital: float = 100_000.0
-        self._current_sim_date: str = ""
+        # ── 模拟交易状态：抽离到 ScreeningTradeController ──
+        self._trade_controller = ScreeningTradeController(self)
         self._current_symbol: str = ""
         self._current_stock_name: str = ""
         self._current_df = None
-        self._trade_marker_items: list = []
-        self._is_at_open: bool = False  # 当前是否处于开盘阶段
         self._repository = StockRepository(self.root)
         self._score_results: list[dict] = []
 
@@ -249,159 +243,8 @@ class ScreeningPage(QtWidgets.QWidget):
         return left
 
     def _build_trade_panel(self) -> QtWidgets.QWidget:
-        """构建右侧操作面板：模拟交易控制区"""
-        panel = QtWidgets.QWidget()
-        panel.setFixedWidth(160)
-        layout = QtWidgets.QVBoxLayout(panel)
-        layout.setContentsMargins(8, 8, 8, 8)
-
-        # 标题
-        title = QtWidgets.QLabel("📅 模拟交易")
-        title.setStyleSheet("font-weight: bold; font-size: 14px;")
-        layout.addWidget(title)
-
-        layout.addWidget(self._make_separator())
-
-        # ── 初始配置区：金额输入 + 开始训练按钮 ──
-        self.trade_setup_widget = QtWidgets.QWidget()
-        setup_layout = QtWidgets.QVBoxLayout(self.trade_setup_widget)
-        setup_layout.setContentsMargins(0, 0, 0, 0)
-
-        setup_layout.addWidget(QtWidgets.QLabel("初始资金"))
-        self.initial_capital_input = QtWidgets.QSpinBox()
-        self.initial_capital_input.setRange(10_000, 100_000_000)
-        self.initial_capital_input.setSingleStep(10_000)
-        self.initial_capital_input.setValue(100_000)
-        self.initial_capital_input.setPrefix("¥ ")
-        self.initial_capital_input.setGroupSeparatorShown(True)
-        setup_layout.addWidget(self.initial_capital_input)
-
-        setup_layout.addSpacing(12)
-
-        self.start_training_btn = QtWidgets.QPushButton("🚀 开始训练")
-        self.start_training_btn.setMinimumHeight(36)
-        self.start_training_btn.setStyleSheet(
-            "background-color: #1890FF; color: white; font-weight: bold; font-size: 13px;"
-        )
-        self.start_training_btn.clicked.connect(self._on_start_training)
-        setup_layout.addWidget(self.start_training_btn)
-
-        layout.addWidget(self.trade_setup_widget)
-
-        # ── 交易操作区：选股后点击"开始训练"才显示 ──
-        self.trade_ops_widget = QtWidgets.QWidget()
-        ops_layout = QtWidgets.QVBoxLayout(self.trade_ops_widget)
-        ops_layout.setContentsMargins(0, 0, 0, 0)
-
-        # 可用资金
-        ops_layout.addWidget(QtWidgets.QLabel("可用资金"))
-        self.available_capital_label = QtWidgets.QLabel("¥ 100,000")
-        self.available_capital_label.setStyleSheet("font-size: 13px; font-weight: bold; color: #1890FF;")
-        ops_layout.addWidget(self.available_capital_label)
-
-        ops_layout.addWidget(self._make_separator())
-
-        # 当前日期
-        ops_layout.addWidget(QtWidgets.QLabel("当前日期"))
-        self.sim_date_label = QtWidgets.QLabel("--")
-        self.sim_date_label.setStyleSheet("font-size: 13px; font-weight: bold;")
-        ops_layout.addWidget(self.sim_date_label)
-
-        # 当前价格
-        ops_layout.addWidget(QtWidgets.QLabel("当前价格"))
-        self.sim_price_label = QtWidgets.QLabel("--")
-        self.sim_price_label.setStyleSheet("font-size: 13px; font-weight: bold;")
-        ops_layout.addWidget(self.sim_price_label)
-
-        ops_layout.addSpacing(8)
-
-        # 下一天 / 快进到收盘 按钮
-        self.next_day_btn = QtWidgets.QPushButton("▶ 下一天")
-        self.next_day_btn.setEnabled(False)
-        self.next_day_btn.clicked.connect(self._on_advance_day)
-        ops_layout.addWidget(self.next_day_btn)
-
-        ops_layout.addWidget(self._make_separator())
-
-        # 买入操作
-        ops_layout.addWidget(QtWidgets.QLabel("买入数量(股)"))
-        self.buy_quantity_input = QtWidgets.QSpinBox()
-        self.buy_quantity_input.setRange(100, 1_000_000)
-        self.buy_quantity_input.setSingleStep(100)
-        self.buy_quantity_input.setValue(100)
-        ops_layout.addWidget(self.buy_quantity_input)
-
-        self.buy_open_btn = QtWidgets.QPushButton("🟢 开盘价买入")
-        self.buy_open_btn.setStyleSheet(
-            "background-color: #CC3333; color: white; font-weight: bold;"
-        )
-        self.buy_open_btn.setEnabled(False)
-        self.buy_open_btn.clicked.connect(self._on_buy_open)
-        ops_layout.addWidget(self.buy_open_btn)
-
-        self.buy_close_btn = QtWidgets.QPushButton("🟢 收盘价买入")
-        self.buy_close_btn.setStyleSheet(
-            "background-color: #CC3333; color: white; font-weight: bold;"
-        )
-        self.buy_close_btn.setEnabled(False)
-        self.buy_close_btn.clicked.connect(self._on_buy_close)
-        ops_layout.addWidget(self.buy_close_btn)
-
-        ops_layout.addWidget(self._make_separator())
-
-        # 卖出操作
-        ops_layout.addWidget(QtWidgets.QLabel("卖出数量(股)"))
-        self.sell_quantity_input = QtWidgets.QSpinBox()
-        self.sell_quantity_input.setRange(100, 1_000_000)
-        self.sell_quantity_input.setSingleStep(100)
-        self.sell_quantity_input.setValue(100)
-        ops_layout.addWidget(self.sell_quantity_input)
-
-        self.sell_btn = QtWidgets.QPushButton("🔴 卖出")
-        self.sell_btn.setStyleSheet(
-            "background-color: #33AA33; color: white; font-weight: bold;"
-        )
-        self.sell_btn.setEnabled(False)
-        self.sell_btn.clicked.connect(self._on_sell)
-        ops_layout.addWidget(self.sell_btn)
-
-        ops_layout.addWidget(self._make_separator())
-
-        # 汇总信息
-        ops_layout.addWidget(QtWidgets.QLabel("总投入"))
-        self.total_cost_label = QtWidgets.QLabel("¥ 0.00")
-        ops_layout.addWidget(self.total_cost_label)
-
-        ops_layout.addWidget(QtWidgets.QLabel("总市值"))
-        self.total_value_label = QtWidgets.QLabel("¥ 0.00")
-        ops_layout.addWidget(self.total_value_label)
-
-        ops_layout.addWidget(QtWidgets.QLabel("总盈亏"))
-        self.total_pnl_label = QtWidgets.QLabel("0.00%")
-        ops_layout.addWidget(self.total_pnl_label)
-
-        ops_layout.addSpacing(8)
-
-        # 结算按钮
-        self.settle_btn = QtWidgets.QPushButton("💰 结算")
-        self.settle_btn.clicked.connect(self._on_settle)
-        ops_layout.addWidget(self.settle_btn)
-
-        self.trade_ops_widget.setVisible(False)
-        layout.addWidget(self.trade_ops_widget)
-
-        layout.addStretch()
-
-        return panel
-
-    def _on_start_training(self):
-        """点击开始训练：记录初始资金，切换到交易操作区"""
-        self._initial_capital = self.initial_capital_input.value()
-        self._available_capital = self._initial_capital
-        self.available_capital_label.setText(f"¥ {self._available_capital:,.2f}")
-
-        self.trade_setup_widget.setVisible(False)
-        self.trade_ops_widget.setVisible(True)
+        """构建右侧操作面板：委托给 ScreeningTradeController。"""
+        return self._trade_controller.build_panel()
 
     @staticmethod
     def _make_separator() -> QtWidgets.QFrame:
@@ -799,12 +642,8 @@ class ScreeningPage(QtWidgets.QWidget):
 
         self.result_table.resizeColumnsToContents()
 
-        # 初始化模拟交易日期为选股目标日期
-        self._current_sim_date = self._target_date
-        self._is_at_open = False
-        self._simulator.reset()
-        self._trade_marker_items.clear()
-        self.holding_table.setRowCount(0)
+        # 初始化模拟交易会话
+        self._trade_controller.start_session(self._target_date)
 
         # 切换到结果态
         self.page_stack.setCurrentIndex(1)
@@ -861,7 +700,8 @@ class ScreeningPage(QtWidgets.QWidget):
     def _load_chart_for_current_symbol(self):
         """加载当前股票截止到模拟日期的数据并刷新图表"""
         symbol = self._current_symbol
-        if not symbol or not self._current_sim_date:
+        sim_date = self._trade_controller.current_sim_date
+        if not symbol or not sim_date:
             return
 
         try:
@@ -872,19 +712,17 @@ class ScreeningPage(QtWidgets.QWidget):
                 )
                 return
 
-            df_up_to_date = df_daily[
-                df_daily["date"] <= self._current_sim_date
-            ].copy()
+            df_up_to_date = df_daily[df_daily["date"] <= sim_date].copy()
             df_up_to_date = df_up_to_date.reset_index(drop=True)
 
             if df_up_to_date.empty:
                 self.statusMessageRequested.emit(
-                    f"{symbol} 在 {self._current_sim_date} 之前无数据", 3000
+                    f"{symbol} 在 {sim_date} 之前无数据", 3000
                 )
                 return
 
             # 开盘阶段：最后一根K线用开盘价替代收盘价
-            if self._is_at_open:
+            if self._trade_controller.is_at_open:
                 df_display = df_up_to_date.copy()
                 last_idx = len(df_display) - 1
                 open_price = df_display.at[last_idx, "open"]
@@ -897,21 +735,9 @@ class ScreeningPage(QtWidgets.QWidget):
             self._current_df = df_up_to_date
             self.chart.set_daily(df_display)
             self._set_chart_visible_range(df_display)
-            self._update_sim_info()
-            self._redraw_trade_markers()
 
-            # 启用交易按钮：根据开盘/收盘阶段控制
-            self.next_day_btn.setEnabled(True)
-            self.sell_btn.setEnabled(True)
-            is_first_day = self._current_sim_date == self._target_date
-            if self._is_at_open:
-                self.buy_open_btn.setVisible(True)
-                self.buy_open_btn.setEnabled(True)
-                self.buy_close_btn.setVisible(False)
-            else:
-                self.buy_open_btn.setVisible(False)
-                self.buy_close_btn.setVisible(True)
-                self.buy_close_btn.setEnabled(True)
+            # 委托给交易控制器：刷新信息标签 + 标记 + 按钮可用性
+            self._trade_controller.on_chart_loaded()
 
             display_days = min(len(df_up_to_date), self.CHART_FIXED_DAYS)
             self.statusMessageRequested.emit(
@@ -945,436 +771,30 @@ class ScreeningPage(QtWidgets.QWidget):
 
     # ── 模拟交易操作 ─────────────────────────────────────────
 
-    def _on_advance_day(self):
-        """下一天/快进到收盘：根据当前阶段切换"""
-        if self._is_at_open:
-            self._advance_to_close()
-        else:
-            self._advance_to_next_open()
+    # ── 重置/返回 ──────────────────────────────────────────────
 
-    def _advance_to_next_open(self):
-        """推进到下一个交易日的开盘阶段"""
-        if not self._current_symbol or not self._current_sim_date:
-            return
-
-        try:
-            df_full = load_daily_csv(
-                self.stock_daily_data_dir, self._current_symbol
-            )
-        except FileNotFoundError:
-            return
-
-        current_mask = df_full["date"] <= self._current_sim_date
-        current_count = current_mask.sum()
-        if current_count >= len(df_full):
-            self.next_day_btn.setEnabled(False)
-            self.statusMessageRequested.emit("已无更多交易日数据", 3000)
-            return
-
-        next_row = df_full.iloc[current_count]
-        next_date = next_row["date"]
-        self._current_sim_date = (
-            next_date.strftime("%Y-%m-%d")
-            if hasattr(next_date, "strftime")
-            else str(next_date)[:10]
-        )
-
-        # 进入开盘阶段
-        self._is_at_open = True
-        self.next_day_btn.setText("⏩ 快进到收盘")
-
-        # 加载数据并用开盘价替代收盘价
-        self._load_chart_for_current_symbol()
-
-        # 更新所有持仓的当前价格（开盘阶段用开盘价）
-        self._update_holding_prices()
-        self._refresh_trade_summary()
-
-    def _advance_to_close(self):
-        """快进到当天收盘，展示完整K线数据"""
-        self._is_at_open = False
-        self.next_day_btn.setText("▶ 下一天")
-
-        # 重新加载完整数据
-        self._load_chart_for_current_symbol()
-
-        # 更新所有持仓的当前价格（收盘价）
-        self._update_holding_prices()
-        self._refresh_trade_summary()
-
-    def _on_buy_open(self):
-        """以开盘价买入当前股票"""
-        self._execute_buy(price_field="open", price_label="开盘价")
-
-    def _on_buy_close(self):
-        """以收盘价买入当前股票"""
-        self._execute_buy(price_field="close", price_label="收盘价")
-
-    def _execute_buy(self, price_field: str, price_label: str):
-        """执行买入操作"""
-        if not self._current_symbol or self._current_df is None:
-            return
-
-        quantity = self.buy_quantity_input.value()
-        if quantity <= 0:
-            self.statusMessageRequested.emit("请输入有效买入数量", 2000)
-            return
-
-        price = float(self._current_df.iloc[-1][price_field])
-        buy_amount = price * quantity
-
-        if buy_amount > self._available_capital:
-            QtWidgets.QMessageBox.warning(
-                self, "资金不足",
-                f"买入需要 ¥{buy_amount:,.2f}，可用资金仅 ¥{self._available_capital:,.2f}",
-            )
-            return
-
-        self._simulator.buy(
-            self._current_symbol,
-            self._current_stock_name,
-            price,
-            quantity,
-            self._current_sim_date,
-        )
-
-        self._available_capital -= buy_amount
-        self.available_capital_label.setText(f"¥ {self._available_capital:,.2f}")
-
-        self._refresh_holding_table()
-        self._refresh_trade_summary()
-        self._redraw_trade_markers()
-        self.statusMessageRequested.emit(
-            f"{price_label}买入 {self._current_symbol} {quantity}股 @ ¥{price:.2f}",
-            3000,
-        )
-
-    def _on_sell(self):
-        """卖出当前股票"""
-        if not self._current_symbol or self._current_df is None:
-            return
-
-        # T+1 限制：当天买入的股票不能当天卖出
-        today_buy_records = [
-            r for r in self._simulator.trade_records
-            if r.symbol == self._current_symbol
-            and r.action == TradeAction.BUY
-            and r.trade_date == self._current_sim_date
-        ]
-        if today_buy_records:
-            QtWidgets.QMessageBox.warning(
-                self, "T+1 限制",
-                f"{self._current_symbol} 今日有买入，A股 T+1 规则不允许当天卖出",
-            )
-            return
-
-        quantity = self.sell_quantity_input.value()
-        if quantity <= 0:
-            self.statusMessageRequested.emit("请输入有效卖出数量", 2000)
-            return
-
-        close_price = float(self._current_df.iloc[-1]["close"])
-
-        try:
-            self._simulator.sell(
-                self._current_symbol,
-                self._current_stock_name,
-                close_price,
-                quantity,
-                self._current_sim_date,
-            )
-        except ValueError as exc:
-            QtWidgets.QMessageBox.warning(self, "卖出失败", str(exc))
-            return
-
-        sell_amount = close_price * quantity
-        self._available_capital += sell_amount
-        self.available_capital_label.setText(f"¥ {self._available_capital:,.2f}")
-
-        self._refresh_holding_table()
-        self._refresh_trade_summary()
-        self._redraw_trade_markers()
-        self.statusMessageRequested.emit(
-            f"卖出 {self._current_symbol} {quantity}股 @ ¥{close_price:.2f}",
-            3000,
-        )
-
-    def _on_settle(self):
-        """结算所有持仓"""
-        if not self._simulator.holdings:
-            QtWidgets.QMessageBox.information(self, "提示", "当前无持仓")
-            return
-
-        result = self._simulator.settle()
-
-        # 构建结算明细文本
-        lines = [
-            f"总投入：¥{result.total_cost:,.2f}",
-            f"总市值：¥{result.total_value:,.2f}",
-            f"总盈亏：¥{result.total_pnl_amount:,.2f}"
-            f"（{result.total_pnl_percent:+.2f}%）",
-            f"交易笔数：{result.trade_count}",
-            "",
-            "── 持仓明细 ──",
-        ]
-        for holding in result.holdings_at_settle:
-            lines.append(
-                f"  {holding.symbol} {holding.name}  "
-                f"{holding.quantity}股  "
-                f"成本¥{holding.average_cost:.2f}  "
-                f"现价¥{holding.current_price:.2f}  "
-                f"盈亏{holding.pnl_percent:+.2f}%"
-            )
-
+    def _confirm_discard_holdings(self, title: str, message: str) -> bool:
+        """有持仓时弹窗确认是否丢弃；返回 True 表示可以继续。"""
+        if not self._trade_controller.has_holdings:
+            return True
         reply = QtWidgets.QMessageBox.question(
-            self,
-            "结算确认",
-            "\n".join(lines) + "\n\n确认结算并重置？",
+            self, title, message,
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
         )
-
-        if reply == QtWidgets.QMessageBox.Yes:
-            self._simulator.reset()
-            self._clear_trade_markers()
-            self._refresh_holding_table()
-            self._refresh_trade_summary()
-            self.statusMessageRequested.emit("模拟交易已结算", 3000)
-
-    # ── 模拟交易辅助方法 ─────────────────────────────────────
-
-    def _update_sim_info(self):
-        """更新操作面板的日期和价格显示"""
-        if self._current_df is not None and not self._current_df.empty:
-            last_row = self._current_df.iloc[-1]
-            date_val = last_row["date"]
-            date_str = (
-                date_val.strftime("%Y-%m-%d")
-                if hasattr(date_val, "strftime")
-                else str(date_val)[:10]
-            )
-            self.sim_date_label.setText(date_str)
-            # 开盘阶段显示开盘价，收盘阶段显示收盘价
-            price_field = "open" if self._is_at_open else "close"
-            price_label = "开盘" if self._is_at_open else "收盘"
-            price = float(last_row[price_field])
-            self.sim_price_label.setText(f"¥ {price:.2f}（{price_label}）")
-        else:
-            self.sim_date_label.setText("--")
-            self.sim_price_label.setText("--")
-
-    def _is_today_bought(self, symbol: str) -> bool:
-        """判断该股票是否在当天有买入记录（T+1 限制）"""
-        return any(
-            r.symbol == symbol
-            and r.action == TradeAction.BUY
-            and r.trade_date == self._current_sim_date
-            for r in self._simulator.trade_records
-        )
-
-    def _refresh_holding_table(self):
-        """刷新持有股票列表"""
-        holdings = self._simulator.get_all_holdings()
-        self.holding_table.setRowCount(len(holdings))
-
-        for row, holding in enumerate(holdings):
-            is_locked = self._is_today_bought(holding.symbol)
-
-            symbol_text = holding.symbol
-            if is_locked:
-                symbol_text += " 🔒T+1"
-            symbol_item = QtWidgets.QTableWidgetItem(symbol_text)
-            if is_locked:
-                symbol_item.setForeground(QtGui.QColor("#999999"))
-            self.holding_table.setItem(row, 0, symbol_item)
-
-            self.holding_table.setItem(
-                row, 1, QtWidgets.QTableWidgetItem(holding.name)
-            )
-            self.holding_table.setItem(
-                row, 2, QtWidgets.QTableWidgetItem(str(holding.quantity))
-            )
-            self.holding_table.setItem(
-                row, 3, QtWidgets.QTableWidgetItem(f"{holding.average_cost:.2f}")
-            )
-            self.holding_table.setItem(
-                row, 4, QtWidgets.QTableWidgetItem(f"{holding.current_price:.2f}")
-            )
-
-            pnl_item = QtWidgets.QTableWidgetItem(
-                f"{holding.pnl_percent:+.2f}%"
-            )
-            pnl_color = "#FF4444" if holding.pnl_percent >= 0 else "#00CC00"
-            pnl_item.setForeground(QtGui.QColor(pnl_color))
-            self.holding_table.setItem(row, 5, pnl_item)
-
-        self.holding_table.resizeColumnsToContents()
-
-    def _refresh_trade_summary(self):
-        """刷新操作面板的汇总信息"""
-        holdings = self._simulator.get_all_holdings()
-        total_cost = sum(h.total_cost for h in holdings)
-        total_value = sum(h.current_value for h in holdings)
-        total_pnl_pct = (
-            ((total_value - total_cost) / total_cost * 100)
-            if total_cost > 0
-            else 0.0
-        )
-
-        self.total_cost_label.setText(f"¥ {total_cost:,.2f}")
-        self.total_value_label.setText(f"¥ {total_value:,.2f}")
-
-        pnl_text = f"{total_pnl_pct:+.2f}%"
-        pnl_color = "#FF4444" if total_pnl_pct >= 0 else "#00CC00"
-        self.total_pnl_label.setText(pnl_text)
-        self.total_pnl_label.setStyleSheet(
-            f"color: {pnl_color}; font-weight: bold;"
-        )
-
-    def _update_holding_prices(self):
-        """推进到新交易日后，更新所有持仓的当前价格"""
-        price_field = "open" if self._is_at_open else "close"
-        price_map: dict[str, float] = {}
-        for symbol in self._simulator.holdings:
-            try:
-                df = load_daily_csv(self.stock_daily_data_dir, symbol)
-                mask = df["date"] <= self._current_sim_date
-                df_up = df[mask]
-                if not df_up.empty:
-                    price_map[symbol] = float(df_up.iloc[-1][price_field])
-            except FileNotFoundError:
-                pass
-
-        self._simulator.update_all_prices(price_map)
-        self._refresh_holding_table()
-
-    def _redraw_trade_markers(self):
-        """重绘当前股票的 B/S 标记"""
-        self._clear_trade_markers()
-
-        if self._current_df is None or self._current_df.empty:
-            return
-
-        records = [
-            r
-            for r in self._simulator.trade_records
-            if r.symbol == self._current_symbol
-        ]
-
-        for record in records:
-            trade_date_str = record.trade_date
-            date_indices = self._current_df.index[
-                self._current_df["date"].apply(
-                    lambda d: (
-                        d.strftime("%Y-%m-%d")
-                        if hasattr(d, "strftime")
-                        else str(d)[:10]
-                    )
-                )
-                == trade_date_str
-            ]
-            if len(date_indices) == 0:
-                continue
-
-            x_pos = int(date_indices[0])
-            row = self._current_df.iloc[x_pos]
-
-            bar_high = float(row["high"])
-            bar_low = float(row["low"])
-            color = "#FF4444" if record.action == TradeAction.BUY else "#00CC00"
-            letter = "B" if record.action == TradeAction.BUY else "S"
-
-            # 综合柱子和趋势线，计算该位置实际占用区域的上下边界
-            local_top = bar_high
-            local_bottom = bar_low
-            short_trend = getattr(self.chart, "_short_trend_values", [])
-            long_short = getattr(self.chart, "_long_short_values", [])
-            if x_pos < len(short_trend):
-                local_top = max(local_top, float(short_trend[x_pos]))
-                local_bottom = min(local_bottom, float(short_trend[x_pos]))
-            if x_pos < len(long_short):
-                local_top = max(local_top, float(long_short[x_pos]))
-                local_bottom = min(local_bottom, float(long_short[x_pos]))
-
-            # 比较上方和下方的空间，选择更宽裕的一侧
-            global_high = float(self._current_df["high"].max())
-            global_low = float(self._current_df["low"].min())
-            price_range = global_high - global_low if global_high > global_low else 1.0
-            marker_offset = price_range * 0.02
-            space_above = global_high - local_top
-            space_below = local_bottom - global_low
-            place_below = space_below >= space_above
-
-            if place_below:
-                # 标记放在下方：三角在上（靠近柱子），字母在下（远离柱子）
-                text = f"▲\n{letter}"
-                y_pos = local_bottom - marker_offset
-                anchor = (0.5, 0)
-            else:
-                # 标记放在上方：三角在下（靠近柱子），字母在上（远离柱子）
-                text = f"{letter}\n▼"
-                y_pos = local_top + marker_offset
-                anchor = (0.5, 1)
-
-            marker = pg.TextItem(text=text, color=color, anchor=anchor)
-            font = QtGui.QFont("Arial", 8, QtGui.QFont.Weight.Bold)
-            marker.setFont(font)
-            marker.setPos(x_pos, y_pos)
-            self.chart.pricePlot.addItem(marker)
-            self._trade_marker_items.append(marker)
-
-    def _clear_trade_markers(self):
-        """清除所有交易标记"""
-        for item in self._trade_marker_items:
-            self.chart.pricePlot.removeItem(item)
-        self._trade_marker_items.clear()
+        return reply == QtWidgets.QMessageBox.Yes
 
     def _on_reset(self):
         """重置模拟交易状态，回到刚进入选股结果时的初始状态"""
-        if self._simulator.holdings:
-            reply = QtWidgets.QMessageBox.question(
-                self,
-                "确认重置",
-                "当前有未结算的模拟交易，重置将清空所有持仓和交易记录。\n确认重置？",
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            )
-            if reply != QtWidgets.QMessageBox.Yes:
-                return
+        if not self._confirm_discard_holdings(
+            "确认重置",
+            "当前有未结算的模拟交易，重置将清空所有持仓和交易记录。\n确认重置？",
+        ):
+            return
 
-        # 重置模拟交易引擎
-        self._simulator.reset()
-        self._clear_trade_markers()
-
-        # 重置状态字段：日期回到选股目标日期
-        self._is_at_open = False
-        self._current_sim_date = self._target_date
+        self._trade_controller.reset_session(self._target_date)
         self._current_symbol = ""
         self._current_stock_name = ""
         self._current_df = None
-
-        # 恢复初始资金
-        self._available_capital = float(self._initial_capital)
-
-        # 重置 UI 控件
-        self.next_day_btn.setText("▶ 下一天")
-        self.next_day_btn.setEnabled(False)
-        self.holding_table.setRowCount(0)
-        self.buy_open_btn.setEnabled(False)
-        self.buy_close_btn.setEnabled(False)
-        self.sell_btn.setEnabled(False)
-
-        # 交易面板切回初始配置态
-        self.trade_setup_widget.setVisible(True)
-        self.trade_ops_widget.setVisible(False)
-        self.initial_capital_input.setValue(self._initial_capital)
-
-        # 重置汇总信息
-        self.available_capital_label.setText(f"¥ {self._available_capital:,.2f}")
-        self.total_cost_label.setText("¥ 0.00")
-        self.total_value_label.setText("¥ 0.00")
-        self.total_pnl_label.setText("0.00%")
-        self.total_pnl_label.setStyleSheet("")
-        self.sim_date_label.setText("--")
-        self.sim_price_label.setText("--")
 
         # 重新选中第一只股票，触发图表加载回到选股日期
         if self.result_table.rowCount() > 0:
@@ -1384,29 +804,14 @@ class ScreeningPage(QtWidgets.QWidget):
 
     def _on_back_to_config(self):
         """返回配置态，有持仓时提示确认"""
-        if self._simulator.holdings:
-            reply = QtWidgets.QMessageBox.question(
-                self,
-                "确认返回",
-                "当前有未结算的模拟交易，是否放弃？",
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            )
-            if reply != QtWidgets.QMessageBox.Yes:
-                return
+        if not self._confirm_discard_holdings(
+            "确认返回", "当前有未结算的模拟交易，是否放弃？",
+        ):
+            return
 
-        # 重置模拟交易状态
-        self._simulator.reset()
-        self._clear_trade_markers()
-        self._is_at_open = False
-        self._current_sim_date = ""
+        self._trade_controller.discard_session()
         self._current_symbol = ""
         self._current_stock_name = ""
         self._current_df = None
-        self.next_day_btn.setText("▶ 下一天")
-        self.holding_table.setRowCount(0)
-
-        # 重置交易面板为初始配置态
-        self.trade_setup_widget.setVisible(True)
-        self.trade_ops_widget.setVisible(False)
 
         self.page_stack.setCurrentIndex(0)
