@@ -54,13 +54,17 @@ class ScoreBreakdown:
     risk_penalty: float = 0.0
     risk_items: dict[str, float] = field(default_factory=dict)
 
+    # P3 战法加分（红柱比、地量、金叉时间细化等）；默认 0 向后兼容
+    bonus_score: float = 0.0
+    bonus_items: dict[str, float] = field(default_factory=dict)
+
     @property
     def base_score(self) -> float:
         return self.specific_score + self.common_score + self.macd_score + self.signal_score
 
     @property
     def final_score(self) -> float:
-        return max(0.0, self.base_score + self.risk_penalty)
+        return max(0.0, self.base_score + self.bonus_score + self.risk_penalty)
 
     @property
     def grade(self) -> str:
@@ -98,6 +102,8 @@ class ScoreBreakdown:
             "signal_items": dict(self.signal_items),
             "risk_penalty": self.risk_penalty,
             "risk_items": dict(self.risk_items),
+            "bonus_score": self.bonus_score,
+            "bonus_items": dict(self.bonus_items),
             "base_score": self.base_score,
             "final_score": self.final_score,
             "grade": self.grade,
@@ -117,6 +123,8 @@ class ScoreBreakdown:
             signal_items=d.get("signal_items", {}),
             risk_penalty=d.get("risk_penalty", 0.0),
             risk_items=d.get("risk_items", {}),
+            bonus_score=d.get("bonus_score", 0.0),
+            bonus_items=d.get("bonus_items", {}),
         )
 
 

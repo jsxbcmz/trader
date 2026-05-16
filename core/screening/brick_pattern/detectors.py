@@ -11,6 +11,7 @@ from .helpers import (
     _find_pullback_phase,
     _find_prior_uptrend,
     _is_green_brick,
+    _is_in_n_shape_decline,
     _is_red_brick,
 )
 
@@ -57,6 +58,10 @@ def detect_n_shape_jump(indicators: dict[str, np.ndarray], index: int) -> Patter
     if oversold_score == 0:
         return PatternMatchDetail(pattern_type=PatternType.N_SHAPE_JUMP, matched=False,
                                   description=f"J值过高({prev_j:.1f}≥40)不符合N型")
+
+    if _is_in_n_shape_decline(indicators, index):
+        return PatternMatchDetail(pattern_type=PatternType.N_SHAPE_JUMP, matched=False,
+                                  description="处于N型下跌段(非真起跳)")
 
     # ── 回调充分度 (8分, V4降权) ──
     if 4 <= max_green <= 6:

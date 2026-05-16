@@ -18,6 +18,7 @@ python -m run  # 或 python run.py
 | 选股页 | `app/pages/screening_page.py` | [.claude/pages/screening_page.md](.claude/pages/screening_page.md) — 两态选股+模拟交易(T+1) |
 | 统计页 | `app/pages/stats_page.py` | [.claude/pages/stats_page.md](.claude/pages/stats_page.md) — API数据采集+持仓分析+收益图表 |
 | 定式验证页 | `app/pages/brick_pattern_page.py` | [.claude/pages/brick_pattern_page.md](.claude/pages/brick_pattern_page.md) — 砖形图定式批量验证 |
+| 评分诊断页 | `app/pages/scoring_page.py` | [.claude/modules/scoring_system.md](.claude/modules/scoring_system.md) — 主板评分 + 三窗口回填诊断 |
 
 ## 模块文档
 
@@ -30,6 +31,7 @@ python -m run  # 或 python run.py
 | 数据层 | [.claude/modules/data_layer.md](.claude/modules/data_layer.md) | `core/data/` + `app/data_loader.py` + `app/history_updater.py` |
 | 指标系统 | [.claude/modules/indicators.md](.claude/modules/indicators.md) | `core/indicators/` |
 | 应用框架 | [.claude/modules/app_framework.md](.claude/modules/app_framework.md) | `app/main_window.py` + services + utils + stats |
+| 主板评分系统 | [.claude/modules/scoring_system.md](.claude/modules/scoring_system.md) | `core/scoring/` + `app/pages/scoring_page.py` |
 
 ## 快速定位规则
 
@@ -55,6 +57,8 @@ python -m run  # 或 python run.py
 | 改线程管理 | `app/utils/thread_manager.py` | modules/app_framework.md |
 | 改数据采集/API请求 | `app/stats/` | pages/stats_page.md |
 | 改股票池管理 | `core/stock_pool/manager.py` | modules/screening_system.md |
+| 改主板评分引擎/落盘/回填 | `core/scoring/` | modules/scoring_system.md |
+| 改评分诊断页 UI | `app/pages/scoring_page.py` | modules/scoring_system.md |
 
 ## 图表指标速览
 

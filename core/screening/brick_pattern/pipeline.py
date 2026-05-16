@@ -86,8 +86,12 @@ def screen_with_indicators(
     actual_date: str,
     enabled_patterns: tuple[PatternType, ...],
     price_limit: float = 0.0,
+    cs_pcts: dict[str, float] | None = None,
 ) -> BrickPatternMatch:
-    """基于已经预计算好的指标执行单日定式检测（V3评分）。"""
+    """基于已经预计算好的指标执行单日定式检测（V3评分）。
+
+    cs_pcts: P1-2 截面归一化分位字典。含则 compute_common_quality_score 走分位查表，否则走绝对阈值。
+    """
     close_arr = indicators["close"]
     if index < 0 or index >= len(close_arr) or len(close_arr) < 10:
         return BrickPatternMatch(
@@ -151,7 +155,7 @@ def screen_with_indicators(
         specific_items = match_r.extra.get("specific_items", {})
 
         common_score, common_items = compute_common_quality_score(
-            indicators, index, match_r.pattern_type,
+            indicators, index, match_r.pattern_type, cs_pcts=cs_pcts,
         )
 
         macd_score, macd_items = compute_macd_auxiliary_score(
@@ -159,6 +163,12 @@ def screen_with_indicators(
         )
 
         risk_penalty, risk_items, risk_details_list = compute_risk_penalty(
+            indicators, index, match_r.pattern_type,
+        )
+
+        # P3 战法加分（红柱比 / 地量 / 金叉时间）
+        from .scoring import compute_p3_bonus
+        bonus_score, bonus_items = compute_p3_bonus(
             indicators, index, match_r.pattern_type,
         )
 
@@ -173,6 +183,8 @@ def screen_with_indicators(
             signal_items=signal_items,
             risk_penalty=risk_penalty,
             risk_items=risk_items,
+            bonus_score=bonus_score,
+            bonus_items=bonus_items,
         )
 
         if breakdown.final_score > best_final:
