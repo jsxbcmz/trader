@@ -1,0 +1,2 @@
+# 统一使用 LF 换行符，防止 Docker 卷挂载导致 CRLF 假变更
+* text=auto eol=lf
