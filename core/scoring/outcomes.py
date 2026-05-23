@@ -1,10 +1,9 @@
 """T+1 / T+2 / T+3 三窗口实盘回填（P0-5）。
 
 每天调用一次 `OutcomesFiller.fill_for_today(today)`：扫 today-1/today-2/today-3
-的 scoring_picks，把 today 的实际收益与是否绿砖写进对应 scoring_outcomes 文件。
+的 scoring_picks，把 today 的实际收益与是否绿砖写进数据库 outcomes 表。
 属于增量更新 — 第 1/2/3 天分别写 t1/t2/t3 列。
 
-存储格式：CSV（扁平时序结构，便于 P2 阶段 IC 计算多日 pd.concat 聚合）。
 交易日历参考：用 000001（平安银行）的日线序列，主板长期未停牌。
 """
 
@@ -15,15 +14,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
 import pandas as pd
-
-OUTCOMES_COLUMNS = (
-    "symbol",
-    "score_date",
-    "t1_return", "t1_is_green",
-    "t2_return", "t2_is_green",
-    "t3_return", "t3_is_green",
-)
 
 from core.data.repository import StockRepository
 from core.screening.brick_pattern.helpers import (
@@ -68,10 +60,10 @@ class OutcomesFiller:
             self._calendar = pd.to_datetime(df["date"]).dt.normalize().sort_values().tolist()
         return self._calendar
 
-    def fill_for_today(self, today: str) -> dict[str, Path]:
+    def fill_for_today(self, today: str) -> dict[str, str]:
         """以 today 为参考点回填过去 3 个交易日的 outcomes。
 
-        返回 {score_date: 写入路径}。
+        返回 {score_date: "ok"} 表示成功写入的日期。
         """
         calendar = self._get_calendar()
         today_ts = pd.Timestamp(today).normalize()
@@ -80,21 +72,21 @@ class OutcomesFiller:
         except ValueError:
             return {}
 
-        results: dict[str, Path] = {}
+        results: dict[str, str] = {}
         for n in WINDOW_DAYS:
             score_idx = today_idx - n
             if score_idx < 0:
                 continue
             score_date = calendar[score_idx].strftime("%Y-%m-%d")
-            path = self._fill_window(score_date=score_date, fill_date=today, window=n)
-            if path is not None:
-                results[score_date] = path
+            if self._fill_window(score_date=score_date, fill_date=today, window=n):
+                results[score_date] = "ok"
         return results
 
-    def _fill_window(self, score_date: str, fill_date: str, window: int) -> Optional[Path]:
+    def _fill_window(self, score_date: str, fill_date: str, window: int) -> bool:
+        """回填单个窗口，返回是否成功写入。"""
         picks = _load_picks(self.root, score_date)
         if not picks:
-            return None
+            return False
         existing = _load_outcomes(self.root, score_date)
 
         for pick in picks:
@@ -112,7 +104,8 @@ class OutcomesFiller:
                 rec.t3_is_green = is_green
             existing[sym] = rec
 
-        return _save_outcomes(self.root, score_date, existing)
+        _save_outcomes(self.root, score_date, existing)
+        return True
 
     def _compute_window(
         self,
@@ -161,12 +154,6 @@ def _load_picks(root: Path, date: str) -> list[dict]:
         return json.load(f).get("picks", [])
 
 
-def _outcomes_path(root: Path, date: str) -> Path:
-    out_dir = root / "output" / "scoring_outcomes"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    return out_dir / f"{date}.csv"
-
-
 def _parse_optional_float(v) -> Optional[float]:
     if v is None or (isinstance(v, float) and pd.isna(v)) or v == "":
         return None
@@ -176,18 +163,23 @@ def _parse_optional_float(v) -> Optional[float]:
 def _parse_optional_bool(v) -> Optional[bool]:
     if v is None or v == "":
         return None
-    if isinstance(v, float) and pd.isna(v):
-        return None
     if isinstance(v, bool):
         return v
+    if isinstance(v, (float, np.floating)):
+        if pd.isna(v):
+            return None
+        return bool(int(v))
+    if isinstance(v, (int, np.integer)):
+        return bool(v)
     return str(v).strip().lower() == "true"
 
 
 def _load_outcomes(root: Path, date: str) -> dict[str, OutcomeRecord]:
-    path = _outcomes_path(root, date)
-    if not path.exists():
+    from core.data.database import get_scoring_db
+    scoring_db = get_scoring_db()
+    df = scoring_db.load_outcomes(date)
+    if df.empty:
         return {}
-    df = pd.read_csv(path, dtype={"symbol": str, "score_date": str})
     out: dict[str, OutcomeRecord] = {}
     for _, row in df.iterrows():
         sym = str(row["symbol"]).zfill(6)
@@ -204,12 +196,11 @@ def _load_outcomes(root: Path, date: str) -> dict[str, OutcomeRecord]:
     return out
 
 
-def _save_outcomes(root: Path, date: str, records: dict[str, OutcomeRecord]) -> Path:
-    path = _outcomes_path(root, date)
+def _save_outcomes(root: Path, date: str, records: dict[str, OutcomeRecord]):
+    from core.data.database import get_scoring_db
+    scoring_db = get_scoring_db()
     rows = [asdict(r) for r in records.values()]
-    df = pd.DataFrame(rows, columns=list(OUTCOMES_COLUMNS))
-    df.to_csv(path, index=False, encoding="utf-8")
-    return path
+    scoring_db.save_outcomes(date, rows)
 
 
 def load_outcomes(root: Path, date: str) -> list[OutcomeRecord]:

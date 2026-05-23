@@ -24,12 +24,12 @@ python -m run  # 或 python run.py
 
 | 模块 | 详细文档 | 核心文件 |
 |------|----------|----------|
-| 图表系统 | [.claude/modules/chart_system.md](.claude/modules/chart_system.md) | `app/widgets.py` + chart_*.py |
+| 图表系统 | [.claude/modules/chart_system.md](.claude/modules/chart_system.md) | `app/widgets.py` + chart_widget_*.py + chart_*.py |
 | 通达信表达式 | [.claude/modules/expression_system.md](.claude/modules/expression_system.md) | `core/expression/` |
-| 选股系统 | [.claude/modules/screening_system.md](.claude/modules/screening_system.md) | `core/screening/` |
-| 模拟交易 | [.claude/modules/trade_simulator.md](.claude/modules/trade_simulator.md) | `core/trade/simulator.py` |
-| 数据层 | [.claude/modules/data_layer.md](.claude/modules/data_layer.md) | `core/data/` + `app/data_loader.py` + `app/history_updater.py` |
-| 指标系统 | [.claude/modules/indicators.md](.claude/modules/indicators.md) | `core/indicators/` |
+| 选股系统 | [.claude/modules/screening_system.md](.claude/modules/screening_system.md) | `core/screening/` + `core/screening/brick_pattern/` |
+| 模拟交易 | [.claude/modules/trade_simulator.md](.claude/modules/trade_simulator.md) | `core/trade/simulator.py` + `app/pages/screening_trade_controller.py` |
+| 数据层 | [.claude/modules/data_layer.md](.claude/modules/data_layer.md) | `core/data/` (database.py, io.py, migration.py) + `app/data_loader.py` + `app/history_updater.py` |
+| 指标系统 | [.claude/modules/indicators.md](.claude/modules/indicators.md) | `core/indicators/` (algorithms.py, builtin.py, registry.py) |
 | 应用框架 | [.claude/modules/app_framework.md](.claude/modules/app_framework.md) | `app/main_window.py` + services + utils + stats |
 | 主板评分系统 | [.claude/modules/scoring_system.md](.claude/modules/scoring_system.md) | `core/scoring/` + `app/pages/scoring_page.py` |
 
@@ -38,27 +38,37 @@ python -m run  # 或 python run.py
 | 需求 | 优先查看 | 详细文档 |
 |------|----------|----------|
 | 改看盘页搜索/表格/状态栏 | `app/pages/market_page.py` | pages/market_page.md |
-| 改选股页/模拟交易 | `app/pages/screening_page.py` | pages/screening_page.md |
+| 改看盘页后台更新/下载 | `app/pages/market_workers.py` | pages/market_page.md |
+| 改选股页骨架/图表 | `app/pages/screening_page.py` | pages/screening_page.md |
+| 改模拟交易UI/资金/T+1 | `app/pages/screening_trade_controller.py` | pages/screening_page.md |
 | 改模板管理界面 | `app/pages/template_page.py` | pages/template_page.md |
 | 改设置页 | `app/pages/settings_page.py` | pages/settings_page.md |
-| 改统计页/数据采集 | `app/pages/stats_page.py` | pages/stats_page.md |
-| 改定式验证页 | `app/pages/brick_pattern_page.py` | pages/brick_pattern_page.md |
-| 改图表主组件/hover/十字线 | `app/widgets.py` | modules/chart_system.md |
-| 改图表布局/面板/子图切换 | `app/chart_layout.py` | modules/chart_system.md |
+| 改统计页/数据采集 | `app/pages/stats_page.py` + `app/stats/` | pages/stats_page.md |
+| 改定式验证页 | `app/pages/brick_pattern_page.py` + `app/pages/brick_pattern/` | pages/brick_pattern_page.md |
+| 改主板评分诊断页 UI | `app/pages/scoring_page.py` | modules/scoring_system.md |
+| 改图表主组件/hover/十字线 | `app/widgets.py` + `app/chart_widget_hover.py` | modules/chart_system.md |
+| 改图表面板数据填充 | `app/chart_widget_panels.py` | modules/chart_system.md |
+| 改图表副图动态切换 | `app/chart_widget_subcharts.py` | modules/chart_system.md |
+| 改图表范围管理 | `app/chart_widget_ranges.py` | modules/chart_system.md |
+| 改图表布局/面板结构 | `app/chart_layout.py` | modules/chart_system.md |
 | 改K线/砖型图元绘制 | `app/chart_primitives.py` | modules/chart_system.md |
 | 改指标计算(EMA/KDJ/Brick/MACD/Needle20) | `app/chart_indicators.py` | modules/chart_system.md |
 | 改信息浮窗/标签HTML | `app/chart_overlays.py` | modules/chart_system.md |
+| 改迷你K线图 | `app/mini_chart.py` | modules/chart_system.md |
+| 改进度对话框 | `app/progress_dialogs.py` | modules/app_framework.md |
 | 改通达信条件解析 | `core/expression/` | modules/expression_system.md |
 | 改选股引擎/缓存 | `core/screening/engine.py`, `service.py` | modules/screening_system.md |
-| 改砖形图定式引擎 | `core/screening/brick_pattern_engine.py` | modules/screening_system.md |
+| 改砖形图定式引擎 | `core/screening/brick_pattern_engine.py` + `core/screening/brick_pattern/` | modules/screening_system.md |
 | 改模板服务 | `core/templates/service.py` | modules/indicators.md |
-| 改模拟交易逻辑 | `core/trade/simulator.py` | modules/trade_simulator.md |
-| 改数据加载/更新 | `app/data_loader.py`, `app/history_updater.py` | modules/data_layer.md |
+| 改模拟交易引擎(买卖/持仓/结算) | `core/trade/simulator.py` | modules/trade_simulator.md |
+| 改数据库/数据IO | `core/data/database.py` + `core/data/io.py` | modules/data_layer.md |
+| 改数据迁移(CSV→SQLite) | `core/data/migration.py` | modules/data_layer.md |
+| 改数据加载(兼容层)/更新 | `app/data_loader.py`, `app/history_updater.py` | modules/data_layer.md |
 | 改线程管理 | `app/utils/thread_manager.py` | modules/app_framework.md |
 | 改数据采集/API请求 | `app/stats/` | pages/stats_page.md |
 | 改股票池管理 | `core/stock_pool/manager.py` | modules/screening_system.md |
 | 改主板评分引擎/落盘/回填 | `core/scoring/` | modules/scoring_system.md |
-| 改评分诊断页 UI | `app/pages/scoring_page.py` | modules/scoring_system.md |
+| 改底层算法(Numba JIT) | `core/indicators/algorithms.py` | modules/indicators.md |
 
 ## 图表指标速览
 
@@ -102,13 +112,15 @@ python -m run  # 或 python run.py
 - `turnover_rate` = 换手率(%)，增量更新时从 daily_basic 接口获取，支持缺失值回填
 - 看盘页X轴：30~150天(可配置)；选股页：固定90天
 - `symbol` 补齐6位，`date` 转datetime升序排列
+- 数据存储：SQLite 为主（`data/market.db`、`data/scoring.db`），CSV 为兼容层
 - 数据文件：`stocklist.csv`、`stock_daily_data/{symbol}.csv`、`templates.json`、`screening_cache/screening_cache.json`
 - 采集输出：`output/day_positions.json`、`output/user_keys.json`
 
 ## 稳定性原则
 1. 切股不重建 PlotWidget —— 只更新数据和范围
 2. 防重入：`_loading_plot`、`_updating_range`
-3. hover 联动是交互核心（`_on_mouse_moved()`）
+3. hover 联动是交互核心（`HoverMixin._on_mouse_moved()`）
 4. `start_worker()` 统一线程管理
 5. `screen_with_cache()` 缓存+断点续选
-6. 子图切换不重建面板 —— 只控制 show/hide + 重新链接 X 轴
+6. 子图切换不重建面板 —— 只控制 show/hide + 重新链接 X 轴（`SubChartsMixin`）
+7. 图表 Widget 通过 Mixin 拆分职责（Hover/Panels/Ranges/SubCharts）

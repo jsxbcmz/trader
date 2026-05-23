@@ -5,6 +5,7 @@ from pathlib import Path
 
 from PySide6 import QtWidgets
 
+from core.data.database import init_databases
 from .main_window import MainWindow
 
 
@@ -13,6 +14,8 @@ def main():
         root = Path(sys.executable).parent
     else:
         root = Path(__file__).resolve().parents[1]
+
+    init_databases(root)
 
     app = QtWidgets.QApplication(sys.argv)
     app.setOrganizationName("StockViewer")

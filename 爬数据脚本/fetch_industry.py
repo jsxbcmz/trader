@@ -1,16 +1,18 @@
 """
 从同花顺 basic.10jqka.com.cn/{symbol}/field.html 页面抓取二级行业分类，
-将第二级行业写入 stocklist.csv 的'涉及行业'列（插在 industry 和 涉及概念 之间）。
+将第二级行业写入数据库 stock_list 表的 ths_industry 字段。
 """
 
-import csv
 import re
+import sys
 import time
 import random
 import os
+from pathlib import Path
 from urllib.request import Request, urlopen
 
-CSV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "stocklist.csv")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from core.data.database import init_databases, get_market_db
 
 USER_AGENT = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
               "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -65,63 +67,46 @@ def fetch_industry(symbol: str, max_retries: int = 3) -> str:
 
 
 def main():
-    # 读取 CSV
-    with open(CSV_PATH, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        original_fieldnames = reader.fieldnames
-        rows = list(reader)
+    project_root = Path(os.path.dirname(os.path.abspath(__file__))).parent
+    init_databases(project_root)
+    market_db = get_market_db()
 
-    # 如果已有'涉及行业'列，检查是否需要继续补充
-    has_column = "涉及行业" in original_fieldnames
-    if has_column:
-        # 找出还没抓取的行（涉及行业为空或"获取失败"的）
-        pending_rows = [(i, r) for i, r in enumerate(rows)
-                        if not r.get("涉及行业") or r["涉及行业"] == "获取失败"]
-        print(f"已有'涉及行业'列，还有 {len(pending_rows)} 条待抓取")
-    else:
-        # 新增列，所有行都需要抓取
-        for row in rows:
-            row["涉及行业"] = ""
-        pending_rows = list(enumerate(rows))
-        print(f"新增'涉及行业'列，共 {len(pending_rows)} 条待抓取")
+    df = market_db.read_df(
+        "SELECT symbol, name, ths_industry FROM stock_list ORDER BY symbol"
+    )
+    if df.empty:
+        print("数据库中无股票列表，请先运行迁移脚本")
+        return
 
-    # 构建输出列顺序：industry 后面插入 涉及行业
-    if not has_column:
-        fieldnames = []
-        for field in original_fieldnames:
-            fieldnames.append(field)
-            if field == "industry":
-                fieldnames.append("涉及行业")
-    else:
-        fieldnames = original_fieldnames
+    pending_rows = []
+    for _, row in df.iterrows():
+        ths_industry = row.get("ths_industry", "") or ""
+        if ths_industry and ths_industry != "获取失败":
+            continue
+        pending_rows.append({"symbol": str(row["symbol"]).zfill(6), "name": row.get("name", "")})
 
     total = len(pending_rows)
-    save_interval = 50  # 每50条保存一次
+    if total == 0:
+        print("✅ 所有股票行业已抓取完毕，无需再跑")
+        return
 
-    for idx, (row_index, row) in enumerate(pending_rows):
+    print(f"待抓取: {total} 条\n")
+
+    for idx, row in enumerate(pending_rows):
         symbol = row["symbol"]
         print(f"[{idx+1}/{total}] 抓取 {symbol} {row['name']} ...")
 
         industry = fetch_industry(symbol)
-        rows[row_index]["涉及行业"] = industry
+        market_db.update_stock_ths_industry(symbol, industry)
 
         if industry:
             print(f"  -> {industry}")
         else:
             print(f"  -> (未获取到)")
 
-        # 定期保存，防止中断丢失
-        if (idx + 1) % save_interval == 0 or (idx + 1) == total:
-            with open(CSV_PATH, "w", encoding="utf-8", newline="") as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                writer.writeheader()
-                writer.writerows(rows)
-            print(f"  --- 已保存 ({idx+1}/{total}) ---")
-
-        # 随机延迟，避免被封
         time.sleep(random.uniform(0.3, 0.8))
 
-    print(f"\n全部完成！结果已写入 {CSV_PATH}")
+    print(f"\n全部完成！结果已保存到数据库")
 
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from core.data.database import init_databases
 from core.models.brick_pattern import PatternType
 from core.scoring import RegimeAnalyzer, RegimeRecord, load_regime
 from core.scoring.regime import _rolling_slope
@@ -58,14 +59,19 @@ def test_regime_smoothing_reduces_switches():
 
 def test_regime_save_and_load_roundtrip():
     """RegimeAnalyzer.save_for_date + load_regime 字段保留。"""
+    import shutil
+    import pandas as pd
+    from core.data.database import MarketDatabase
     with tempfile.TemporaryDirectory() as tmpdir:
         root = Path(tmpdir)
-        # 复制必要 CSV 到临时根
-        (root / "stock_daily_data").mkdir()
-        # 用真实 OAMV CSV
-        import shutil
+        init_databases(root)
+        # 将真实 OAMV 数据导入临时数据库
         src = PROJECT_ROOT / "stock_daily_data" / "oamv_930903_CSI.csv"
-        shutil.copy(src, root / "stock_daily_data" / "oamv_930903_CSI.csv")
+        oamv_df = pd.read_csv(src)
+        oamv_df["date"] = pd.to_datetime(oamv_df["date"], errors="coerce").dt.strftime("%Y-%m-%d")
+        oamv_df = oamv_df.dropna(subset=["date", "open", "close", "high", "low"])
+        from core.data.database import get_market_db
+        get_market_db().bulk_upsert_oamv_daily(oamv_df)
 
         ra = RegimeAnalyzer.from_root(root)
         path = ra.save_for_date("2026-05-15")
@@ -76,6 +82,8 @@ def test_regime_save_and_load_roundtrip():
         assert loaded.date == "2026-05-15"
         assert loaded.smoothed_phase in ("bull", "bear")
         assert loaded.tempo in ("fast", "slow")
+    # 恢复全局数据库到 PROJECT_ROOT，避免污染后续测试
+    init_databases(PROJECT_ROOT)
 
 
 def test_regime_missing_date_returns_none():
@@ -245,6 +253,7 @@ def test_score_breakdown_bonus_default_zero():
 
 
 def main():
+    init_databases(PROJECT_ROOT)
     tests = [
         test_regime_user_provided_bull_period,
         test_regime_user_provided_bear_period,

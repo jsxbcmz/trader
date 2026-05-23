@@ -143,7 +143,7 @@ class MainBoardScoringEngine:
         if not self.use_cross_section:
             return self._run_via_brick_engine(target_date, progress_callback, cancelled_fn)
 
-        cs_df, _ = self.cross_section.compute_and_save(target_date)
+        cs_df = self.cross_section.compute_and_save(target_date)
         return self._run_with_cs_pcts(target_date, cs_df, progress_callback, cancelled_fn)
 
     # ── 内部 ────────────────────────────────────────────

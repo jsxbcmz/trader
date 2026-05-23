@@ -1,14 +1,14 @@
 """截面分位计算（P1-1）。
 
 对全主板每只票计算 3 个待归一化因子的当日原始值，再用 `pd.rank(pct=True)`
-得到截面分位（0~1），缓存到 `output/scoring_cross_section/{date}.csv`。
+得到截面分位（0~1），缓存到 scoring.db 的 cross_section 表。
 
 3 个待归一化因子：
 1. 信号日涨幅 day_change      = (close[i] - close[i-1]) / close[i-1] * 100
 2. 翻红力度比 force_ratio     = (brick[i] - brick[i-1]) / max(|brick[i-1]-brick[i-2]|, 2.0)
 3. 短趋斜率 short_trend_slope = polyfit(short_trend[i-9..i], 1) / close[i] * 100
 
-下游（P1-2 scoring.py）读这份 CSV 把绝对阈值改成"分位 → 分数"查表。
+下游（P1-2 scoring.py）读分位数据把绝对阈值改成"分位 → 分数"查表。
 """
 
 from __future__ import annotations
@@ -133,33 +133,28 @@ class CrossSectionStats:
         df = df[list(CS_COLUMNS)].sort_values("symbol").reset_index(drop=True)
         return df
 
-    def save(self, target_date: str, df: pd.DataFrame) -> Path:
-        path = _cs_path(self.repository.root, target_date)
-        df.to_csv(path, index=False, encoding="utf-8")
-        return path
+    def save(self, target_date: str, df: pd.DataFrame):
+        from core.data.database import get_scoring_db
+        scoring_db = get_scoring_db()
+        scoring_db.save_cross_section(target_date, df)
 
-    def compute_and_save(self, target_date: str) -> tuple[pd.DataFrame, Path]:
+    def compute_and_save(self, target_date: str) -> pd.DataFrame:
         df = self.compute(target_date)
-        path = self.save(target_date, df)
-        return df, path
+        self.save(target_date, df)
+        return df
 
 
 # ── IO ─────────────────────────────────────────────────
 
 
-def _cs_path(root: Path, date: str) -> Path:
-    out_dir = root / "output" / "scoring_cross_section"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    return out_dir / f"{date}.csv"
-
-
 def load_cross_section(root: Path, date: str) -> pd.DataFrame:
-    """读取已缓存的截面分位。symbol 列保持字符串（6 位补零）。"""
-    path = _cs_path(root, date)
-    if not path.exists():
+    """从数据库读取已缓存的截面分位。symbol 列保持字符串（6 位补零）。"""
+    from core.data.database import get_scoring_db
+    scoring_db = get_scoring_db()
+    df = scoring_db.load_cross_section(date)
+    if df.empty:
         return pd.DataFrame(columns=list(CS_COLUMNS))
-    df = pd.read_csv(path, dtype={"symbol": str})
-    df["symbol"] = df["symbol"].str.zfill(6)
+    df["symbol"] = df["symbol"].astype(str).str.zfill(6)
     return df
 
 

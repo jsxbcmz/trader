@@ -131,8 +131,10 @@ def test_scoring_picks_excludes_non_matched():
 
 
 def test_outcomes_roundtrip_with_none():
+    from core.data.database import init_databases
     with tempfile.TemporaryDirectory() as tmpdir:
         root = Path(tmpdir)
+        init_databases(root)
         date = "2026-05-15"
         records = {
             "000001": OutcomeRecord(
@@ -148,9 +150,7 @@ def test_outcomes_roundtrip_with_none():
                 t3_return=None, t3_is_green=None,
             ),
         }
-        path = _save_outcomes(root, date, records)
-        assert path.exists()
-        assert path.suffix == ".csv"
+        _save_outcomes(root, date, records)
 
         loaded = _load_outcomes(root, date)
         assert len(loaded) == 2
@@ -173,8 +173,10 @@ def test_outcomes_roundtrip_with_none():
 
 def test_outcomes_incremental_update():
     """模拟 T+1/T+2/T+3 三天分别填充对应列的场景。"""
+    from core.data.database import init_databases
     with tempfile.TemporaryDirectory() as tmpdir:
         root = Path(tmpdir)
+        init_databases(root)
         date = "2026-05-12"
 
         # 第 1 天（T+1 收盘后）：只写 t1
@@ -214,20 +216,22 @@ def test_outcomes_incremental_update():
         assert f.t3_is_green is False
 
 
-def test_outcomes_csv_format():
-    """检查 CSV 表头和列顺序符合 OUTCOMES_COLUMNS 约定。"""
+def test_outcomes_db_roundtrip():
+    """检查 outcomes 数据库写入和读取的完整性。"""
+    from core.data.database import init_databases, get_scoring_db
     with tempfile.TemporaryDirectory() as tmpdir:
         root = Path(tmpdir)
+        init_databases(root)
         records = {
             "000001": OutcomeRecord(symbol="000001", score_date="2026-05-15",
                                     t1_return=0.05, t1_is_green=True),
         }
-        path = _save_outcomes(root, "2026-05-15", records)
-        text = path.read_text(encoding="utf-8").splitlines()
-        header = text[0]
-        assert header == "symbol,score_date,t1_return,t1_is_green,t2_return,t2_is_green,t3_return,t3_is_green", (
-            f"表头格式不符：{header}"
-        )
+        _save_outcomes(root, "2026-05-15", records)
+        loaded = _load_outcomes(root, "2026-05-15")
+        assert len(loaded) == 1
+        r = loaded["000001"]
+        assert r.t1_return == 0.05
+        assert r.t1_is_green is True
 
 
 # ── 主入口 ─────────────────────────────────────────────
@@ -241,7 +245,7 @@ def main():
         test_scoring_picks_excludes_non_matched,
         test_outcomes_roundtrip_with_none,
         test_outcomes_incremental_update,
-        test_outcomes_csv_format,
+        test_outcomes_db_roundtrip,
     ]
     passed = failed = 0
     for fn in tests:

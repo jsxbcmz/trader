@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from core.data.io import get_daily_csv_path, load_daily_csv, load_stock_list, normalize_daily_dataframe
+from core.data.io import load_daily_csv, load_stock_list, normalize_daily_dataframe
 from core.models.market import StockInfo
 
 
@@ -41,10 +41,10 @@ class StockRepository:
         return stocks
 
     def get_daily_frame(self, symbol: str) -> pd.DataFrame:
-        return load_daily_csv(self.stock_daily_data_dir, symbol).copy()
+        try:
+            return load_daily_csv(self.stock_daily_data_dir, symbol).copy()
+        except FileNotFoundError:
+            return pd.DataFrame(columns=["date", "open", "high", "low", "close", "volume", "turnover_rate"])
 
     def normalize_daily_frame(self, df: pd.DataFrame) -> pd.DataFrame:
         return normalize_daily_dataframe(df)
-
-    def get_daily_path(self, symbol: str) -> Path:
-        return get_daily_csv_path(self.stock_daily_data_dir, symbol)

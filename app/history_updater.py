@@ -14,8 +14,6 @@ import numpy as np
 from .chart_indicators import compute_oamv
 from .data_loader import (
     DAILY_COLUMNS,
-    get_index_csv_path,
-    get_industry_csv_path,
     get_last_trade_date,
     load_index_csv,
     load_raw_daily_csv,
@@ -25,6 +23,7 @@ from .data_loader import (
     save_daily_csv,
 )
 from .tushare_client import TushareClient, TushareClientError
+from core.data.database import get_market_db
 
 
 @dataclass
@@ -153,11 +152,7 @@ class HistoryUpdater:
         return local_df["turnover_rate"].isna().any()
 
     def _backfill_turnover_rate(self, symbol: str, meta: dict, local_df: pd.DataFrame) -> pd.DataFrame:
-        """回填本地数据中缺失的换手率。
-
-        只针对换手率为空的行去拉 daily_basic，避免每次都全量重拉。
-        拉取范围用缺失日期的 [min, max] 区间一次性请求，减少接口调用次数。
-        """
+        """回填本地数据中缺失的换手率，直接更新数据库。"""
         if "turnover_rate" not in local_df.columns:
             missing_mask = pd.Series([True] * len(local_df), index=local_df.index)
         else:
@@ -184,7 +179,14 @@ class HistoryUpdater:
 
         basic_df = basic_df.copy()
         basic_df["date"] = pd.to_datetime(basic_df["trade_date"], format="%Y%m%d", errors="coerce").dt.strftime("%Y-%m-%d")
-        rate_map = dict(zip(basic_df["date"], pd.to_numeric(basic_df["turnover_rate"], errors="coerce")))
+        rate_map = {
+            date: float(rate)
+            for date, rate in zip(basic_df["date"], pd.to_numeric(basic_df["turnover_rate"], errors="coerce"))
+            if pd.notna(rate)
+        }
+
+        market_db = get_market_db()
+        market_db.bulk_update_turnover_rate(symbol, rate_map)
 
         result = local_df.copy()
         if "turnover_rate" not in result.columns:
@@ -193,7 +195,6 @@ class HistoryUpdater:
         date_col = pd.to_datetime(result["date"], errors="coerce").dt.strftime("%Y-%m-%d")
         existing_rate = pd.to_numeric(result["turnover_rate"], errors="coerce")
         fetched_rate = date_col.map(rate_map)
-        # 只填补原本为空的行，已有的换手率保持不变
         result["turnover_rate"] = existing_rate.where(existing_rate.notna(), fetched_rate)
         return result
 
@@ -277,20 +278,15 @@ class HistoryUpdater:
     def update_index(self, ts_code: str, end_date: str | None = None) -> UpdateResult:
         start_ts = time.perf_counter()
         name = dict(self.INDEX_CODES).get(ts_code, ts_code)
-        csv_path = get_index_csv_path(self.stock_daily_data_dir, ts_code)
+        market_db = get_market_db()
 
         try:
-            local_df = pd.read_csv(csv_path) if csv_path.exists() else pd.DataFrame(columns=DAILY_COLUMNS)
+            last_date_str = market_db.get_index_last_trade_date(ts_code)
 
-            last_date = None
-            if not local_df.empty and "date" in local_df.columns:
-                dates = pd.to_datetime(local_df["date"], errors="coerce").dropna()
-                if not dates.empty:
-                    last_date = dates.max()
-
-            if last_date is None:
+            if last_date_str is None:
                 start_date = self.default_start_date
             else:
+                last_date = pd.Timestamp(last_date_str)
                 start_date = (last_date + timedelta(days=1)).strftime("%Y%m%d")
 
             end_date = end_date or pd.Timestamp.today().strftime("%Y%m%d")
@@ -303,21 +299,13 @@ class HistoryUpdater:
                 return UpdateResult(ts_code, name, "skipped", 0, 0, "接口未返回新数据", time.perf_counter() - start_ts)
 
             mapped_df = self._map_index_daily_to_local(remote_df)
-            combined = pd.concat([local_df, mapped_df], ignore_index=True, sort=False)
-            normalized = normalize_daily_dataframe(combined)
-            before_count = len(normalize_daily_dataframe(local_df)) if not local_df.empty else 0
+            normalized = normalize_daily_dataframe(mapped_df)
 
-            self.stock_daily_data_dir.mkdir(parents=True, exist_ok=True)
-            import tempfile
-            with tempfile.NamedTemporaryFile("w", delete=False, suffix=".csv", dir=self.stock_daily_data_dir, encoding="utf-8-sig", newline="") as tmp:
-                normalized.to_csv(tmp.name, index=False)
-                temp_path = Path(tmp.name)
-            temp_path.replace(csv_path)
-
-            written = max(0, len(normalized) - before_count)
+            market_db.bulk_upsert_index_daily(ts_code, normalized)
+            written = len(normalized)
 
             if ts_code == "930903.CSI" and written > 0:
-                self._rebuild_oamv_csv()
+                self._rebuild_oamv()
 
             return UpdateResult(ts_code, name, "updated", len(mapped_df), written, "更新成功", time.perf_counter() - start_ts)
         except TushareClientError as exc:
@@ -325,8 +313,8 @@ class HistoryUpdater:
         except Exception as exc:
             return UpdateResult(ts_code, name, "failed", 0, 0, f"更新失败: {exc}", time.perf_counter() - start_ts)
 
-    def _rebuild_oamv_csv(self):
-        """读取 930903 指数数据，计算 OAMV 虚拟K线，写入独立 CSV。"""
+    def _rebuild_oamv(self):
+        """读取 930903 指数数据，计算 OAMV 虚拟K线，写入数据库。"""
         df = load_index_csv(self.stock_daily_data_dir, "930903.CSI")
         if df.empty or len(df) < 16:
             return
@@ -352,13 +340,8 @@ class HistoryUpdater:
             return
 
         oamv_df["date"] = oamv_df["date"].dt.strftime("%Y-%m-%d")
-        oamv_path = self.stock_daily_data_dir / "oamv_930903_CSI.csv"
-
-        import tempfile
-        with tempfile.NamedTemporaryFile("w", delete=False, suffix=".csv", dir=self.stock_daily_data_dir, encoding="utf-8-sig", newline="") as tmp:
-            oamv_df.to_csv(tmp.name, index=False)
-            temp_path = Path(tmp.name)
-        temp_path.replace(oamv_path)
+        market_db = get_market_db()
+        market_db.bulk_upsert_oamv_daily(oamv_df)
 
     def _load_sw_industry_list(self) -> list[tuple[str, str]]:
         if self._sw_industry_list is not None:
@@ -391,18 +374,17 @@ class HistoryUpdater:
 
     def update_industry(self, ts_code: str, name: str, end_date: str | None = None) -> UpdateResult:
         start_ts = time.perf_counter()
-        csv_path = get_industry_csv_path(self.industry_daily_data_dir, ts_code)
+        market_db = get_market_db()
 
         try:
-            local_df = pd.read_csv(csv_path) if csv_path.exists() else pd.DataFrame(columns=DAILY_COLUMNS)
+            last_date_str = market_db.get_industry_last_trade_date(ts_code)
 
-            last_date = None
-            if not local_df.empty and "date" in local_df.columns:
-                dates = pd.to_datetime(local_df["date"], errors="coerce").dropna()
-                if not dates.empty:
-                    last_date = dates.max()
+            if last_date_str is None:
+                start_date = self.default_start_date
+            else:
+                last_date = pd.Timestamp(last_date_str)
+                start_date = (last_date + timedelta(days=1)).strftime("%Y%m%d")
 
-            start_date = self.default_start_date if last_date is None else (last_date + timedelta(days=1)).strftime("%Y%m%d")
             end_date = end_date or pd.Timestamp.today().strftime("%Y%m%d")
             if start_date > end_date:
                 return UpdateResult(ts_code, name, "skipped", 0, 0, "本地数据已是最新", time.perf_counter() - start_ts)
@@ -413,18 +395,11 @@ class HistoryUpdater:
                 return UpdateResult(ts_code, name, "skipped", 0, 0, "接口未返回新数据", time.perf_counter() - start_ts)
 
             mapped_df = self._map_sw_daily_to_local(remote_df)
-            combined = pd.concat([local_df, mapped_df], ignore_index=True, sort=False)
-            normalized = normalize_daily_dataframe(combined)
-            before_count = len(normalize_daily_dataframe(local_df)) if not local_df.empty else 0
+            normalized = normalize_daily_dataframe(mapped_df)
 
-            self.industry_daily_data_dir.mkdir(parents=True, exist_ok=True)
-            import tempfile
-            with tempfile.NamedTemporaryFile("w", delete=False, suffix=".csv", dir=self.industry_daily_data_dir, encoding="utf-8-sig", newline="") as tmp:
-                normalized.to_csv(tmp.name, index=False)
-                temp_path = Path(tmp.name)
-            temp_path.replace(csv_path)
+            market_db.bulk_upsert_industry_daily(ts_code, normalized)
+            written = len(normalized)
 
-            written = max(0, len(normalized) - before_count)
             return UpdateResult(ts_code, name, "updated", len(mapped_df), written, "更新成功", time.perf_counter() - start_ts)
         except TushareClientError as exc:
             return UpdateResult(ts_code, name, "failed", 0, 0, str(exc), time.perf_counter() - start_ts)

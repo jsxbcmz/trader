@@ -15,7 +15,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from core.models.brick_pattern import PatternType
 from core.scoring import get_symbol_pcts, load_cross_section
-from core.scoring.cross_section import CS_COLUMNS, _cs_path
+from core.scoring.cross_section import CS_COLUMNS
 from core.screening.brick_pattern.scoring import _pct_to_score, compute_common_quality_score
 
 
@@ -118,8 +118,12 @@ def test_common_quality_low_pct_low_score():
 
 def test_cross_section_csv_roundtrip():
     """save + load 后 DataFrame 字段与值保持一致。"""
+    from core.data.database import init_databases, get_scoring_db
     with tempfile.TemporaryDirectory() as tmpdir:
         root = Path(tmpdir)
+        init_databases(root)
+        scoring_db = get_scoring_db()
+
         df = pd.DataFrame([
             {"symbol": "000001", "day_change": 5.5, "day_change_pct": 0.95,
              "force_ratio": 2.3, "force_ratio_pct": 0.88,
@@ -129,8 +133,7 @@ def test_cross_section_csv_roundtrip():
              "short_trend_slope": 0.10, "short_trend_slope_pct": 0.50},
         ])[list(CS_COLUMNS)]
 
-        path = _cs_path(root, "2026-05-15")
-        df.to_csv(path, index=False, encoding="utf-8")
+        scoring_db.save_cross_section("2026-05-15", df)
 
         loaded = load_cross_section(root, "2026-05-15")
         assert len(loaded) == 2
@@ -161,7 +164,9 @@ def test_get_symbol_pcts():
 
 
 def test_load_cross_section_missing_returns_empty():
+    from core.data.database import init_databases
     with tempfile.TemporaryDirectory() as tmpdir:
+        init_databases(Path(tmpdir))
         df = load_cross_section(Path(tmpdir), "1990-01-01")
         assert df.empty
         assert list(df.columns) == list(CS_COLUMNS)
