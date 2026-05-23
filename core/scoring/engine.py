@@ -43,6 +43,9 @@ def _scoring_worker(args: tuple) -> dict:
     """主板评分 worker：复用 screen_with_indicators，把 cs_pcts 传下去。"""
     root_str, symbol, name, target_date, enabled_pattern_values, cs_pcts = args
     try:
+        from core.data.database import init_databases
+        init_databases(Path(root_str))
+
         repository = StockRepository(Path(root_str))
         df = repository.get_daily_frame(symbol)
         time_result = locate_time_index(df, target_date)

@@ -395,8 +395,13 @@ _scoring_db: ScoringDatabase | None = None
 
 
 def init_databases(root: Path):
-    """应用启动时调用，初始化全局数据库实例。"""
+    """应用启动时调用，初始化全局数据库实例。
+
+    多次调用安全：已初始化时跳过。
+    """
     global _market_db, _scoring_db
+    if _market_db is not None:
+        return
     db_dir = root / "db"
     _market_db = MarketDatabase(db_dir / "market.db")
     _scoring_db = ScoringDatabase(db_dir / "scoring.db")

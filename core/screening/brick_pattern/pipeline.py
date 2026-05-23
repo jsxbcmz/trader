@@ -222,6 +222,9 @@ def _worker_screen_stock(args: tuple) -> dict:
     (root_str, symbol, stock_name, target_date, enabled_pattern_values, price_limit) = args
 
     try:
+        from core.data.database import init_databases
+        init_databases(Path(root_str))
+
         repository = StockRepository(Path(root_str))
         df = repository.get_daily_frame(symbol)
         time_result = locate_time_index(df, target_date)

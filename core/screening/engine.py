@@ -34,6 +34,9 @@ def _screen_single_stock(args: tuple) -> dict:
     (root, symbol, stock_info, serialized_expr, target_date, include_debug) = args
 
     try:
+        from core.data.database import init_databases
+        init_databases(Path(root))
+
         # 每个进程创建自己的 repository
         repository = StockRepository(Path(root))
 
