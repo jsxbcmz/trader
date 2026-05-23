@@ -40,6 +40,9 @@ CS_COLUMNS = (
 def _cs_worker(args: tuple) -> dict:
     root_str, symbol, target_date = args
     try:
+        from core.data.database import init_databases
+        init_databases(Path(root_str))
+
         repo = StockRepository(Path(root_str))
         df = repo.get_daily_frame(symbol)
         if df.empty or len(df) < 12:
