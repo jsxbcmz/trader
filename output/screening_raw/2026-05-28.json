@@ -1,0 +1,2609 @@
+{
+  "date": "2026-05-28",
+  "results": [
+    {
+      "symbol": "600176",
+      "name": "中国巨石",
+      "pattern": "上升波段延续",
+      "score": 85.0,
+      "grade": "S",
+      "close": 43.48,
+      "day_change": 9.99,
+      "is_limit_up": true,
+      "vol": 729.01,
+      "avg_vol_30": 536.69,
+      "vol_ratio": 1.36,
+      "turnover_rate": 4.4,
+      "q_score": 26,
+      "q_items": {
+        "翻红力度比": 2,
+        "信号日涨幅": 8,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 2,
+        "K线形态": 10
+      },
+      "m_score": 22,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 8,
+        "DIFF水平": 4
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 3.0,
+      "p_items": {
+        "红柱比2/3": 2,
+        "DIFF/DEA刚金叉": 1
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 66.0,
+      "diff": 2.3612,
+      "dea": 2.0167,
+      "hist": 0.6889,
+      "brick_val": 119.9029,
+      "st_val": 36.8449,
+      "ls_val": 32.4964,
+      "open": 39.27,
+      "high": 43.48,
+      "low": 38.69,
+      "prev_close": 39.53,
+      "industry": "玻璃"
+    },
+    {
+      "symbol": "002613",
+      "name": "北玻股份",
+      "pattern": "上升波段延续",
+      "score": 83.0,
+      "grade": "A",
+      "close": 4.92,
+      "day_change": 10.07,
+      "is_limit_up": true,
+      "vol": 24.89,
+      "avg_vol_30": 27.02,
+      "vol_ratio": 0.92,
+      "turnover_rate": 6.67,
+      "q_score": 29,
+      "q_items": {
+        "翻红力度比": 3,
+        "信号日涨幅": 8,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 2,
+        "K线形态": 10
+      },
+      "m_score": 22,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 8,
+        "DIFF水平": 4
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 68.0,
+      "diff": 0.1612,
+      "dea": 0.0967,
+      "hist": 0.129,
+      "brick_val": 111.6868,
+      "st_val": 4.217,
+      "ls_val": 4.1014,
+      "open": 4.47,
+      "high": 4.92,
+      "low": 4.43,
+      "prev_close": 4.47,
+      "industry": "专用机械"
+    },
+    {
+      "symbol": "600246",
+      "name": "万通发展",
+      "pattern": "上升波段延续",
+      "score": 83.0,
+      "grade": "A",
+      "close": 16.81,
+      "day_change": 10.01,
+      "is_limit_up": true,
+      "vol": 406.49,
+      "avg_vol_30": 189.98,
+      "vol_ratio": 2.14,
+      "turnover_rate": 13.27,
+      "q_score": 26,
+      "q_items": {
+        "翻红力度比": 2,
+        "信号日涨幅": 8,
+        "短趋vs多空": 1,
+        "均线排列": 2,
+        "短趋斜率": 3,
+        "K线形态": 10
+      },
+      "m_score": 18,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 4,
+        "DIFF水平": 4
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 61.0,
+      "diff": 1.3946,
+      "dea": 1.1277,
+      "hist": 0.5339,
+      "brick_val": 121.129,
+      "st_val": 13.6057,
+      "ls_val": 12.417,
+      "open": 15.73,
+      "high": 16.81,
+      "low": 15.55,
+      "prev_close": 15.28,
+      "industry": "区域地产"
+    },
+    {
+      "symbol": "603527",
+      "name": "众源新材",
+      "pattern": "上升波段延续",
+      "score": 83.0,
+      "grade": "A",
+      "close": 14.49,
+      "day_change": 10.02,
+      "is_limit_up": true,
+      "vol": 41.66,
+      "avg_vol_30": 24.83,
+      "vol_ratio": 1.68,
+      "turnover_rate": 9.4,
+      "q_score": 29,
+      "q_items": {
+        "翻红力度比": 3,
+        "信号日涨幅": 8,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 2,
+        "K线形态": 10
+      },
+      "m_score": 18,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 4,
+        "DIFF水平": 4
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 3.0,
+      "p_items": {
+        "红柱比2/3": 2,
+        "DIFF/DEA刚金叉": 1
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 65.0,
+      "diff": 0.4463,
+      "dea": 0.4321,
+      "hist": 0.0284,
+      "brick_val": 116.1285,
+      "st_val": 13.1646,
+      "ls_val": 12.4648,
+      "open": 13.13,
+      "high": 14.49,
+      "low": 13.05,
+      "prev_close": 13.17,
+      "industry": "铜"
+    },
+    {
+      "symbol": "603050",
+      "name": "科林电气",
+      "pattern": "横盘起跳",
+      "score": 75.0,
+      "grade": "A",
+      "close": 24.89,
+      "day_change": 9.99,
+      "is_limit_up": true,
+      "vol": 20.36,
+      "avg_vol_30": 20.53,
+      "vol_ratio": 0.99,
+      "turnover_rate": 2.04,
+      "q_score": 29,
+      "q_items": {
+        "翻红力度比": 3,
+        "信号日涨幅": 8,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 2,
+        "K线形态": 10
+      },
+      "m_score": 9,
+      "m_items": {
+        "DIFF位置": 4,
+        "MACD柱状态": 3,
+        "金叉确认": 2
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 0.0,
+      "p_items": {},
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 53.0,
+      "diff": 0.6102,
+      "dea": 0.6804,
+      "hist": -0.1404,
+      "brick_val": 83.7744,
+      "st_val": 23.154,
+      "ls_val": 22.1467,
+      "open": 23.02,
+      "high": 24.89,
+      "low": 23.02,
+      "prev_close": 22.63,
+      "industry": "电气设备"
+    },
+    {
+      "symbol": "603031",
+      "name": "安孚科技",
+      "pattern": "N型起跳",
+      "score": 74.0,
+      "grade": "A",
+      "close": 58.04,
+      "day_change": 10.01,
+      "is_limit_up": true,
+      "vol": 140.86,
+      "avg_vol_30": 100.26,
+      "vol_ratio": 1.41,
+      "turnover_rate": 8.12,
+      "q_score": 26,
+      "q_items": {
+        "翻红力度比": 1,
+        "信号日涨幅": 7,
+        "短趋vs多空": 2,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 10
+      },
+      "m_score": 11,
+      "m_items": {
+        "DIFF位置": 2,
+        "MACD柱状态": 6,
+        "金叉确认": 3
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 54.0,
+      "diff": 1.1357,
+      "dea": 0.6389,
+      "hist": 0.9935,
+      "brick_val": 113.8798,
+      "st_val": 52.6702,
+      "ls_val": 51.9888,
+      "open": 52.0,
+      "high": 58.04,
+      "low": 51.0,
+      "prev_close": 52.76,
+      "industry": "电气设备"
+    },
+    {
+      "symbol": "600158",
+      "name": "中体产业",
+      "pattern": "横盘起跳",
+      "score": 73.0,
+      "grade": "A",
+      "close": 11.6,
+      "day_change": 8.51,
+      "is_limit_up": false,
+      "vol": 147.85,
+      "avg_vol_30": 114.99,
+      "vol_ratio": 1.29,
+      "turnover_rate": 13.58,
+      "q_score": 27,
+      "q_items": {
+        "翻红力度比": 3,
+        "信号日涨幅": 8,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 0,
+        "K线形态": 10
+      },
+      "m_score": 13,
+      "m_items": {
+        "DIFF位置": 10,
+        "MACD柱状态": 3,
+        "金叉确认": 0
+      },
+      "s_score": 9,
+      "s_items": {
+        "T日涨幅": 9,
+        "涨幅质量": 0
+      },
+      "p_score": 0.0,
+      "p_items": {},
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 49.0,
+      "diff": -0.0954,
+      "dea": 0.1751,
+      "hist": -0.5411,
+      "brick_val": 69.7797,
+      "st_val": 12.1369,
+      "ls_val": 11.5299,
+      "open": 10.6,
+      "high": 11.76,
+      "low": 10.6,
+      "prev_close": 10.69,
+      "industry": "文教休闲"
+    },
+    {
+      "symbol": "603006",
+      "name": "联明股份",
+      "pattern": "N型起跳",
+      "score": 73.0,
+      "grade": "A",
+      "close": 14.33,
+      "day_change": 9.98,
+      "is_limit_up": true,
+      "vol": 17.73,
+      "avg_vol_30": 5.68,
+      "vol_ratio": 3.12,
+      "turnover_rate": 4.97,
+      "q_score": 25,
+      "q_items": {
+        "翻红力度比": 3,
+        "信号日涨幅": 7,
+        "短趋vs多空": 2,
+        "均线排列": 2,
+        "短趋斜率": 1,
+        "K线形态": 10
+      },
+      "m_score": 6,
+      "m_items": {
+        "DIFF位置": 4,
+        "MACD柱状态": 3,
+        "金叉确认": 2,
+        "近期死叉": -3
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 48.0,
+      "diff": 0.1025,
+      "dea": 0.1551,
+      "hist": -0.1052,
+      "brick_val": 83.7453,
+      "st_val": 13.7882,
+      "ls_val": 13.5765,
+      "open": 13.0,
+      "high": 14.33,
+      "low": 13.0,
+      "prev_close": 13.03,
+      "industry": "汽车配件"
+    },
+    {
+      "symbol": "603931",
+      "name": "格林达",
+      "pattern": "上升波段延续",
+      "score": 70.0,
+      "grade": "A",
+      "close": 63.74,
+      "day_change": 9.88,
+      "is_limit_up": true,
+      "vol": 95.18,
+      "avg_vol_30": 42.72,
+      "vol_ratio": 2.23,
+      "turnover_rate": 7.63,
+      "q_score": 26,
+      "q_items": {
+        "翻红力度比": 1,
+        "信号日涨幅": 8,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 10
+      },
+      "m_score": 18,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 4,
+        "DIFF水平": 4
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 69.0,
+      "diff": 6.9563,
+      "dea": 5.588,
+      "hist": 2.7367,
+      "brick_val": 145.6828,
+      "st_val": 48.2756,
+      "ls_val": 41.097,
+      "open": 57.43,
+      "high": 63.81,
+      "low": 57.43,
+      "prev_close": 58.01,
+      "industry": "化工原料"
+    },
+    {
+      "symbol": "601588",
+      "name": "北辰实业",
+      "pattern": "横盘起跳",
+      "score": 69.0,
+      "grade": "B",
+      "close": 2.06,
+      "day_change": 10.16,
+      "is_limit_up": true,
+      "vol": 19.75,
+      "avg_vol_30": 18.07,
+      "vol_ratio": 1.09,
+      "turnover_rate": 3.67,
+      "q_score": 26,
+      "q_items": {
+        "翻红力度比": 3,
+        "信号日涨幅": 8,
+        "短趋vs多空": 2,
+        "均线排列": 3,
+        "短趋斜率": 0,
+        "K线形态": 10
+      },
+      "m_score": 9,
+      "m_items": {
+        "DIFF位置": 4,
+        "MACD柱状态": 3,
+        "金叉确认": 2
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 52.0,
+      "diff": 0.0178,
+      "dea": 0.0197,
+      "hist": -0.0039,
+      "brick_val": 89.9898,
+      "st_val": 1.9266,
+      "ls_val": 1.8899,
+      "open": 1.85,
+      "high": 2.06,
+      "low": 1.84,
+      "prev_close": 1.87,
+      "industry": "区域地产"
+    },
+    {
+      "symbol": "002951",
+      "name": "金时科技",
+      "pattern": "N型起跳",
+      "score": 65.0,
+      "grade": "B",
+      "close": 17.49,
+      "day_change": 10.0,
+      "is_limit_up": true,
+      "vol": 21.64,
+      "avg_vol_30": 15.9,
+      "vol_ratio": 1.36,
+      "turnover_rate": 3.19,
+      "q_score": 23,
+      "q_items": {
+        "翻红力度比": 1,
+        "信号日涨幅": 7,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 2,
+        "K线形态": 7
+      },
+      "m_score": 11,
+      "m_items": {
+        "DIFF位置": 4,
+        "MACD柱状态": 3,
+        "金叉确认": 7,
+        "近期死叉": -3
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 51.0,
+      "diff": 0.332,
+      "dea": 0.3406,
+      "hist": -0.0172,
+      "brick_val": 98.5248,
+      "st_val": 16.4726,
+      "ls_val": 15.9334,
+      "open": 16.2,
+      "high": 17.49,
+      "low": 15.75,
+      "prev_close": 15.9
+    },
+    {
+      "symbol": "600237",
+      "name": "铜峰电子",
+      "pattern": "横盘起跳",
+      "score": 65.0,
+      "grade": "B",
+      "close": 10.92,
+      "day_change": 9.97,
+      "is_limit_up": true,
+      "vol": 126.66,
+      "avg_vol_30": 34.3,
+      "vol_ratio": 3.69,
+      "turnover_rate": 19.47,
+      "q_score": 25,
+      "q_items": {
+        "翻红力度比": 1,
+        "信号日涨幅": 8,
+        "短趋vs多空": 2,
+        "均线排列": 2,
+        "短趋斜率": 2,
+        "K线形态": 10
+      },
+      "m_score": 11,
+      "m_items": {
+        "DIFF位置": 2,
+        "MACD柱状态": 6,
+        "金叉确认": 3
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 53.0,
+      "diff": 0.2794,
+      "dea": 0.1362,
+      "hist": 0.2864,
+      "brick_val": 118.7708,
+      "st_val": 9.5224,
+      "ls_val": 9.4636,
+      "open": 10.0,
+      "high": 10.92,
+      "low": 9.97,
+      "prev_close": 9.93
+    },
+    {
+      "symbol": "002125",
+      "name": "湘潭电化",
+      "pattern": "横盘起跳",
+      "score": 64.0,
+      "grade": "B",
+      "close": 14.96,
+      "day_change": 5.72,
+      "is_limit_up": false,
+      "vol": 62.8,
+      "avg_vol_30": 38.05,
+      "vol_ratio": 1.65,
+      "turnover_rate": 6.89,
+      "q_score": 18,
+      "q_items": {
+        "翻红力度比": 3,
+        "信号日涨幅": 8,
+        "短趋vs多空": 2,
+        "均线排列": 1,
+        "短趋斜率": 0,
+        "K线形态": 4
+      },
+      "m_score": 12,
+      "m_items": {
+        "DIFF位置": 7,
+        "MACD柱状态": 3,
+        "金叉确认": 2
+      },
+      "s_score": 6,
+      "s_items": {
+        "T日涨幅": 6,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 38.0,
+      "diff": 0.0566,
+      "dea": 0.0934,
+      "hist": -0.0736,
+      "brick_val": 70.8532,
+      "st_val": 14.5048,
+      "ls_val": 14.3647,
+      "open": 14.1,
+      "high": 15.02,
+      "low": 13.65,
+      "prev_close": 14.15
+    },
+    {
+      "symbol": "002080",
+      "name": "中材科技",
+      "pattern": "上升波段延续",
+      "score": 63.0,
+      "grade": "B",
+      "close": 76.51,
+      "day_change": 8.14,
+      "is_limit_up": false,
+      "vol": 377.02,
+      "avg_vol_30": 314.57,
+      "vol_ratio": 1.2,
+      "turnover_rate": 3.03,
+      "q_score": 25,
+      "q_items": {
+        "翻红力度比": 1,
+        "信号日涨幅": 7,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 10
+      },
+      "m_score": 18,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 4,
+        "DIFF水平": 4
+      },
+      "s_score": 9,
+      "s_items": {
+        "T日涨幅": 9,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 62.0,
+      "diff": 5.8385,
+      "dea": 5.3385,
+      "hist": 0.9999,
+      "brick_val": 122.4879,
+      "st_val": 65.7124,
+      "ls_val": 56.9652,
+      "open": 70.8,
+      "high": 76.95,
+      "low": 70.8,
+      "prev_close": 70.75
+    },
+    {
+      "symbol": "001259",
+      "name": "利仁科技",
+      "pattern": "上升波段延续",
+      "score": 62.0,
+      "grade": "B",
+      "close": 77.99,
+      "day_change": 4.26,
+      "is_limit_up": false,
+      "vol": 37.22,
+      "avg_vol_30": 16.19,
+      "vol_ratio": 2.3,
+      "turnover_rate": 10.34,
+      "q_score": 19,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 5,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 7
+      },
+      "m_score": 15,
+      "m_items": {
+        "DIFF趋势": 7,
+        "MACD柱趋势": 4,
+        "DIFF水平": 4
+      },
+      "s_score": 6,
+      "s_items": {
+        "T日涨幅": 6,
+        "涨幅质量": 0
+      },
+      "p_score": 0.0,
+      "p_items": {},
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 40.0,
+      "diff": 11.5845,
+      "dea": 10.1415,
+      "hist": 2.8859,
+      "brick_val": 119.838,
+      "st_val": 61.8543,
+      "ls_val": 48.6753,
+      "open": 72.86,
+      "high": 78.9,
+      "low": 72.0,
+      "prev_close": 74.8
+    },
+    {
+      "symbol": "605058",
+      "name": "澳弘电子",
+      "pattern": "横盘起跳",
+      "score": 62.0,
+      "grade": "B",
+      "close": 41.11,
+      "day_change": 4.55,
+      "is_limit_up": false,
+      "vol": 31.58,
+      "avg_vol_30": 18.65,
+      "vol_ratio": 1.69,
+      "turnover_rate": 5.5,
+      "q_score": 21,
+      "q_items": {
+        "翻红力度比": 1,
+        "信号日涨幅": 5,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 2,
+        "K线形态": 7
+      },
+      "m_score": 19,
+      "m_items": {
+        "DIFF位置": 6,
+        "MACD柱状态": 6,
+        "金叉确认": 7
+      },
+      "s_score": 6,
+      "s_items": {
+        "T日涨幅": 6,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 48.0,
+      "diff": 1.1798,
+      "dea": 1.0135,
+      "hist": 0.3325,
+      "brick_val": 111.7752,
+      "st_val": 38.3289,
+      "ls_val": 36.4029,
+      "open": 39.2,
+      "high": 41.2,
+      "low": 38.6,
+      "prev_close": 39.32
+    },
+    {
+      "symbol": "603353",
+      "name": "和顺石油",
+      "pattern": "横盘起跳",
+      "score": 59.0,
+      "grade": "B",
+      "close": 56.78,
+      "day_change": 10.0,
+      "is_limit_up": true,
+      "vol": 74.59,
+      "avg_vol_30": 43.11,
+      "vol_ratio": 1.73,
+      "turnover_rate": 8.31,
+      "q_score": 20,
+      "q_items": {
+        "翻红力度比": 1,
+        "信号日涨幅": 8,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 4
+      },
+      "m_score": 16,
+      "m_items": {
+        "DIFF位置": 6,
+        "MACD柱状态": 6,
+        "金叉确认": 7,
+        "近期死叉": -3
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 3.0,
+      "p_items": {
+        "红柱比2/3": 2,
+        "DIFF/DEA刚金叉": 1
+      },
+      "r_penalty": -10.0,
+      "r_items": {
+        "横盘MACD死叉": -10.0
+      },
+      "raw_total": 64.0,
+      "diff": 3.2489,
+      "dea": 2.9208,
+      "hist": 0.6562,
+      "brick_val": 105.5154,
+      "st_val": 49.1849,
+      "ls_val": 44.3325,
+      "open": 52.5,
+      "high": 56.78,
+      "low": 49.01,
+      "prev_close": 51.62
+    },
+    {
+      "symbol": "603458",
+      "name": "勘设股份",
+      "pattern": "N型起跳",
+      "score": 59.0,
+      "grade": "B",
+      "close": 14.0,
+      "day_change": 9.98,
+      "is_limit_up": true,
+      "vol": 59.91,
+      "avg_vol_30": 23.98,
+      "vol_ratio": 2.5,
+      "turnover_rate": 14.13,
+      "q_score": 29,
+      "q_items": {
+        "翻红力度比": 3,
+        "信号日涨幅": 7,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 10
+      },
+      "m_score": 6,
+      "m_items": {
+        "DIFF位置": 4,
+        "MACD柱状态": 3,
+        "金叉确认": 2,
+        "近期死叉": -3
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 0.0,
+      "p_items": {},
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 58.0,
+      "diff": 0.5032,
+      "dea": 0.5534,
+      "hist": -0.1006,
+      "brick_val": 105.0324,
+      "st_val": 13.0628,
+      "ls_val": 12.118,
+      "open": 12.75,
+      "high": 14.0,
+      "low": 12.63,
+      "prev_close": 12.73
+    },
+    {
+      "symbol": "000831",
+      "name": "中国稀土",
+      "pattern": "横盘起跳",
+      "score": 57.0,
+      "grade": "B",
+      "close": 51.78,
+      "day_change": 4.97,
+      "is_limit_up": false,
+      "vol": 183.87,
+      "avg_vol_30": 197.79,
+      "vol_ratio": 0.93,
+      "turnover_rate": 3.41,
+      "q_score": 17,
+      "q_items": {
+        "翻红力度比": 1,
+        "信号日涨幅": 5,
+        "短趋vs多空": 2,
+        "均线排列": 2,
+        "短趋斜率": 0,
+        "K线形态": 7
+      },
+      "m_score": 15,
+      "m_items": {
+        "DIFF位置": 10,
+        "MACD柱状态": 3,
+        "金叉确认": 2
+      },
+      "s_score": 6,
+      "s_items": {
+        "T日涨幅": 6,
+        "涨幅质量": 0
+      },
+      "p_score": 0.0,
+      "p_items": {},
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 38.0,
+      "diff": -0.4534,
+      "dea": 0.0469,
+      "hist": -1.0008,
+      "brick_val": 63.8096,
+      "st_val": 52.9248,
+      "ls_val": 52.5586,
+      "open": 49.32,
+      "high": 51.99,
+      "low": 48.9,
+      "prev_close": 49.33
+    },
+    {
+      "symbol": "601138",
+      "name": "工业富联",
+      "pattern": "上升波段延续",
+      "score": 56.0,
+      "grade": "B",
+      "close": 75.0,
+      "day_change": 7.02,
+      "is_limit_up": false,
+      "vol": 2643.76,
+      "avg_vol_30": 1636.0,
+      "vol_ratio": 1.62,
+      "turnover_rate": 1.82,
+      "q_score": 21,
+      "q_items": {
+        "翻红力度比": 3,
+        "信号日涨幅": 7,
+        "短趋vs多空": 3,
+        "均线排列": 2,
+        "短趋斜率": 2,
+        "K线形态": 4
+      },
+      "m_score": 22,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 8,
+        "DIFF水平": 4
+      },
+      "s_score": 7,
+      "s_items": {
+        "T日涨幅": 7,
+        "涨幅质量": 0
+      },
+      "p_score": 3.0,
+      "p_items": {
+        "红柱比2/3": 2,
+        "DIFF/DEA刚金叉": 1
+      },
+      "r_penalty": -10.0,
+      "r_items": {
+        "冲高回落": -10.0
+      },
+      "raw_total": 63.0,
+      "diff": 2.8336,
+      "dea": 2.6195,
+      "hist": 0.4281,
+      "brick_val": 112.5855,
+      "st_val": 67.4565,
+      "ls_val": 63.5311,
+      "open": 70.0,
+      "high": 76.28,
+      "low": 68.89,
+      "prev_close": 70.08
+    },
+    {
+      "symbol": "000823",
+      "name": "超声电子",
+      "pattern": "横盘起跳",
+      "score": 52.0,
+      "grade": "C",
+      "close": 17.0,
+      "day_change": 4.55,
+      "is_limit_up": false,
+      "vol": 120.59,
+      "avg_vol_30": 60.53,
+      "vol_ratio": 1.99,
+      "turnover_rate": 13.22,
+      "q_score": 22,
+      "q_items": {
+        "翻红力度比": 3,
+        "信号日涨幅": 5,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 1,
+        "K线形态": 7
+      },
+      "m_score": 9,
+      "m_items": {
+        "DIFF位置": 4,
+        "MACD柱状态": 3,
+        "金叉确认": 2
+      },
+      "s_score": 6,
+      "s_items": {
+        "T日涨幅": 6,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 39.0,
+      "diff": 0.2844,
+      "dea": 0.3165,
+      "hist": -0.0643,
+      "brick_val": 106.4353,
+      "st_val": 16.3027,
+      "ls_val": 15.7514,
+      "open": 16.02,
+      "high": 17.06,
+      "low": 15.88,
+      "prev_close": 16.26
+    },
+    {
+      "symbol": "603324",
+      "name": "盛剑科技",
+      "pattern": "上升波段延续",
+      "score": 52.0,
+      "grade": "C",
+      "close": 31.17,
+      "day_change": 9.99,
+      "is_limit_up": true,
+      "vol": 37.18,
+      "avg_vol_30": 15.42,
+      "vol_ratio": 2.41,
+      "turnover_rate": 8.37,
+      "q_score": 27,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 8,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 10
+      },
+      "m_score": 18,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 4,
+        "DIFF水平": 4
+      },
+      "s_score": 15.0,
+      "s_items": {
+        "T日涨幅": 10,
+        "涨幅质量": 5
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -30.0,
+      "r_items": {
+        "高位放量大阴线": -15,
+        "天量见顶": -15.0
+      },
+      "raw_total": 92.0,
+      "diff": 1.1994,
+      "dea": 0.9933,
+      "hist": 0.412,
+      "brick_val": 105.9147,
+      "st_val": 28.459,
+      "ls_val": 27.122,
+      "open": 27.77,
+      "high": 31.17,
+      "low": 27.32,
+      "prev_close": 28.34
+    },
+    {
+      "symbol": "603466",
+      "name": "风语筑",
+      "pattern": "上升波段延续",
+      "score": 52.0,
+      "grade": "C",
+      "close": 11.06,
+      "day_change": 2.88,
+      "is_limit_up": false,
+      "vol": 61.21,
+      "avg_vol_30": 40.38,
+      "vol_ratio": 1.52,
+      "turnover_rate": 9.41,
+      "q_score": 17,
+      "q_items": {
+        "翻红力度比": 2,
+        "信号日涨幅": 2,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 4
+      },
+      "m_score": 18,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 4,
+        "DIFF水平": 4
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 49.0,
+      "diff": 0.2889,
+      "dea": 0.2449,
+      "hist": 0.088,
+      "brick_val": 102.9045,
+      "st_val": 10.4626,
+      "ls_val": 10.1776,
+      "open": 10.53,
+      "high": 11.3,
+      "low": 10.43,
+      "prev_close": 10.75
+    },
+    {
+      "symbol": "002046",
+      "name": "国机精工",
+      "pattern": "横盘起跳",
+      "score": 51.0,
+      "grade": "C",
+      "close": 55.75,
+      "day_change": 8.02,
+      "is_limit_up": false,
+      "vol": 135.53,
+      "avg_vol_30": 97.27,
+      "vol_ratio": 1.39,
+      "turnover_rate": 4.7,
+      "q_score": 21,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 8,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 0,
+        "K线形态": 7
+      },
+      "m_score": 9,
+      "m_items": {
+        "DIFF位置": 4,
+        "MACD柱状态": 3,
+        "金叉确认": 2
+      },
+      "s_score": 9,
+      "s_items": {
+        "T日涨幅": 9,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 41.0,
+      "diff": 0.875,
+      "dea": 1.1858,
+      "hist": -0.6215,
+      "brick_val": 85.6128,
+      "st_val": 53.9445,
+      "ls_val": 51.4296,
+      "open": 51.55,
+      "high": 56.6,
+      "low": 50.68,
+      "prev_close": 51.61
+    },
+    {
+      "symbol": "603701",
+      "name": "德宏股份",
+      "pattern": "横盘起跳",
+      "score": 51.0,
+      "grade": "C",
+      "close": 26.03,
+      "day_change": 4.75,
+      "is_limit_up": false,
+      "vol": 17.76,
+      "avg_vol_30": 13.59,
+      "vol_ratio": 1.31,
+      "turnover_rate": 2.68,
+      "q_score": 16,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 5,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 1,
+        "K线形态": 4
+      },
+      "m_score": 9,
+      "m_items": {
+        "DIFF位置": 4,
+        "MACD柱状态": 3,
+        "金叉确认": 2
+      },
+      "s_score": 6,
+      "s_items": {
+        "T日涨幅": 6,
+        "涨幅质量": 0
+      },
+      "p_score": 0.0,
+      "p_items": {},
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 31.0,
+      "diff": 0.3478,
+      "dea": 0.4254,
+      "hist": -0.1551,
+      "brick_val": 86.5047,
+      "st_val": 25.4441,
+      "ls_val": 24.2742,
+      "open": 24.79,
+      "high": 26.43,
+      "low": 24.3,
+      "prev_close": 24.85
+    },
+    {
+      "symbol": "605589",
+      "name": "圣泉集团",
+      "pattern": "上升波段延续",
+      "score": 51.0,
+      "grade": "C",
+      "close": 48.66,
+      "day_change": 7.97,
+      "is_limit_up": false,
+      "vol": 298.4,
+      "avg_vol_30": 206.03,
+      "vol_ratio": 1.45,
+      "turnover_rate": 7.56,
+      "q_score": 23,
+      "q_items": {
+        "翻红力度比": 2,
+        "信号日涨幅": 7,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 7
+      },
+      "m_score": 18,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 4,
+        "DIFF水平": 4
+      },
+      "s_score": 7,
+      "s_items": {
+        "T日涨幅": 7,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -18.0,
+      "r_items": {
+        "三波追高": -8.0,
+        "冲高回落": -10.0
+      },
+      "raw_total": 68.0,
+      "diff": 2.6246,
+      "dea": 2.4029,
+      "hist": 0.4435,
+      "brick_val": 109.1934,
+      "st_val": 43.1479,
+      "ls_val": 38.8866,
+      "open": 44.02,
+      "high": 49.34,
+      "low": 43.51,
+      "prev_close": 45.07
+    },
+    {
+      "symbol": "001314",
+      "name": "亿道信息",
+      "pattern": "横盘起跳",
+      "score": 48.0,
+      "grade": "C",
+      "close": 58.8,
+      "day_change": 2.62,
+      "is_limit_up": false,
+      "vol": 32.54,
+      "avg_vol_30": 26.11,
+      "vol_ratio": 1.25,
+      "turnover_rate": 4.42,
+      "q_score": 12,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 3,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 0
+      },
+      "m_score": 19,
+      "m_items": {
+        "DIFF位置": 6,
+        "MACD柱状态": 6,
+        "金叉确认": 7
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 3.0,
+      "p_items": {
+        "红柱比2/3": 2,
+        "DIFF/DEA刚金叉": 1
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 38.0,
+      "diff": 2.8015,
+      "dea": 2.7438,
+      "hist": 0.1154,
+      "brick_val": 102.6119,
+      "st_val": 54.6417,
+      "ls_val": 50.7413,
+      "open": 57.58,
+      "high": 61.08,
+      "low": 57.25,
+      "prev_close": 57.3
+    },
+    {
+      "symbol": "600171",
+      "name": "上海贝岭",
+      "pattern": "横盘起跳",
+      "score": 48.0,
+      "grade": "C",
+      "close": 31.12,
+      "day_change": 3.11,
+      "is_limit_up": false,
+      "vol": 137.77,
+      "avg_vol_30": 58.61,
+      "vol_ratio": 2.35,
+      "turnover_rate": 6.31,
+      "q_score": 17,
+      "q_items": {
+        "翻红力度比": 2,
+        "信号日涨幅": 5,
+        "短趋vs多空": 0,
+        "均线排列": 2,
+        "短趋斜率": 1,
+        "K线形态": 7
+      },
+      "m_score": 19,
+      "m_items": {
+        "DIFF位置": 6,
+        "MACD柱状态": 6,
+        "金叉确认": 7
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 50.0,
+      "diff": 0.4526,
+      "dea": 0.3603,
+      "hist": 0.1846,
+      "brick_val": 101.7506,
+      "st_val": 29.5921,
+      "ls_val": 29.5818,
+      "open": 29.92,
+      "high": 31.31,
+      "low": 29.82,
+      "prev_close": 30.18
+    },
+    {
+      "symbol": "605258",
+      "name": "协和电子",
+      "pattern": "上升波段延续",
+      "score": 48.0,
+      "grade": "C",
+      "close": 38.56,
+      "day_change": 2.83,
+      "is_limit_up": false,
+      "vol": 21.36,
+      "avg_vol_30": 15.14,
+      "vol_ratio": 1.41,
+      "turnover_rate": 6.42,
+      "q_score": 11,
+      "q_items": {
+        "翻红力度比": 3,
+        "信号日涨幅": 2,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 0,
+        "K线形态": 0
+      },
+      "m_score": 25,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 8,
+        "DIFF水平": 7
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 3.0,
+      "p_items": {
+        "红柱比2/3": 2,
+        "DIFF/DEA刚金叉": 1
+      },
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 51.0,
+      "diff": 0.3814,
+      "dea": 0.3482,
+      "hist": 0.0664,
+      "brick_val": 112.6761,
+      "st_val": 37.2425,
+      "ls_val": 36.3338,
+      "open": 37.45,
+      "high": 38.56,
+      "low": 36.3,
+      "prev_close": 37.5
+    },
+    {
+      "symbol": "605399",
+      "name": "晨光新材",
+      "pattern": "上升波段延续",
+      "score": 48.0,
+      "grade": "C",
+      "close": 15.83,
+      "day_change": 3.94,
+      "is_limit_up": false,
+      "vol": 18.44,
+      "avg_vol_30": 11.15,
+      "vol_ratio": 1.65,
+      "turnover_rate": 3.76,
+      "q_score": 16,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 5,
+        "短趋vs多空": 2,
+        "均线排列": 3,
+        "短趋斜率": 2,
+        "K线形态": 4
+      },
+      "m_score": 18,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 4,
+        "DIFF水平": 4
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 48.0,
+      "diff": 0.2617,
+      "dea": 0.176,
+      "hist": 0.1715,
+      "brick_val": 94.413,
+      "st_val": 15.1734,
+      "ls_val": 14.9732,
+      "open": 15.34,
+      "high": 16.16,
+      "low": 15.34,
+      "prev_close": 15.23
+    },
+    {
+      "symbol": "002893",
+      "name": "京能热力",
+      "pattern": "横盘起跳",
+      "score": 47.0,
+      "grade": "C",
+      "close": 12.21,
+      "day_change": 3.65,
+      "is_limit_up": false,
+      "vol": 37.03,
+      "avg_vol_30": 20.84,
+      "vol_ratio": 1.78,
+      "turnover_rate": 15.31,
+      "q_score": 19,
+      "q_items": {
+        "翻红力度比": 3,
+        "信号日涨幅": 5,
+        "短趋vs多空": 0,
+        "均线排列": 1,
+        "短趋斜率": 3,
+        "K线形态": 7
+      },
+      "m_score": 11,
+      "m_items": {
+        "DIFF位置": 2,
+        "MACD柱状态": 6,
+        "金叉确认": 3
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 44.0,
+      "diff": 0.2433,
+      "dea": 0.142,
+      "hist": 0.2026,
+      "brick_val": 112.351,
+      "st_val": 11.4626,
+      "ls_val": 11.4324,
+      "open": 11.67,
+      "high": 12.21,
+      "low": 11.49,
+      "prev_close": 11.78
+    },
+    {
+      "symbol": "601208",
+      "name": "东材科技",
+      "pattern": "上升波段延续",
+      "score": 46.0,
+      "grade": "C",
+      "close": 54.43,
+      "day_change": 4.17,
+      "is_limit_up": false,
+      "vol": 429.11,
+      "avg_vol_30": 340.34,
+      "vol_ratio": 1.26,
+      "turnover_rate": 8.07,
+      "q_score": 16,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 5,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 4
+      },
+      "m_score": 18,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 4,
+        "DIFF水平": 4
+      },
+      "s_score": 6,
+      "s_items": {
+        "T日涨幅": 6,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 50.0,
+      "diff": 4.5161,
+      "dea": 4.1532,
+      "hist": 0.7259,
+      "brick_val": 124.3875,
+      "st_val": 47.4282,
+      "ls_val": 40.6381,
+      "open": 51.83,
+      "high": 55.0,
+      "low": 50.52,
+      "prev_close": 52.25
+    },
+    {
+      "symbol": "603306",
+      "name": "华懋科技",
+      "pattern": "横盘起跳",
+      "score": 45.0,
+      "grade": "C",
+      "close": 116.76,
+      "day_change": 2.03,
+      "is_limit_up": false,
+      "vol": 159.64,
+      "avg_vol_30": 184.27,
+      "vol_ratio": 0.87,
+      "turnover_rate": 4.18,
+      "q_score": 11,
+      "q_items": {
+        "翻红力度比": 1,
+        "信号日涨幅": 3,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 0
+      },
+      "m_score": 19,
+      "m_items": {
+        "DIFF位置": 6,
+        "MACD柱状态": 6,
+        "金叉确认": 7
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 1.0,
+      "p_items": {
+        "DIFF/DEA刚金叉": 1
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 35.0,
+      "diff": 4.8024,
+      "dea": 4.6273,
+      "hist": 0.3501,
+      "brick_val": 110.1964,
+      "st_val": 109.0542,
+      "ls_val": 98.9565,
+      "open": 114.88,
+      "high": 118.98,
+      "low": 111.91,
+      "prev_close": 114.44
+    },
+    {
+      "symbol": "603823",
+      "name": "百合花",
+      "pattern": "横盘起跳",
+      "score": 45.0,
+      "grade": "C",
+      "close": 28.1,
+      "day_change": 5.05,
+      "is_limit_up": false,
+      "vol": 53.5,
+      "avg_vol_30": 24.19,
+      "vol_ratio": 2.21,
+      "turnover_rate": 4.71,
+      "q_score": 21,
+      "q_items": {
+        "翻红力度比": 2,
+        "信号日涨幅": 8,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 4
+      },
+      "m_score": 11,
+      "m_items": {
+        "DIFF位置": 2,
+        "MACD柱状态": 6,
+        "金叉确认": 3
+      },
+      "s_score": 6,
+      "s_items": {
+        "T日涨幅": 6,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 48.0,
+      "diff": 2.704,
+      "dea": 1.9625,
+      "hist": 1.483,
+      "brick_val": 148.9023,
+      "st_val": 21.6621,
+      "ls_val": 19.3953,
+      "open": 26.75,
+      "high": 28.4,
+      "low": 26.02,
+      "prev_close": 26.75
+    },
+    {
+      "symbol": "002842",
+      "name": "翔鹭钨业",
+      "pattern": "横盘起跳",
+      "score": 44.0,
+      "grade": "C",
+      "close": 32.76,
+      "day_change": 2.22,
+      "is_limit_up": false,
+      "vol": 92.34,
+      "avg_vol_30": 158.31,
+      "vol_ratio": 0.58,
+      "turnover_rate": 10.64,
+      "q_score": 13,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 3,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 0,
+        "K线形态": 4
+      },
+      "m_score": 13,
+      "m_items": {
+        "DIFF位置": 10,
+        "MACD柱状态": 3,
+        "金叉确认": 0
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "地量": 2
+      },
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 32.0,
+      "diff": -0.471,
+      "dea": 0.0315,
+      "hist": -1.005,
+      "brick_val": 63.6227,
+      "st_val": 34.6777,
+      "ls_val": 33.0758,
+      "open": 31.7,
+      "high": 33.1,
+      "low": 31.41,
+      "prev_close": 32.05
+    },
+    {
+      "symbol": "601298",
+      "name": "青岛港",
+      "pattern": "N型起跳",
+      "score": 42.0,
+      "grade": "C",
+      "close": 8.85,
+      "day_change": 0.8,
+      "is_limit_up": false,
+      "vol": 10.49,
+      "avg_vol_30": 8.74,
+      "vol_ratio": 1.2,
+      "turnover_rate": 0.22,
+      "q_score": 9,
+      "q_items": {
+        "翻红力度比": 1,
+        "信号日涨幅": 2,
+        "短趋vs多空": 0,
+        "均线排列": 2,
+        "短趋斜率": 0,
+        "K线形态": 4
+      },
+      "m_score": 13,
+      "m_items": {
+        "DIFF位置": 10,
+        "MACD柱状态": 3,
+        "金叉确认": 0
+      },
+      "s_score": 2,
+      "s_items": {
+        "T日涨幅": 2,
+        "涨幅质量": 0
+      },
+      "p_score": 0.0,
+      "p_items": {},
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 24.0,
+      "diff": -0.0165,
+      "dea": 0.0059,
+      "hist": -0.0447,
+      "brick_val": 64.4198,
+      "st_val": 8.9332,
+      "ls_val": 8.9142,
+      "open": 8.76,
+      "high": 8.89,
+      "low": 8.74,
+      "prev_close": 8.78
+    },
+    {
+      "symbol": "603005",
+      "name": "晶方科技",
+      "pattern": "上升波段延续",
+      "score": 42.0,
+      "grade": "C",
+      "close": 45.6,
+      "day_change": 6.02,
+      "is_limit_up": false,
+      "vol": 636.17,
+      "avg_vol_30": 246.84,
+      "vol_ratio": 2.58,
+      "turnover_rate": 22.17,
+      "q_score": 18,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 7,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 4
+      },
+      "m_score": 18,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 4,
+        "DIFF水平": 4
+      },
+      "s_score": 7,
+      "s_items": {
+        "T日涨幅": 7,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -18.0,
+      "r_items": {
+        "三波追高": -8.0,
+        "冲高回落": -10.0
+      },
+      "raw_total": 63.0,
+      "diff": 3.4634,
+      "dea": 2.2609,
+      "hist": 2.4051,
+      "brick_val": 130.0487,
+      "st_val": 36.0677,
+      "ls_val": 33.3504,
+      "open": 41.88,
+      "high": 46.36,
+      "low": 40.99,
+      "prev_close": 43.01
+    },
+    {
+      "symbol": "002049",
+      "name": "紫光国微",
+      "pattern": "横盘起跳",
+      "score": 41.0,
+      "grade": "C",
+      "close": 86.3,
+      "day_change": 1.46,
+      "is_limit_up": false,
+      "vol": 523.21,
+      "avg_vol_30": 278.26,
+      "vol_ratio": 1.88,
+      "turnover_rate": 7.21,
+      "q_score": 12,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 1,
+        "短趋vs多空": 3,
+        "均线排列": 2,
+        "短趋斜率": 2,
+        "K线形态": 4
+      },
+      "m_score": 19,
+      "m_items": {
+        "DIFF位置": 6,
+        "MACD柱状态": 6,
+        "金叉确认": 7
+      },
+      "s_score": 2,
+      "s_items": {
+        "T日涨幅": 2,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 43.0,
+      "diff": 2.8696,
+      "dea": 2.3871,
+      "hist": 0.965,
+      "brick_val": 109.93,
+      "st_val": 79.7865,
+      "ls_val": 77.3327,
+      "open": 84.51,
+      "high": 86.73,
+      "low": 83.38,
+      "prev_close": 85.06
+    },
+    {
+      "symbol": "600183",
+      "name": "生益科技",
+      "pattern": "上升波段延续",
+      "score": 41.0,
+      "grade": "C",
+      "close": 135.64,
+      "day_change": 2.94,
+      "is_limit_up": false,
+      "vol": 1352.68,
+      "avg_vol_30": 609.13,
+      "vol_ratio": 2.22,
+      "turnover_rate": 4.29,
+      "q_score": 9,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 2,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 0
+      },
+      "m_score": 22,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 8,
+        "DIFF水平": 4
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -13.0,
+      "r_items": {
+        "锤子线": -5.0,
+        "三波追高": -8.0
+      },
+      "raw_total": 50.0,
+      "diff": 14.78,
+      "dea": 10.8417,
+      "hist": 7.8766,
+      "brick_val": 149.9271,
+      "st_val": 99.0845,
+      "ls_val": 85.0859,
+      "open": 132.77,
+      "high": 137.7,
+      "low": 125.51,
+      "prev_close": 131.76
+    },
+    {
+      "symbol": "002201",
+      "name": "九鼎新材",
+      "pattern": "横盘起跳",
+      "score": 40.0,
+      "grade": "C",
+      "close": 11.79,
+      "day_change": 3.6,
+      "is_limit_up": false,
+      "vol": 39.43,
+      "avg_vol_30": 94.8,
+      "vol_ratio": 0.42,
+      "turnover_rate": 5.64,
+      "q_score": 13,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 5,
+        "短趋vs多空": 2,
+        "均线排列": 2,
+        "短趋斜率": 0,
+        "K线形态": 4
+      },
+      "m_score": 13,
+      "m_items": {
+        "DIFF位置": 10,
+        "MACD柱状态": 3,
+        "金叉确认": 0
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 0.0,
+      "p_items": {},
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 30.0,
+      "diff": -0.3578,
+      "dea": -0.1197,
+      "hist": -0.4762,
+      "brick_val": 61.013,
+      "st_val": 12.7476,
+      "ls_val": 12.5805,
+      "open": 11.35,
+      "high": 11.86,
+      "low": 11.2,
+      "prev_close": 11.38
+    },
+    {
+      "symbol": "603311",
+      "name": "金海高科",
+      "pattern": "上升波段延续",
+      "score": 38.0,
+      "grade": "D",
+      "close": 30.5,
+      "day_change": 0.96,
+      "is_limit_up": false,
+      "vol": 34.16,
+      "avg_vol_30": 35.17,
+      "vol_ratio": 0.97,
+      "turnover_rate": 4.8,
+      "q_score": 8,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 1,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 0
+      },
+      "m_score": 18,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 4,
+        "DIFF水平": 4
+      },
+      "s_score": 2,
+      "s_items": {
+        "T日涨幅": 2,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -13.0,
+      "r_items": {
+        "锤子线": -5.0,
+        "三波追高": -8.0
+      },
+      "raw_total": 43.0,
+      "diff": 3.3307,
+      "dea": 2.738,
+      "hist": 1.1853,
+      "brick_val": 115.3909,
+      "st_val": 25.1735,
+      "ls_val": 21.2378,
+      "open": 30.3,
+      "high": 30.98,
+      "low": 29.29,
+      "prev_close": 30.21
+    },
+    {
+      "symbol": "002700",
+      "name": "万憬能源",
+      "pattern": "横盘起跳",
+      "score": 37.0,
+      "grade": "D",
+      "close": 7.18,
+      "day_change": 3.31,
+      "is_limit_up": false,
+      "vol": 6.21,
+      "avg_vol_30": 4.02,
+      "vol_ratio": 1.55,
+      "turnover_rate": 4.08,
+      "q_score": 11,
+      "q_items": {
+        "翻红力度比": 1,
+        "信号日涨幅": 5,
+        "短趋vs多空": 2,
+        "均线排列": 2,
+        "短趋斜率": 1,
+        "K线形态": 0
+      },
+      "m_score": 11,
+      "m_items": {
+        "DIFF位置": 4,
+        "MACD柱状态": 3,
+        "金叉确认": 7,
+        "近期死叉": -3
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 3.0,
+      "p_items": {
+        "红柱比2/3": 2,
+        "DIFF/DEA刚金叉": 1
+      },
+      "r_penalty": -10.0,
+      "r_items": {
+        "横盘MACD死叉": -10.0
+      },
+      "raw_total": 39.0,
+      "diff": 0.0655,
+      "dea": 0.0669,
+      "hist": -0.0028,
+      "brick_val": 107.5816,
+      "st_val": 7.0311,
+      "ls_val": 6.9752,
+      "open": 7.02,
+      "high": 7.2,
+      "low": 6.87,
+      "prev_close": 6.95
+    },
+    {
+      "symbol": "000338",
+      "name": "潍柴动力",
+      "pattern": "上升波段延续",
+      "score": 36.0,
+      "grade": "D",
+      "close": 35.31,
+      "day_change": 2.35,
+      "is_limit_up": false,
+      "vol": 330.26,
+      "avg_vol_30": 359.91,
+      "vol_ratio": 0.92,
+      "turnover_rate": 1.92,
+      "q_score": 20,
+      "q_items": {
+        "翻红力度比": 1,
+        "信号日涨幅": 2,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 10
+      },
+      "m_score": 4,
+      "m_items": {
+        "DIFF趋势": 0,
+        "MACD柱趋势": 0,
+        "DIFF水平": 4
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 38.0,
+      "diff": 1.6406,
+      "dea": 1.7195,
+      "hist": -0.1579,
+      "brick_val": 115.0452,
+      "st_val": 33.1895,
+      "ls_val": 29.8076,
+      "open": 33.7,
+      "high": 35.5,
+      "low": 33.7,
+      "prev_close": 34.5
+    },
+    {
+      "symbol": "002460",
+      "name": "赣锋锂业",
+      "pattern": "横盘起跳",
+      "score": 33.0,
+      "grade": "D",
+      "close": 72.8,
+      "day_change": -0.68,
+      "is_limit_up": false,
+      "vol": 374.75,
+      "avg_vol_30": 580.17,
+      "vol_ratio": 0.65,
+      "turnover_rate": 4.29,
+      "q_score": 6,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 1,
+        "短趋vs多空": 3,
+        "均线排列": 2,
+        "短趋斜率": 0,
+        "K线形态": 0
+      },
+      "m_score": 13,
+      "m_items": {
+        "DIFF位置": 10,
+        "MACD柱状态": 3,
+        "金叉确认": 0
+      },
+      "s_score": 0,
+      "s_items": {
+        "T日涨幅": 0,
+        "涨幅质量": 0
+      },
+      "p_score": 0.0,
+      "p_items": {},
+      "r_penalty": -5.0,
+      "r_items": {
+        "锤子线": -5.0
+      },
+      "raw_total": 24.0,
+      "diff": -2.0494,
+      "dea": -0.8946,
+      "hist": -2.3097,
+      "brick_val": 44.3018,
+      "st_val": 79.0799,
+      "ls_val": 77.3137,
+      "open": 73.9,
+      "high": 74.87,
+      "low": 70.5,
+      "prev_close": 73.3
+    },
+    {
+      "symbol": "002571",
+      "name": "德力股份",
+      "pattern": "横盘起跳",
+      "score": 33.0,
+      "grade": "D",
+      "close": 13.06,
+      "day_change": 6.79,
+      "is_limit_up": false,
+      "vol": 22.61,
+      "avg_vol_30": 10.32,
+      "vol_ratio": 2.19,
+      "turnover_rate": 5.92,
+      "q_score": 18,
+      "q_items": {
+        "翻红力度比": 3,
+        "信号日涨幅": 8,
+        "短趋vs多空": 0,
+        "均线排列": 2,
+        "短趋斜率": 1,
+        "K线形态": 4
+      },
+      "m_score": 11,
+      "m_items": {
+        "DIFF位置": 2,
+        "MACD柱状态": 6,
+        "金叉确认": 3
+      },
+      "s_score": 7,
+      "s_items": {
+        "T日涨幅": 7,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -18.0,
+      "r_items": {
+        "三波追高": -8.0,
+        "冲高回落": -10.0
+      },
+      "raw_total": 56.0,
+      "diff": 0.1873,
+      "dea": 0.0665,
+      "hist": 0.2415,
+      "brick_val": 106.5627,
+      "st_val": 11.9348,
+      "ls_val": 11.8954,
+      "open": 12.23,
+      "high": 13.3,
+      "low": 12.11,
+      "prev_close": 12.23
+    },
+    {
+      "symbol": "605208",
+      "name": "永茂泰",
+      "pattern": "横盘起跳",
+      "score": 33.0,
+      "grade": "D",
+      "close": 14.78,
+      "day_change": 1.93,
+      "is_limit_up": false,
+      "vol": 19.31,
+      "avg_vol_30": 22.32,
+      "vol_ratio": 0.87,
+      "turnover_rate": 4.04,
+      "q_score": 8,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 3,
+        "短趋vs多空": 3,
+        "均线排列": 2,
+        "短趋斜率": 0,
+        "K线形态": 0
+      },
+      "m_score": 12,
+      "m_items": {
+        "DIFF位置": 7,
+        "MACD柱状态": 3,
+        "金叉确认": 2
+      },
+      "s_score": 2,
+      "s_items": {
+        "T日涨幅": 2,
+        "涨幅质量": 0
+      },
+      "p_score": 0.0,
+      "p_items": {},
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 22.0,
+      "diff": 0.0664,
+      "dea": 0.1275,
+      "hist": -0.1222,
+      "brick_val": 60.6612,
+      "st_val": 14.7072,
+      "ls_val": 14.3551,
+      "open": 14.42,
+      "high": 14.93,
+      "low": 14.18,
+      "prev_close": 14.5
+    },
+    {
+      "symbol": "002443",
+      "name": "金洲管道",
+      "pattern": "上升波段延续",
+      "score": 32.0,
+      "grade": "D",
+      "close": 12.08,
+      "day_change": 2.55,
+      "is_limit_up": false,
+      "vol": 45.64,
+      "avg_vol_30": 44.34,
+      "vol_ratio": 1.03,
+      "turnover_rate": 7.3,
+      "q_score": 9,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 2,
+        "短趋vs多空": 1,
+        "均线排列": 3,
+        "短趋斜率": 3,
+        "K线形态": 0
+      },
+      "m_score": 4,
+      "m_items": {
+        "DIFF趋势": 0,
+        "MACD柱趋势": 0,
+        "DIFF水平": 4
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 0.0,
+      "p_items": {},
+      "r_penalty": 0,
+      "r_items": {},
+      "raw_total": 17.0,
+      "diff": 0.503,
+      "dea": 0.6652,
+      "hist": -0.3245,
+      "brick_val": 87.1033,
+      "st_val": 12.108,
+      "ls_val": 10.9223,
+      "open": 11.92,
+      "high": 12.25,
+      "low": 11.72,
+      "prev_close": 11.78
+    },
+    {
+      "symbol": "000402",
+      "name": "金融街",
+      "pattern": "横盘起跳",
+      "score": 31.0,
+      "grade": "D",
+      "close": 2.93,
+      "day_change": 1.74,
+      "is_limit_up": false,
+      "vol": 13.39,
+      "avg_vol_30": 29.09,
+      "vol_ratio": 0.46,
+      "turnover_rate": 1.53,
+      "q_score": 14,
+      "q_items": {
+        "翻红力度比": 1,
+        "信号日涨幅": 3,
+        "短趋vs多空": 3,
+        "均线排列": 3,
+        "短趋斜率": 0,
+        "K线形态": 4
+      },
+      "m_score": 7,
+      "m_items": {
+        "DIFF位置": 4,
+        "MACD柱状态": 3,
+        "金叉确认": 0
+      },
+      "s_score": 2,
+      "s_items": {
+        "T日涨幅": 2,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 33.0,
+      "diff": 0.0189,
+      "dea": 0.0519,
+      "hist": -0.066,
+      "brick_val": 68.9955,
+      "st_val": 3.0083,
+      "ls_val": 2.9069,
+      "open": 2.86,
+      "high": 2.97,
+      "low": 2.85,
+      "prev_close": 2.88
+    },
+    {
+      "symbol": "600366",
+      "name": "宁波韵升",
+      "pattern": "横盘起跳",
+      "score": 31.0,
+      "grade": "D",
+      "close": 13.18,
+      "day_change": 2.73,
+      "is_limit_up": false,
+      "vol": 38.93,
+      "avg_vol_30": 35.6,
+      "vol_ratio": 1.09,
+      "turnover_rate": 2.71,
+      "q_score": 12,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 3,
+        "短趋vs多空": 0,
+        "均线排列": 2,
+        "短趋斜率": 0,
+        "K线形态": 7
+      },
+      "m_score": 12,
+      "m_items": {
+        "DIFF位置": 7,
+        "MACD柱状态": 3,
+        "金叉确认": 2
+      },
+      "s_score": 4,
+      "s_items": {
+        "T日涨幅": 4,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -8.0,
+      "r_items": {
+        "三波追高": -8.0
+      },
+      "raw_total": 38.0,
+      "diff": 0.0502,
+      "dea": 0.1025,
+      "hist": -0.1046,
+      "brick_val": 90.0773,
+      "st_val": 13.1755,
+      "ls_val": 13.1477,
+      "open": 12.76,
+      "high": 13.27,
+      "low": 12.71,
+      "prev_close": 12.83
+    },
+    {
+      "symbol": "603351",
+      "name": "威尔药业",
+      "pattern": "横盘起跳",
+      "score": 30.0,
+      "grade": "D",
+      "close": 26.02,
+      "day_change": 1.13,
+      "is_limit_up": false,
+      "vol": 2.73,
+      "avg_vol_30": 2.98,
+      "vol_ratio": 0.92,
+      "turnover_rate": 0.78,
+      "q_score": 5,
+      "q_items": {
+        "翻红力度比": 0,
+        "信号日涨幅": 1,
+        "短趋vs多空": 2,
+        "均线排列": 2,
+        "短趋斜率": 0,
+        "K线形态": 0
+      },
+      "m_score": 13,
+      "m_items": {
+        "DIFF位置": 10,
+        "MACD柱状态": 3,
+        "金叉确认": 0
+      },
+      "s_score": 2,
+      "s_items": {
+        "T日涨幅": 2,
+        "涨幅质量": 0
+      },
+      "p_score": 0.0,
+      "p_items": {},
+      "r_penalty": -5.0,
+      "r_items": {
+        "锤子线": -5.0
+      },
+      "raw_total": 25.0,
+      "diff": -0.0985,
+      "dea": 0.1275,
+      "hist": -0.4521,
+      "brick_val": 55.4851,
+      "st_val": 26.8743,
+      "ls_val": 26.6525,
+      "open": 25.9,
+      "high": 26.3,
+      "low": 25.34,
+      "prev_close": 25.73
+    }
+  ]
+}

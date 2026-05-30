@@ -1,0 +1,358 @@
+{
+  "date": "2026-05-25",
+  "total": 44,
+  "results": [
+    {
+      "symbol": "000966",
+      "name": "长源电力",
+      "pattern": "N型起跳",
+      "score": 83.0,
+      "grade": "A",
+      "summary": "命中: N型起跳 83分 [A级]"
+    },
+    {
+      "symbol": "002674",
+      "name": "兴业科技",
+      "pattern": "上升波段延续",
+      "score": 83.0,
+      "grade": "A",
+      "summary": "命中: 上升波段延续 83分 [A级]"
+    },
+    {
+      "symbol": "603203",
+      "name": "快克智能",
+      "pattern": "上升波段延续",
+      "score": 83.0,
+      "grade": "A",
+      "summary": "命中: 上升波段延续 83分 [A级]"
+    },
+    {
+      "symbol": "605588",
+      "name": "冠石科技",
+      "pattern": "上升波段延续",
+      "score": 80.0,
+      "grade": "A",
+      "summary": "命中: 上升波段延续 80分 [A级]"
+    },
+    {
+      "symbol": "002745",
+      "name": "木林森",
+      "pattern": "N型起跳",
+      "score": 75.0,
+      "grade": "A",
+      "summary": "命中: N型起跳 75分 [A级]"
+    },
+    {
+      "symbol": "000682",
+      "name": "东方电子",
+      "pattern": "上升波段延续",
+      "score": 74.0,
+      "grade": "A",
+      "summary": "命中: 上升波段延续 74分 [A级]"
+    },
+    {
+      "symbol": "002409",
+      "name": "雅克科技",
+      "pattern": "上升波段延续",
+      "score": 74.0,
+      "grade": "A",
+      "summary": "命中: 上升波段延续 74分 [A级]"
+    },
+    {
+      "symbol": "002951",
+      "name": "金时科技",
+      "pattern": "N型起跳",
+      "score": 73.0,
+      "grade": "A",
+      "summary": "命中: N型起跳 73分 [A级]"
+    },
+    {
+      "symbol": "605566",
+      "name": "福莱蒽特",
+      "pattern": "横盘起跳",
+      "score": 73.0,
+      "grade": "A",
+      "summary": "命中: 横盘起跳 73分 [A级]"
+    },
+    {
+      "symbol": "000988",
+      "name": "华工科技",
+      "pattern": "上升波段延续",
+      "score": 72.0,
+      "grade": "A",
+      "summary": "命中: 上升波段延续 72分 [A级]"
+    },
+    {
+      "symbol": "001289",
+      "name": "龙源电力",
+      "pattern": "N型起跳",
+      "score": 72.0,
+      "grade": "A",
+      "summary": "命中: N型起跳 72分 [A级]"
+    },
+    {
+      "symbol": "002947",
+      "name": "恒铭达",
+      "pattern": "上升波段延续",
+      "score": 72.0,
+      "grade": "A",
+      "summary": "命中: 上升波段延续 72分 [A级]"
+    },
+    {
+      "symbol": "600863",
+      "name": "内蒙华电",
+      "pattern": "横盘起跳",
+      "score": 72.0,
+      "grade": "A",
+      "summary": "命中: 横盘起跳 72分 [A级]"
+    },
+    {
+      "symbol": "603303",
+      "name": "得邦照明",
+      "pattern": "上升波段延续",
+      "score": 69.0,
+      "grade": "B",
+      "summary": "命中: 上升波段延续 69分 [B级]"
+    },
+    {
+      "symbol": "001326",
+      "name": "联域股份",
+      "pattern": "上升波段延续",
+      "score": 68.0,
+      "grade": "B",
+      "summary": "命中: 上升波段延续 68分 [B级]"
+    },
+    {
+      "symbol": "000767",
+      "name": "晋控电力",
+      "pattern": "上升波段延续",
+      "score": 67.0,
+      "grade": "B",
+      "summary": "命中: 上升波段延续 67分 [B级]"
+    },
+    {
+      "symbol": "600578",
+      "name": "京能电力",
+      "pattern": "横盘起跳",
+      "score": 67.0,
+      "grade": "B",
+      "summary": "命中: 横盘起跳 67分 [B级]"
+    },
+    {
+      "symbol": "002421",
+      "name": "达实智能",
+      "pattern": "上升波段延续",
+      "score": 66.0,
+      "grade": "B",
+      "summary": "命中: 上升波段延续 66分 [B级]"
+    },
+    {
+      "symbol": "002927",
+      "name": "泰永长征",
+      "pattern": "上升波段延续",
+      "score": 66.0,
+      "grade": "B",
+      "summary": "命中: 上升波段延续 66分 [B级]"
+    },
+    {
+      "symbol": "603578",
+      "name": "三星新材",
+      "pattern": "N型起跳",
+      "score": 62.0,
+      "grade": "B",
+      "summary": "命中: N型起跳 62分 [B级]"
+    },
+    {
+      "symbol": "002957",
+      "name": "科瑞技术",
+      "pattern": "N型起跳",
+      "score": 60.0,
+      "grade": "B",
+      "summary": "命中: N型起跳 60分 [B级]"
+    },
+    {
+      "symbol": "000883",
+      "name": "湖北能源",
+      "pattern": "N型起跳",
+      "score": 59.0,
+      "grade": "B",
+      "summary": "命中: N型起跳 59分 [B级]"
+    },
+    {
+      "symbol": "002119",
+      "name": "康强电子",
+      "pattern": "N型起跳",
+      "score": 58.0,
+      "grade": "B",
+      "summary": "命中: N型起跳 58分 [B级]"
+    },
+    {
+      "symbol": "002617",
+      "name": "露笑科技",
+      "pattern": "上升波段延续",
+      "score": 58.0,
+      "grade": "B",
+      "summary": "命中: 上升波段延续 58分 [B级]"
+    },
+    {
+      "symbol": "000935",
+      "name": "四川双马",
+      "pattern": "上升波段延续",
+      "score": 57.0,
+      "grade": "B",
+      "summary": "命中: 上升波段延续 57分 [B级]"
+    },
+    {
+      "symbol": "002452",
+      "name": "长高电新",
+      "pattern": "上升波段延续",
+      "score": 57.0,
+      "grade": "B",
+      "summary": "命中: 上升波段延续 57分 [B级]"
+    },
+    {
+      "symbol": "603650",
+      "name": "彤程新材",
+      "pattern": "上升波段延续",
+      "score": 56.0,
+      "grade": "B",
+      "summary": "命中: 上升波段延续 56分 [B级]"
+    },
+    {
+      "symbol": "002706",
+      "name": "良信股份",
+      "pattern": "上升波段延续",
+      "score": 54.0,
+      "grade": "C",
+      "summary": "命中: 上升波段延续 54分 [C级]"
+    },
+    {
+      "symbol": "603068",
+      "name": "博通集成",
+      "pattern": "上升波段延续",
+      "score": 54.0,
+      "grade": "C",
+      "summary": "命中: 上升波段延续 54分 [C级]"
+    },
+    {
+      "symbol": "002861",
+      "name": "瀛通通讯",
+      "pattern": "上升波段延续",
+      "score": 52.0,
+      "grade": "C",
+      "summary": "命中: 上升波段延续 52分 [C级]"
+    },
+    {
+      "symbol": "003018",
+      "name": "金富科技",
+      "pattern": "上升波段延续",
+      "score": 52.0,
+      "grade": "C",
+      "summary": "命中: 上升波段延续 52分 [C级]"
+    },
+    {
+      "symbol": "001872",
+      "name": "招商港口",
+      "pattern": "横盘起跳",
+      "score": 50.0,
+      "grade": "C",
+      "summary": "命中: 横盘起跳 50分 [C级]"
+    },
+    {
+      "symbol": "002516",
+      "name": "旷达科技",
+      "pattern": "N型起跳",
+      "score": 49.0,
+      "grade": "C",
+      "summary": "命中: N型起跳 49分 [C级]"
+    },
+    {
+      "symbol": "002983",
+      "name": "芯瑞达",
+      "pattern": "上升波段延续",
+      "score": 48.0,
+      "grade": "C",
+      "summary": "命中: 上升波段延续 48分 [C级]"
+    },
+    {
+      "symbol": "601963",
+      "name": "重庆银行",
+      "pattern": "上升波段延续",
+      "score": 48.0,
+      "grade": "C",
+      "summary": "命中: 上升波段延续 48分 [C级]"
+    },
+    {
+      "symbol": "000921",
+      "name": "海信家电",
+      "pattern": "N型起跳",
+      "score": 47.0,
+      "grade": "C",
+      "summary": "命中: N型起跳 47分 [C级]"
+    },
+    {
+      "symbol": "600566",
+      "name": "济川药业",
+      "pattern": "上升波段延续",
+      "score": 46.0,
+      "grade": "C",
+      "summary": "命中: 上升波段延续 46分 [C级]"
+    },
+    {
+      "symbol": "002786",
+      "name": "银宝山新",
+      "pattern": "上升波段延续",
+      "score": 44.0,
+      "grade": "C",
+      "summary": "命中: 上升波段延续 44分 [C级]"
+    },
+    {
+      "symbol": "603859",
+      "name": "能科科技",
+      "pattern": "上升波段延续",
+      "score": 44.0,
+      "grade": "C",
+      "summary": "命中: 上升波段延续 44分 [C级]"
+    },
+    {
+      "symbol": "600508",
+      "name": "上海能源",
+      "pattern": "N型起跳",
+      "score": 42.0,
+      "grade": "C",
+      "summary": "命中: N型起跳 42分 [C级]"
+    },
+    {
+      "symbol": "603116",
+      "name": "红蜻蜓",
+      "pattern": "横盘起跳",
+      "score": 42.0,
+      "grade": "C",
+      "summary": "命中: 横盘起跳 42分 [C级]"
+    },
+    {
+      "symbol": "002796",
+      "name": "世嘉科技",
+      "pattern": "横盘起跳",
+      "score": 41.0,
+      "grade": "C",
+      "summary": "命中: 横盘起跳 41分 [C级]"
+    },
+    {
+      "symbol": "603997",
+      "name": "继峰股份",
+      "pattern": "上升波段延续",
+      "score": 41.0,
+      "grade": "C",
+      "summary": "命中: 上升波段延续 41分 [C级]"
+    },
+    {
+      "symbol": "000543",
+      "name": "皖能电力",
+      "pattern": "N型起跳",
+      "score": 40.0,
+      "grade": "C",
+      "summary": "命中: N型起跳 40分 [C级]"
+    }
+  ]
+}

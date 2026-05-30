@@ -26,8 +26,12 @@ def get_latest_trade_date(conn: sqlite3.Connection) -> str:
 
 
 def run_screening(date: str | None = None, pattern: str = "砖型图",
-                   min_score: int = 0, limit: int = 20) -> list[dict]:
-    db_path = PROJECT / "db" / "market.db"
+                   min_score: int = 0, limit: int = 20,
+                   db_path: str = "") -> list[dict]:
+    if db_path:
+        db_path = Path(db_path)
+    else:
+        db_path = PROJECT / "db" / "market.db"
     if not db_path.exists():
         raise FileNotFoundError(f"数据库不存在: {db_path}")
 
@@ -135,8 +139,9 @@ if __name__ == "__main__":
     parser.add_argument("--pattern", default="砖型图", choices=["砖型图"], help="选股模式")
     parser.add_argument("--min-score", type=int, default=0, help="最低评分")
     parser.add_argument("--limit", type=int, default=20, help="最多返回")
+    parser.add_argument("--db", default="", help="数据库路径")
     args = parser.parse_args()
 
     date = args.date if args.date else None
-    results = run_screening(date, args.pattern, args.min_score, args.limit)
+    results = run_screening(date, args.pattern, args.min_score, args.limit, args.db)
     print(format_results(results))

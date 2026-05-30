@@ -1,0 +1,333 @@
+{
+  "date": "2026-05-25",
+  "analyzed_at": "2026-05-25T14:37:07.756775",
+  "next_trading_day": "2026-05-26",
+  "source": "manual + screening",
+  "stocks": [
+    {
+      "symbol": "000966",
+      "name": "长源电力",
+      "score": 83,
+      "grade": "A",
+      "pattern": "N型起跳",
+      "close": 5.21,
+      "chg": 9.92,
+      "is_limit_up": true,
+      "prediction": "震荡，涨停后乖离大，可能冲高回落",
+      "direction": "震荡",
+      "confidence": "中",
+      "risks": [],
+      "key_level": "支撑4.80 压力5.26"
+    },
+    {
+      "symbol": "002674",
+      "name": "兴业科技",
+      "score": 83,
+      "grade": "A",
+      "pattern": "上升波段延续",
+      "close": 15.97,
+      "chg": 9.99,
+      "is_limit_up": true,
+      "prediction": "偏多，突破新高，量价配合好",
+      "direction": "偏多",
+      "confidence": "中",
+      "risks": [],
+      "key_level": "支撑15.0 压力16.5"
+    },
+    {
+      "symbol": "603203",
+      "name": "快克智能",
+      "score": 83,
+      "grade": "A",
+      "pattern": "上升波段延续",
+      "close": 66.55,
+      "chg": 10.0,
+      "is_limit_up": true,
+      "prediction": "震荡偏空，高位S1风险，警惕回落",
+      "direction": "震荡偏空",
+      "confidence": "高",
+      "risks": [
+        "高位S1"
+      ],
+      "key_level": "支撑58 压力68"
+    },
+    {
+      "symbol": "605588",
+      "name": "冠石科技",
+      "score": 80,
+      "grade": "A",
+      "pattern": "上升波段延续",
+      "close": 67.64,
+      "chg": 10.0,
+      "is_limit_up": true,
+      "prediction": "偏多，刚突破横盘区，回踩确认后有望继续",
+      "direction": "偏多",
+      "confidence": "中",
+      "risks": [
+        "三波追高-8"
+      ],
+      "key_level": "支撑62 压力68"
+    },
+    {
+      "symbol": "002745",
+      "name": "木林森",
+      "score": 75,
+      "grade": "A",
+      "pattern": "N型起跳",
+      "close": 10.82,
+      "chg": 9.96,
+      "is_limit_up": true,
+      "prediction": "偏多，放量涨停，量价配合好",
+      "direction": "偏多",
+      "confidence": "中",
+      "risks": [],
+      "key_level": "支撑10.0 压力11.0"
+    },
+    {
+      "symbol": "000682",
+      "name": "东方电子",
+      "score": 74,
+      "grade": "A",
+      "pattern": "上升波段延续",
+      "close": 14.48,
+      "chg": 5.39,
+      "is_limit_up": false,
+      "prediction": "偏多，稳步爬升，节奏健康",
+      "direction": "偏多",
+      "confidence": "中",
+      "risks": [],
+      "key_level": "支撑13.8 压力14.8"
+    },
+    {
+      "symbol": "002409",
+      "name": "雅克科技",
+      "score": 74,
+      "grade": "A",
+      "pattern": "上升波段延续",
+      "close": 128.15,
+      "chg": 10.0,
+      "is_limit_up": true,
+      "prediction": "震荡偏空，高位巨量S1风险",
+      "direction": "震荡偏空",
+      "confidence": "高",
+      "risks": [
+        "高位巨量S1",
+        "三波追高-8"
+      ],
+      "key_level": "支撑110 压力128"
+    },
+    {
+      "symbol": "002951",
+      "name": "金时科技",
+      "score": 73,
+      "grade": "A",
+      "pattern": "N型起跳",
+      "close": 17.63,
+      "chg": 9.98,
+      "is_limit_up": true,
+      "prediction": "偏多，N型突破需确认量能",
+      "direction": "偏多",
+      "confidence": "低",
+      "risks": [
+        "三波追高-8",
+        "缩量涨停"
+      ],
+      "key_level": "支撑16.5 压力18.0"
+    },
+    {
+      "symbol": "605566",
+      "name": "福莱蒽特",
+      "score": 73,
+      "grade": "A",
+      "pattern": "横盘起跳",
+      "close": 40.26,
+      "chg": 10.0,
+      "is_limit_up": true,
+      "prediction": "偏多，横盘起跳后有望延续",
+      "direction": "偏多",
+      "confidence": "中",
+      "risks": [],
+      "key_level": "支撑37 压力41"
+    },
+    {
+      "symbol": "000988",
+      "name": "华工科技",
+      "score": 72,
+      "grade": "A",
+      "pattern": "上升波段延续",
+      "close": 171.94,
+      "chg": 10.0,
+      "is_limit_up": true,
+      "prediction": "震荡偏空，高位加速赶顶",
+      "direction": "震荡偏空",
+      "confidence": "高",
+      "risks": [
+        "三波追高-8",
+        "高位加速"
+      ],
+      "key_level": "支撑155 压力172"
+    },
+    {
+      "symbol": "001289",
+      "name": "龙源电力",
+      "score": 72,
+      "grade": "A",
+      "pattern": "N型起跳",
+      "close": 18.13,
+      "chg": 5.96,
+      "is_limit_up": false,
+      "prediction": "偏多，金叉初期+低换手，安全边际好",
+      "direction": "偏多",
+      "confidence": "中",
+      "risks": [],
+      "key_level": "支撑17.2 压力18.5"
+    },
+    {
+      "symbol": "002947",
+      "name": "恒铭达",
+      "score": 72,
+      "grade": "A",
+      "pattern": "上升波段延续",
+      "close": 98.34,
+      "chg": 10.0,
+      "is_limit_up": true,
+      "prediction": "偏多，缩量涨停筹码锁定好",
+      "direction": "偏多",
+      "confidence": "中",
+      "risks": [],
+      "key_level": "支撑92 压力100"
+    },
+    {
+      "symbol": "600863",
+      "name": "内蒙华电",
+      "score": 72,
+      "grade": "A",
+      "pattern": "横盘起跳",
+      "close": 5.93,
+      "chg": 10.02,
+      "is_limit_up": true,
+      "prediction": "偏多，即将金叉+低位放量",
+      "direction": "偏多",
+      "confidence": "中",
+      "risks": [
+        "白线<黄线"
+      ],
+      "key_level": "支撑5.5 压力6.0"
+    },
+    {
+      "symbol": "600483",
+      "name": "福能股份",
+      "score": 0,
+      "grade": "",
+      "pattern": "",
+      "close": 11.09,
+      "chg": 3.16,
+      "is_limit_up": false,
+      "prediction": "偏多，MACD金叉红柱温和爬升",
+      "direction": "偏多",
+      "confidence": "中",
+      "risks": [],
+      "key_level": "支撑10.75 压力11.39"
+    },
+    {
+      "symbol": "600206",
+      "name": "有研新材",
+      "score": 0,
+      "grade": "",
+      "pattern": "",
+      "close": 30.38,
+      "chg": 2.08,
+      "is_limit_up": false,
+      "prediction": "偏空，S1放量阴线反弹无力",
+      "direction": "偏空",
+      "confidence": "高",
+      "risks": [
+        "S1放量阴线"
+      ],
+      "key_level": "支撑28.92 压力30.78"
+    },
+    {
+      "symbol": "002927",
+      "name": "泰永长征",
+      "score": 0,
+      "grade": "",
+      "pattern": "",
+      "close": 23.83,
+      "chg": 10.02,
+      "is_limit_up": true,
+      "prediction": "震荡，缩量涨停主力高度控盘",
+      "direction": "震荡",
+      "confidence": "低",
+      "risks": [
+        "缩量涨停"
+      ],
+      "key_level": "支撑22.43 压力24.5"
+    },
+    {
+      "symbol": "002803",
+      "name": "吉宏股份",
+      "score": 0,
+      "grade": "",
+      "pattern": "",
+      "close": 22.46,
+      "chg": 2.0,
+      "is_limit_up": false,
+      "prediction": "震荡，MACD死叉横盘方向不明",
+      "direction": "震荡",
+      "confidence": "中",
+      "risks": [
+        "MACD死叉"
+      ],
+      "key_level": "支撑21.37 压力22.44"
+    },
+    {
+      "symbol": "000690",
+      "name": "宝新能源",
+      "score": 0,
+      "grade": "",
+      "pattern": "",
+      "close": 5.51,
+      "chg": 5.76,
+      "is_limit_up": false,
+      "prediction": "偏多，MACD即将金叉白线企稳",
+      "direction": "偏多",
+      "confidence": "中",
+      "risks": [],
+      "key_level": "支撑5.21 压力5.73"
+    },
+    {
+      "symbol": "600726",
+      "name": "华电能源",
+      "score": 0,
+      "grade": "",
+      "pattern": "",
+      "close": 6.92,
+      "chg": 10.02,
+      "is_limit_up": true,
+      "prediction": "偏多，缩量涨停抛压释放有反弹动力",
+      "direction": "偏多",
+      "confidence": "低",
+      "risks": [
+        "20日涨44%高位"
+      ],
+      "key_level": "支撑6.57 压力7.16"
+    },
+    {
+      "symbol": "000791",
+      "name": "甘肃能源",
+      "score": 0,
+      "grade": "",
+      "pattern": "",
+      "close": 9.01,
+      "chg": 2.62,
+      "is_limit_up": false,
+      "prediction": "偏多，回调企稳反弹修复中",
+      "direction": "偏多",
+      "confidence": "低",
+      "risks": [
+        "MACD死叉"
+      ],
+      "key_level": "支撑8.78 压力9.37"
+    }
+  ]
+}

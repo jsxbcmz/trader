@@ -1,0 +1,719 @@
+{
+  "date": "2026-05-27",
+  "is_bear_day": true,
+  "market_temp": {
+    "total": 3053,
+    "up_count": 539,
+    "down_count": 2514,
+    "ratio": "539:2514",
+    "avg_change": -1.793,
+    "avg_up": 2.78,
+    "avg_down": -2.809
+  },
+  "sectors": [
+    {
+      "industry": "黄金",
+      "count": 9,
+      "avg_chg": -5.55,
+      "up_count": 0
+    },
+    {
+      "industry": "铅锌",
+      "count": 13,
+      "avg_chg": -5.32,
+      "up_count": 0
+    },
+    {
+      "industry": "公共交通",
+      "count": 7,
+      "avg_chg": -3.8,
+      "up_count": 0
+    },
+    {
+      "industry": "铜",
+      "count": 15,
+      "avg_chg": -3.79,
+      "up_count": 1
+    },
+    {
+      "industry": "机械基件",
+      "count": 48,
+      "avg_chg": -3.64,
+      "up_count": 5
+    },
+    {
+      "industry": "摩托车",
+      "count": 8,
+      "avg_chg": -3.5,
+      "up_count": 0
+    },
+    {
+      "industry": "农用机械",
+      "count": 7,
+      "avg_chg": -3.07,
+      "up_count": 0
+    },
+    {
+      "industry": "软件服务",
+      "count": 74,
+      "avg_chg": -3.05,
+      "up_count": 7
+    },
+    {
+      "industry": "普钢",
+      "count": 26,
+      "avg_chg": -3.03,
+      "up_count": 1
+    },
+    {
+      "industry": "电器仪表",
+      "count": 20,
+      "avg_chg": -3.02,
+      "up_count": 1
+    },
+    {
+      "industry": "航空",
+      "count": 24,
+      "avg_chg": -3.0,
+      "up_count": 1
+    },
+    {
+      "industry": "染料涂料",
+      "count": 16,
+      "avg_chg": -2.92,
+      "up_count": 0
+    },
+    {
+      "industry": "塑料",
+      "count": 34,
+      "avg_chg": -2.89,
+      "up_count": 5
+    },
+    {
+      "industry": "钢加工",
+      "count": 21,
+      "avg_chg": -2.84,
+      "up_count": 1
+    },
+    {
+      "industry": "石油加工",
+      "count": 10,
+      "avg_chg": -2.82,
+      "up_count": 1
+    },
+    {
+      "industry": "矿物制品",
+      "count": 13,
+      "avg_chg": -2.81,
+      "up_count": 1
+    },
+    {
+      "industry": "通信设备",
+      "count": 58,
+      "avg_chg": -2.8,
+      "up_count": 6
+    },
+    {
+      "industry": "服饰",
+      "count": 50,
+      "avg_chg": -2.74,
+      "up_count": 3
+    },
+    {
+      "industry": "其他建材",
+      "count": 21,
+      "avg_chg": -2.72,
+      "up_count": 1
+    },
+    {
+      "industry": "汽车配件",
+      "count": 155,
+      "avg_chg": -2.72,
+      "up_count": 16
+    },
+    {
+      "industry": "家居用品",
+      "count": 47,
+      "avg_chg": -2.71,
+      "up_count": 4
+    },
+    {
+      "industry": "机床制造",
+      "count": 12,
+      "avg_chg": -2.67,
+      "up_count": 2
+    },
+    {
+      "industry": "化纤",
+      "count": 25,
+      "avg_chg": -2.64,
+      "up_count": 3
+    },
+    {
+      "industry": "农药化肥",
+      "count": 46,
+      "avg_chg": -2.59,
+      "up_count": 1
+    },
+    {
+      "industry": "水运",
+      "count": 18,
+      "avg_chg": -2.57,
+      "up_count": 1
+    },
+    {
+      "industry": "运输设备",
+      "count": 25,
+      "avg_chg": -2.57,
+      "up_count": 2
+    },
+    {
+      "industry": "铝",
+      "count": 29,
+      "avg_chg": -2.57,
+      "up_count": 4
+    },
+    {
+      "industry": "区域地产",
+      "count": 42,
+      "avg_chg": -2.53,
+      "up_count": 4
+    },
+    {
+      "industry": "多元金融",
+      "count": 23,
+      "avg_chg": -2.52,
+      "up_count": 1
+    },
+    {
+      "industry": "特种钢",
+      "count": 9,
+      "avg_chg": -2.5,
+      "up_count": 0
+    },
+    {
+      "industry": "专用机械",
+      "count": 94,
+      "avg_chg": -2.49,
+      "up_count": 13
+    },
+    {
+      "industry": "汽车服务",
+      "count": 6,
+      "avg_chg": -2.49,
+      "up_count": 0
+    },
+    {
+      "industry": "汽车整车",
+      "count": 21,
+      "avg_chg": -2.46,
+      "up_count": 0
+    },
+    {
+      "industry": "IT设备",
+      "count": 27,
+      "avg_chg": -2.45,
+      "up_count": 1
+    },
+    {
+      "industry": "小金属",
+      "count": 45,
+      "avg_chg": -2.39,
+      "up_count": 7
+    },
+    {
+      "industry": "房产服务",
+      "count": 9,
+      "avg_chg": -2.39,
+      "up_count": 1
+    },
+    {
+      "industry": "石油开采",
+      "count": 16,
+      "avg_chg": -2.39,
+      "up_count": 1
+    },
+    {
+      "industry": "装修装饰",
+      "count": 17,
+      "avg_chg": -2.38,
+      "up_count": 2
+    },
+    {
+      "industry": "水泥",
+      "count": 22,
+      "avg_chg": -2.32,
+      "up_count": 1
+    },
+    {
+      "industry": "仓储物流",
+      "count": 40,
+      "avg_chg": -2.27,
+      "up_count": 3
+    },
+    {
+      "industry": "化工原料",
+      "count": 142,
+      "avg_chg": -2.22,
+      "up_count": 17
+    },
+    {
+      "industry": "建筑工程",
+      "count": 78,
+      "avg_chg": -2.22,
+      "up_count": 9
+    },
+    {
+      "industry": "广告包装",
+      "count": 38,
+      "avg_chg": -2.21,
+      "up_count": 3
+    },
+    {
+      "industry": "纺织",
+      "count": 33,
+      "avg_chg": -2.19,
+      "up_count": 3
+    },
+    {
+      "industry": "化工机械",
+      "count": 11,
+      "avg_chg": -2.12,
+      "up_count": 1
+    },
+    {
+      "industry": "医疗保健",
+      "count": 41,
+      "avg_chg": -2.11,
+      "up_count": 4
+    },
+    {
+      "industry": "工程机械",
+      "count": 26,
+      "avg_chg": -2.06,
+      "up_count": 3
+    },
+    {
+      "industry": "农业综合",
+      "count": 30,
+      "avg_chg": -2.02,
+      "up_count": 2
+    },
+    {
+      "industry": "保险",
+      "count": 5,
+      "avg_chg": -1.97,
+      "up_count": 0
+    },
+    {
+      "industry": "饲料",
+      "count": 17,
+      "avg_chg": -1.97,
+      "up_count": 3
+    },
+    {
+      "industry": "纺织机械",
+      "count": 10,
+      "avg_chg": -1.91,
+      "up_count": 3
+    },
+    {
+      "industry": "港口",
+      "count": 16,
+      "avg_chg": -1.9,
+      "up_count": 1
+    },
+    {
+      "industry": "其他商业",
+      "count": 9,
+      "avg_chg": -1.86,
+      "up_count": 2
+    },
+    {
+      "industry": "综合类",
+      "count": 16,
+      "avg_chg": -1.86,
+      "up_count": 1
+    },
+    {
+      "industry": "环境保护",
+      "count": 48,
+      "avg_chg": -1.85,
+      "up_count": 7
+    },
+    {
+      "industry": "家用电器",
+      "count": 63,
+      "avg_chg": -1.83,
+      "up_count": 12
+    },
+    {
+      "industry": "全国地产",
+      "count": 24,
+      "avg_chg": -1.82,
+      "up_count": 2
+    },
+    {
+      "industry": "文教休闲",
+      "count": 31,
+      "avg_chg": -1.75,
+      "up_count": 5
+    },
+    {
+      "industry": "玻璃",
+      "count": 14,
+      "avg_chg": -1.58,
+      "up_count": 3
+    },
+    {
+      "industry": "园区开发",
+      "count": 14,
+      "avg_chg": -1.56,
+      "up_count": 2
+    },
+    {
+      "industry": "互联网",
+      "count": 37,
+      "avg_chg": -1.55,
+      "up_count": 5
+    },
+    {
+      "industry": "空运",
+      "count": 8,
+      "avg_chg": -1.54,
+      "up_count": 1
+    },
+    {
+      "industry": "水务",
+      "count": 15,
+      "avg_chg": -1.53,
+      "up_count": 1
+    },
+    {
+      "industry": "橡胶",
+      "count": 5,
+      "avg_chg": -1.48,
+      "up_count": 1
+    },
+    {
+      "industry": "批发业",
+      "count": 5,
+      "avg_chg": -1.45,
+      "up_count": 0
+    },
+    {
+      "industry": "医药商业",
+      "count": 27,
+      "avg_chg": -1.37,
+      "up_count": 3
+    },
+    {
+      "industry": "机场",
+      "count": 5,
+      "avg_chg": -1.34,
+      "up_count": 0
+    },
+    {
+      "industry": "出版业",
+      "count": 21,
+      "avg_chg": -1.33,
+      "up_count": 1
+    },
+    {
+      "industry": "元器件",
+      "count": 126,
+      "avg_chg": -1.32,
+      "up_count": 36
+    },
+    {
+      "industry": "焦炭加工",
+      "count": 7,
+      "avg_chg": -1.32,
+      "up_count": 0
+    },
+    {
+      "industry": "生物制药",
+      "count": 19,
+      "avg_chg": -1.3,
+      "up_count": 3
+    },
+    {
+      "industry": "化学制药",
+      "count": 75,
+      "avg_chg": -1.21,
+      "up_count": 13
+    },
+    {
+      "industry": "商贸代理",
+      "count": 14,
+      "avg_chg": -1.21,
+      "up_count": 2
+    },
+    {
+      "industry": "铁路",
+      "count": 7,
+      "avg_chg": -1.17,
+      "up_count": 1
+    },
+    {
+      "industry": "造纸",
+      "count": 27,
+      "avg_chg": -1.16,
+      "up_count": 7
+    },
+    {
+      "industry": "红黄酒",
+      "count": 8,
+      "avg_chg": -1.13,
+      "up_count": 3
+    },
+    {
+      "industry": "电气设备",
+      "count": 164,
+      "avg_chg": -1.03,
+      "up_count": 45
+    },
+    {
+      "industry": "旅游服务",
+      "count": 6,
+      "avg_chg": -1.01,
+      "up_count": 0
+    },
+    {
+      "industry": "船舶",
+      "count": 5,
+      "avg_chg": -0.98,
+      "up_count": 1
+    },
+    {
+      "industry": "食品",
+      "count": 70,
+      "avg_chg": -0.92,
+      "up_count": 19
+    },
+    {
+      "industry": "证券",
+      "count": 49,
+      "avg_chg": -0.89,
+      "up_count": 8
+    },
+    {
+      "industry": "软饮料",
+      "count": 8,
+      "avg_chg": -0.86,
+      "up_count": 2
+    },
+    {
+      "industry": "路桥",
+      "count": 19,
+      "avg_chg": -0.84,
+      "up_count": 7
+    },
+    {
+      "industry": "供气供热",
+      "count": 40,
+      "avg_chg": -0.79,
+      "up_count": 11
+    },
+    {
+      "industry": "酒店餐饮",
+      "count": 7,
+      "avg_chg": -0.7,
+      "up_count": 1
+    },
+    {
+      "industry": "渔业",
+      "count": 6,
+      "avg_chg": -0.69,
+      "up_count": 1
+    },
+    {
+      "industry": "百货",
+      "count": 35,
+      "avg_chg": -0.67,
+      "up_count": 10
+    },
+    {
+      "industry": "种植业",
+      "count": 13,
+      "avg_chg": -0.58,
+      "up_count": 4
+    },
+    {
+      "industry": "银行",
+      "count": 42,
+      "avg_chg": -0.57,
+      "up_count": 5
+    },
+    {
+      "industry": "日用化工",
+      "count": 11,
+      "avg_chg": -0.4,
+      "up_count": 4
+    },
+    {
+      "industry": "中成药",
+      "count": 56,
+      "avg_chg": -0.29,
+      "up_count": 19
+    },
+    {
+      "industry": "半导体",
+      "count": 34,
+      "avg_chg": -0.26,
+      "up_count": 14
+    },
+    {
+      "industry": "旅游景点",
+      "count": 15,
+      "avg_chg": -0.2,
+      "up_count": 6
+    },
+    {
+      "industry": "影视音像",
+      "count": 22,
+      "avg_chg": 0.07,
+      "up_count": 9
+    },
+    {
+      "industry": "啤酒",
+      "count": 6,
+      "avg_chg": 0.18,
+      "up_count": 4
+    },
+    {
+      "industry": "新型电力",
+      "count": 26,
+      "avg_chg": 0.29,
+      "up_count": 12
+    },
+    {
+      "industry": "乳制品",
+      "count": 16,
+      "avg_chg": 0.36,
+      "up_count": 7
+    },
+    {
+      "industry": "煤炭开采",
+      "count": 25,
+      "avg_chg": 1.29,
+      "up_count": 19
+    },
+    {
+      "industry": "水力发电",
+      "count": 21,
+      "avg_chg": 1.77,
+      "up_count": 17
+    },
+    {
+      "industry": "火力发电",
+      "count": 31,
+      "avg_chg": 2.89,
+      "up_count": 25
+    },
+    {
+      "industry": "白酒",
+      "count": 19,
+      "avg_chg": 3.32,
+      "up_count": 19
+    },
+    {
+      "industry": "超市连锁",
+      "count": 8,
+      "avg_chg": 3.96,
+      "up_count": 8
+    }
+  ],
+  "corrected_patterns": [
+    {
+      "symbol": "603895",
+      "name": "天永智能",
+      "pattern_raw": "上升波段延续",
+      "pattern_cn": "上升波段延续"
+    },
+    {
+      "symbol": "002927",
+      "name": "泰永长征",
+      "pattern_raw": "横盘起跳",
+      "pattern_cn": "横盘起跳"
+    },
+    {
+      "symbol": "605055",
+      "name": "迎丰股份",
+      "pattern_raw": "上升波段延续",
+      "pattern_cn": "上升波段延续"
+    },
+    {
+      "symbol": "001301",
+      "name": "尚太科技",
+      "pattern_raw": "上升波段延续",
+      "pattern_cn": "上升波段延续"
+    },
+    {
+      "symbol": "002881",
+      "name": "美格智能",
+      "pattern_raw": "N型起跳",
+      "pattern_cn": "N型起跳"
+    },
+    {
+      "symbol": "600353",
+      "name": "旭光电子",
+      "pattern_raw": "横盘起跳",
+      "pattern_cn": "横盘起跳"
+    },
+    {
+      "symbol": "600885",
+      "name": "宏发股份",
+      "pattern_raw": "上升波段延续",
+      "pattern_cn": "上升波段延续"
+    },
+    {
+      "symbol": "603693",
+      "name": "江苏新能",
+      "pattern_raw": "上升波段延续",
+      "pattern_cn": "上升波段延续"
+    },
+    {
+      "symbol": "000601",
+      "name": "韶能股份",
+      "pattern_raw": "横盘起跳",
+      "pattern_cn": "横盘起跳"
+    },
+    {
+      "symbol": "002150",
+      "name": "通润装备",
+      "pattern_raw": "上升波段延续",
+      "pattern_cn": "上升波段延续"
+    },
+    {
+      "symbol": "600578",
+      "name": "京能电力",
+      "pattern_raw": "横盘起跳",
+      "pattern_cn": "横盘起跳"
+    },
+    {
+      "symbol": "601991",
+      "name": "大唐发电",
+      "pattern_raw": "上升波段延续",
+      "pattern_cn": "上升波段延续"
+    },
+    {
+      "symbol": "002353",
+      "name": "杰瑞股份",
+      "pattern_raw": "横盘起跳",
+      "pattern_cn": "横盘起跳"
+    },
+    {
+      "symbol": "600330",
+      "name": "天通股份",
+      "pattern_raw": "横盘起跳",
+      "pattern_cn": "横盘起跳"
+    },
+    {
+      "symbol": "002032",
+      "name": "苏泊尔",
+      "pattern_raw": "上升波段延续",
+      "pattern_cn": "上升波段延续"
+    }
+  ]
+}
