@@ -13,7 +13,8 @@
       "close": 39.25,
       "day_change": 10.01,
       "vol": 138.38,
-      "is_limit_up": true
+      "is_limit_up": true,
+      "source": "auto"
     },
     {
       "symbol": "001331",
@@ -24,7 +25,8 @@
       "close": 67.83,
       "day_change": 10.01,
       "vol": 77.48,
-      "is_limit_up": true
+      "is_limit_up": true,
+      "source": "auto"
     },
     {
       "symbol": "603608",
@@ -35,7 +37,8 @@
       "close": 19.11,
       "day_change": 10.02,
       "vol": 74.0,
-      "is_limit_up": true
+      "is_limit_up": true,
+      "source": "auto"
     },
     {
       "symbol": "600590",
@@ -46,7 +49,8 @@
       "close": 15.28,
       "day_change": 8.91,
       "vol": 220.17,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "603353",
@@ -57,7 +61,8 @@
       "close": 55.07,
       "day_change": 10.01,
       "vol": 47.08,
-      "is_limit_up": true
+      "is_limit_up": true,
+      "source": "auto"
     },
     {
       "symbol": "601958",
@@ -68,7 +73,8 @@
       "close": 23.23,
       "day_change": 9.99,
       "vol": 182.82,
-      "is_limit_up": true
+      "is_limit_up": true,
+      "source": "auto"
     },
     {
       "symbol": "000408",
@@ -79,7 +85,8 @@
       "close": 84.24,
       "day_change": 6.36,
       "vol": 172.9,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "002747",
@@ -90,7 +97,8 @@
       "close": 30.03,
       "day_change": 4.96,
       "vol": 352.17,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "603306",
@@ -101,7 +109,8 @@
       "close": 118.39,
       "day_change": 5.83,
       "vol": 245.8,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "600784",
@@ -112,7 +121,8 @@
       "close": 8.7,
       "day_change": 7.14,
       "vol": 44.56,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "603080",
@@ -123,7 +133,8 @@
       "close": 23.6,
       "day_change": 3.42,
       "vol": 11.44,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "002856",
@@ -134,7 +145,8 @@
       "close": 20.01,
       "day_change": 4.98,
       "vol": 23.29,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "003013",
@@ -145,7 +157,8 @@
       "close": 14.88,
       "day_change": 3.26,
       "vol": 6.61,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "000688",
@@ -156,7 +169,8 @@
       "close": 45.64,
       "day_change": 7.87,
       "vol": 174.63,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "600730",
@@ -167,7 +181,8 @@
       "close": 13.62,
       "day_change": 5.01,
       "vol": 50.02,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "600999",
@@ -178,7 +193,8 @@
       "close": 17.87,
       "day_change": 2.11,
       "vol": 195.09,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "000700",
@@ -189,7 +205,8 @@
       "close": 15.98,
       "day_change": 7.46,
       "vol": 240.91,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "000727",
@@ -200,7 +217,8 @@
       "close": 3.0,
       "day_change": 2.39,
       "vol": 83.06,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "603662",
@@ -211,7 +229,8 @@
       "close": 69.19,
       "day_change": 2.08,
       "vol": 98.71,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "001203",
@@ -222,7 +241,8 @@
       "close": 40.08,
       "day_change": 3.91,
       "vol": 121.65,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "600331",
@@ -233,7 +253,8 @@
       "close": 15.74,
       "day_change": 2.88,
       "vol": 96.47,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "002406",
@@ -244,7 +265,8 @@
       "close": 8.51,
       "day_change": 7.04,
       "vol": 112.13,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "002774",
@@ -255,7 +277,8 @@
       "close": 12.8,
       "day_change": 3.9,
       "vol": 16.38,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "600150",
@@ -266,7 +289,8 @@
       "close": 38.69,
       "day_change": 2.08,
       "vol": 376.75,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "603681",
@@ -277,7 +301,8 @@
       "close": 22.47,
       "day_change": 1.67,
       "vol": 21.47,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "600901",
@@ -288,7 +313,8 @@
       "close": 6.35,
       "day_change": 1.76,
       "vol": 18.86,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "603259",
@@ -299,7 +325,8 @@
       "close": 104.11,
       "day_change": 1.52,
       "vol": 402.08,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "600461",
@@ -310,7 +337,8 @@
       "close": 10.43,
       "day_change": 1.46,
       "vol": 9.32,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "002638",
@@ -321,7 +349,8 @@
       "close": 4.29,
       "day_change": 0.0,
       "vol": 14.2,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "600884",
@@ -332,7 +361,8 @@
       "close": 14.7,
       "day_change": 1.45,
       "vol": 110.98,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "002125",
@@ -343,7 +373,8 @@
       "close": 14.45,
       "day_change": 1.83,
       "vol": 51.25,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "002340",
@@ -354,7 +385,8 @@
       "close": 8.26,
       "day_change": 1.98,
       "vol": 116.76,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "002011",
@@ -365,7 +397,8 @@
       "close": 12.82,
       "day_change": 1.26,
       "vol": 21.37,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "605186",
@@ -376,7 +409,8 @@
       "close": 25.15,
       "day_change": 2.15,
       "vol": 23.92,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "601515",
@@ -387,7 +421,8 @@
       "close": 4.24,
       "day_change": 0.0,
       "vol": 8.9,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "000762",
@@ -398,7 +433,8 @@
       "close": 31.2,
       "day_change": -0.64,
       "vol": 69.35,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "002460",
@@ -409,7 +445,8 @@
       "close": 75.0,
       "day_change": -0.13,
       "vol": 339.36,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "600338",
@@ -420,7 +457,8 @@
       "close": 19.68,
       "day_change": -0.46,
       "vol": 110.45,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "603016",
@@ -431,7 +469,8 @@
       "close": 47.16,
       "day_change": 0.19,
       "vol": 18.66,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "000831",
@@ -442,7 +481,8 @@
       "close": 51.23,
       "day_change": -0.37,
       "vol": 142.79,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "603335",
@@ -453,7 +493,8 @@
       "close": 6.65,
       "day_change": -2.92,
       "vol": 12.29,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "603800",
@@ -464,7 +505,8 @@
       "close": 65.5,
       "day_change": 1.39,
       "vol": 65.35,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "002316",
@@ -475,7 +517,8 @@
       "close": 5.49,
       "day_change": 1.48,
       "vol": 17.76,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     },
     {
       "symbol": "601995",
@@ -486,7 +529,8 @@
       "close": 34.4,
       "day_change": 1.18,
       "vol": 91.86,
-      "is_limit_up": false
+      "is_limit_up": false,
+      "source": "auto"
     }
   ],
   "enriched": [

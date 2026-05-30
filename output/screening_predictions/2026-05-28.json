@@ -23,8 +23,12 @@
       "prediction": "板块共振最强，MACD金叉+砖值上升。明日预计高开震荡，关注45元压力位。若高开≤3%可参与，高开>5%等回踩",
       "expected_direction": "高开震荡偏多",
       "confidence": "高",
-      "key_risks": ["高位加速后的回吐压力", "若低开则偏多失效"],
-      "continuity_assessment": "技术面+行业面双优，有延续性"
+      "key_risks": [
+        "高位加速后的回吐压力",
+        "若低开则偏多失效"
+      ],
+      "continuity_assessment": "技术面+行业面双优，有延续性",
+      "source": "auto"
     },
     {
       "symbol": "002613",
@@ -40,8 +44,12 @@
       "prediction": "与中国巨石同板块联动，低价股弹性大。明日可跟涨，关注5元整数关口",
       "expected_direction": "跟涨偏多",
       "confidence": "中",
-      "key_risks": ["低价股波动大", "若低开则偏多失效"],
-      "continuity_assessment": "板块联动效应强，可跟涨"
+      "key_risks": [
+        "低价股波动大",
+        "若低开则偏多失效"
+      ],
+      "continuity_assessment": "板块联动效应强，可跟涨",
+      "source": "auto"
     },
     {
       "symbol": "600246",
@@ -58,8 +66,12 @@
       "prediction": "放量2.2x涨停+金叉翻红，砖值121高位盘整后突破。明日惯性冲高概率大，回踩16元附近可低吸",
       "expected_direction": "惯性冲高",
       "confidence": "中",
-      "key_risks": ["砖值121高位，连续涨停回踩压力大", "若低开则偏多失效"],
-      "continuity_assessment": "放量涨停有接力意愿，但高位风险需警惕"
+      "key_risks": [
+        "砖值121高位，连续涨停回踩压力大",
+        "若低开则偏多失效"
+      ],
+      "continuity_assessment": "放量涨停有接力意愿，但高位风险需警惕",
+      "source": "auto"
     },
     {
       "symbol": "603527",
@@ -72,7 +84,10 @@
       "prediction": "涨停封板，量能配合。明日观察能否连板",
       "expected_direction": "观察偏多",
       "confidence": "中",
-      "key_risks": ["若低开则偏多失效"]
+      "key_risks": [
+        "若低开则偏多失效"
+      ],
+      "source": "auto"
     },
     {
       "symbol": "603050",
@@ -85,7 +100,10 @@
       "prediction": "涨停，明日观察",
       "expected_direction": "观察偏多",
       "confidence": "中",
-      "key_risks": ["若低开则偏多失效"]
+      "key_risks": [
+        "若低开则偏多失效"
+      ],
+      "source": "auto"
     },
     {
       "symbol": "603931",
@@ -101,8 +119,11 @@
       "prediction": "涨停+金叉翻红，MACD完美配合。明日若高开后量能持续可短线参与",
       "expected_direction": "高开震荡偏多",
       "confidence": "中",
-      "key_risks": ["若低开则偏多失效"],
-      "continuity_assessment": "金叉翻红配合涨停，技术面健康"
+      "key_risks": [
+        "若低开则偏多失效"
+      ],
+      "continuity_assessment": "金叉翻红配合涨停，技术面健康",
+      "source": "auto"
     },
     {
       "symbol": "601588",
@@ -117,7 +138,11 @@
       "prediction": "低价股涨停但MACD死叉，明日冲高回落概率大",
       "expected_direction": "冲高回落",
       "confidence": "低",
-      "key_risks": ["低价股波动大", "MACD死叉不支持持续上涨"]
+      "key_risks": [
+        "低价股波动大",
+        "MACD死叉不支持持续上涨"
+      ],
+      "source": "auto"
     },
     {
       "symbol": "002203",
@@ -131,15 +156,19 @@
       "prediction": "涨停但MACD死叉，技术面矛盾。需关注是否有利好消息驱动。若平开可观察，低开则看空",
       "expected_direction": "谨慎观察",
       "confidence": "低",
-      "key_risks": ["MACD死叉不支持", "需消息面确认"],
-      "continuity_assessment": "技术面不支持，可能是消息脉冲"
+      "key_risks": [
+        "MACD死叉不支持",
+        "需消息面确认"
+      ],
+      "continuity_assessment": "技术面不支持，可能是消息脉冲",
+      "source": "auto"
     },
     {
       "symbol": "000823",
       "name": "超声电子",
       "score": 52,
       "grade": "C",
-      "close": 17.00,
+      "close": 17.0,
       "day_change_pct": 4.55,
       "industry": "元器件",
       "industry_avg_chg": 1.64,
@@ -147,61 +176,78 @@
       "prediction": "砖值暴拉+47.8但MACD死叉未配合，放量滞涨。明日回调概率大",
       "expected_direction": "回调偏空",
       "confidence": "中",
-      "key_risks": ["砖值暴拉无金叉确认", "放量滞涨"]
+      "key_risks": [
+        "砖值暴拉无金叉确认",
+        "放量滞涨"
+      ],
+      "source": "auto"
     },
     {
       "symbol": "000811",
       "name": "冰轮环境",
       "close": 35.21,
-      "day_change_pct": 4.30,
+      "day_change_pct": 4.3,
       "industry": "工程机械",
       "industry_avg_chg": -0.38,
       "macd": "高位死叉",
       "prediction": "砖值大幅回落-29.5+MACD死叉+板块偏弱。今日反弹是出货窗口，明日大概率收阴",
       "expected_direction": "看空下跌",
       "confidence": "高",
-      "key_risks": ["砖值持续回落", "MACD高位死叉", "板块拖累"],
-      "continuity_assessment": "反弹出货性质"
+      "key_risks": [
+        "砖值持续回落",
+        "MACD高位死叉",
+        "板块拖累"
+      ],
+      "continuity_assessment": "反弹出货性质",
+      "source": "auto"
     },
     {
       "symbol": "003026",
       "name": "中晶科技",
       "close": 46.71,
-      "day_change_pct": 6.40,
+      "day_change_pct": 6.4,
       "industry": "半导体",
       "industry_avg_chg": 1.51,
       "macd": "死叉深渊 HIST=-1.76",
       "prediction": "MACD死叉加深，缩量反弹。典型弱势特征，明日看空",
       "expected_direction": "看空下跌",
       "confidence": "高",
-      "key_risks": ["MACD死叉扩大", "缩量反弹不可持续"]
+      "key_risks": [
+        "MACD死叉扩大",
+        "缩量反弹不可持续"
+      ],
+      "source": "auto"
     },
     {
       "symbol": "002730",
       "name": "电光科技",
       "close": 32.02,
-      "day_change_pct": 7.70,
+      "day_change_pct": 7.7,
       "industry": "专用机械",
-      "industry_avg_chg": 1.10,
+      "industry_avg_chg": 1.1,
       "macd": "死叉",
       "prediction": "砖值回升+6.8，MACD死叉差距缩小。若明日继续放量可看多，否则观望",
       "expected_direction": "中性观察",
       "confidence": "低",
-      "key_risks": ["MACD仍未翻红"]
+      "key_risks": [
+        "MACD仍未翻红"
+      ],
+      "source": "auto"
     },
     {
       "symbol": "600158",
       "name": "中体产业",
       "score": 73,
       "grade": "A",
-      "close": 11.60,
+      "close": 11.6,
       "day_change_pct": 8.51,
       "industry": "文教休闲",
       "industry_avg_chg": 0.89,
       "macd": "死叉",
       "prediction": "+8.51%未封板+死叉，明日可能冲高回落",
       "expected_direction": "冲高回落",
-      "confidence": "低"
+      "confidence": "低",
+      "source": "auto"
     },
     {
       "symbol": "603006",
@@ -217,7 +263,11 @@
       "prediction": "死叉涨停+汽车配件板块微跌。明日低开概率较大",
       "expected_direction": "偏空",
       "confidence": "中",
-      "key_risks": ["MACD死叉", "板块偏弱不支持"]
+      "key_risks": [
+        "MACD死叉",
+        "板块偏弱不支持"
+      ],
+      "source": "auto"
     },
     {
       "symbol": "002553",
@@ -229,7 +279,8 @@
       "macd": "金叉翻红",
       "prediction": "金叉翻红+76分高评分，未封板但趋势向上。明日可观察",
       "expected_direction": "震荡偏多",
-      "confidence": "中"
+      "confidence": "中",
+      "source": "auto"
     },
     {
       "symbol": "002916",
@@ -238,11 +289,12 @@
       "grade": "A",
       "is_limit_up": true,
       "close": 398.28,
-      "day_change_pct": 10.00,
+      "day_change_pct": 10.0,
       "macd": "死叉",
       "prediction": "高价股涨停但MACD死叉，高位风险较大",
       "expected_direction": "谨慎",
-      "confidence": "低"
+      "confidence": "低",
+      "source": "auto"
     }
   ]
 }

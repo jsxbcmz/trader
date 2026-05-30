@@ -52,7 +52,8 @@
       "high": 43.48,
       "low": 38.69,
       "prev_close": 39.53,
-      "industry": "玻璃"
+      "industry": "玻璃",
+      "source": "auto"
     },
     {
       "symbol": "002613",
@@ -104,7 +105,8 @@
       "high": 4.92,
       "low": 4.43,
       "prev_close": 4.47,
-      "industry": "专用机械"
+      "industry": "专用机械",
+      "source": "auto"
     },
     {
       "symbol": "600246",
@@ -156,7 +158,8 @@
       "high": 16.81,
       "low": 15.55,
       "prev_close": 15.28,
-      "industry": "区域地产"
+      "industry": "区域地产",
+      "source": "auto"
     },
     {
       "symbol": "603527",
@@ -209,7 +212,8 @@
       "high": 14.49,
       "low": 13.05,
       "prev_close": 13.17,
-      "industry": "铜"
+      "industry": "铜",
+      "source": "auto"
     },
     {
       "symbol": "603050",
@@ -259,7 +263,8 @@
       "high": 24.89,
       "low": 23.02,
       "prev_close": 22.63,
-      "industry": "电气设备"
+      "industry": "电气设备",
+      "source": "auto"
     },
     {
       "symbol": "603031",
@@ -311,7 +316,8 @@
       "high": 58.04,
       "low": 51.0,
       "prev_close": 52.76,
-      "industry": "电气设备"
+      "industry": "电气设备",
+      "source": "auto"
     },
     {
       "symbol": "600158",
@@ -361,7 +367,8 @@
       "high": 11.76,
       "low": 10.6,
       "prev_close": 10.69,
-      "industry": "文教休闲"
+      "industry": "文教休闲",
+      "source": "auto"
     },
     {
       "symbol": "603006",
@@ -414,7 +421,8 @@
       "high": 14.33,
       "low": 13.0,
       "prev_close": 13.03,
-      "industry": "汽车配件"
+      "industry": "汽车配件",
+      "source": "auto"
     },
     {
       "symbol": "603931",
@@ -468,7 +476,8 @@
       "high": 63.81,
       "low": 57.43,
       "prev_close": 58.01,
-      "industry": "化工原料"
+      "industry": "化工原料",
+      "source": "auto"
     },
     {
       "symbol": "601588",
@@ -520,7 +529,8 @@
       "high": 2.06,
       "low": 1.84,
       "prev_close": 1.87,
-      "industry": "区域地产"
+      "industry": "区域地产",
+      "source": "auto"
     },
     {
       "symbol": "002951",
@@ -572,7 +582,8 @@
       "open": 16.2,
       "high": 17.49,
       "low": 15.75,
-      "prev_close": 15.9
+      "prev_close": 15.9,
+      "source": "auto"
     },
     {
       "symbol": "600237",
@@ -623,7 +634,8 @@
       "open": 10.0,
       "high": 10.92,
       "low": 9.97,
-      "prev_close": 9.93
+      "prev_close": 9.93,
+      "source": "auto"
     },
     {
       "symbol": "002125",
@@ -674,7 +686,8 @@
       "open": 14.1,
       "high": 15.02,
       "low": 13.65,
-      "prev_close": 14.15
+      "prev_close": 14.15,
+      "source": "auto"
     },
     {
       "symbol": "002080",
@@ -727,7 +740,8 @@
       "open": 70.8,
       "high": 76.95,
       "low": 70.8,
-      "prev_close": 70.75
+      "prev_close": 70.75,
+      "source": "auto"
     },
     {
       "symbol": "001259",
@@ -776,7 +790,8 @@
       "open": 72.86,
       "high": 78.9,
       "low": 72.0,
-      "prev_close": 74.8
+      "prev_close": 74.8,
+      "source": "auto"
     },
     {
       "symbol": "605058",
@@ -827,7 +842,8 @@
       "open": 39.2,
       "high": 41.2,
       "low": 38.6,
-      "prev_close": 39.32
+      "prev_close": 39.32,
+      "source": "auto"
     },
     {
       "symbol": "603353",
@@ -882,7 +898,8 @@
       "open": 52.5,
       "high": 56.78,
       "low": 49.01,
-      "prev_close": 51.62
+      "prev_close": 51.62,
+      "source": "auto"
     },
     {
       "symbol": "603458",
@@ -934,7 +951,8 @@
       "open": 12.75,
       "high": 14.0,
       "low": 12.63,
-      "prev_close": 12.73
+      "prev_close": 12.73,
+      "source": "auto"
     },
     {
       "symbol": "000831",
@@ -983,7 +1001,8 @@
       "open": 49.32,
       "high": 51.99,
       "low": 48.9,
-      "prev_close": 49.33
+      "prev_close": 49.33,
+      "source": "auto"
     },
     {
       "symbol": "601138",
@@ -1037,7 +1056,8 @@
       "open": 70.0,
       "high": 76.28,
       "low": 68.89,
-      "prev_close": 70.08
+      "prev_close": 70.08,
+      "source": "auto"
     },
     {
       "symbol": "000823",
@@ -1088,7 +1108,8 @@
       "open": 16.02,
       "high": 17.06,
       "low": 15.88,
-      "prev_close": 16.26
+      "prev_close": 16.26,
+      "source": "auto"
     },
     {
       "symbol": "603324",
@@ -1142,7 +1163,8 @@
       "open": 27.77,
       "high": 31.17,
       "low": 27.32,
-      "prev_close": 28.34
+      "prev_close": 28.34,
+      "source": "auto"
     },
     {
       "symbol": "603466",
@@ -1195,7 +1217,8 @@
       "open": 10.53,
       "high": 11.3,
       "low": 10.43,
-      "prev_close": 10.75
+      "prev_close": 10.75,
+      "source": "auto"
     },
     {
       "symbol": "002046",
@@ -1246,7 +1269,8 @@
       "open": 51.55,
       "high": 56.6,
       "low": 50.68,
-      "prev_close": 51.61
+      "prev_close": 51.61,
+      "source": "auto"
     },
     {
       "symbol": "603701",
@@ -1295,7 +1319,8 @@
       "open": 24.79,
       "high": 26.43,
       "low": 24.3,
-      "prev_close": 24.85
+      "prev_close": 24.85,
+      "source": "auto"
     },
     {
       "symbol": "605589",
@@ -1349,7 +1374,8 @@
       "open": 44.02,
       "high": 49.34,
       "low": 43.51,
-      "prev_close": 45.07
+      "prev_close": 45.07,
+      "source": "auto"
     },
     {
       "symbol": "001314",
@@ -1401,7 +1427,8 @@
       "open": 57.58,
       "high": 61.08,
       "low": 57.25,
-      "prev_close": 57.3
+      "prev_close": 57.3,
+      "source": "auto"
     },
     {
       "symbol": "600171",
@@ -1454,7 +1481,8 @@
       "open": 29.92,
       "high": 31.31,
       "low": 29.82,
-      "prev_close": 30.18
+      "prev_close": 30.18,
+      "source": "auto"
     },
     {
       "symbol": "605258",
@@ -1508,7 +1536,8 @@
       "open": 37.45,
       "high": 38.56,
       "low": 36.3,
-      "prev_close": 37.5
+      "prev_close": 37.5,
+      "source": "auto"
     },
     {
       "symbol": "605399",
@@ -1561,7 +1590,8 @@
       "open": 15.34,
       "high": 16.16,
       "low": 15.34,
-      "prev_close": 15.23
+      "prev_close": 15.23,
+      "source": "auto"
     },
     {
       "symbol": "002893",
@@ -1614,7 +1644,8 @@
       "open": 11.67,
       "high": 12.21,
       "low": 11.49,
-      "prev_close": 11.78
+      "prev_close": 11.78,
+      "source": "auto"
     },
     {
       "symbol": "601208",
@@ -1667,7 +1698,8 @@
       "open": 51.83,
       "high": 55.0,
       "low": 50.52,
-      "prev_close": 52.25
+      "prev_close": 52.25,
+      "source": "auto"
     },
     {
       "symbol": "603306",
@@ -1718,7 +1750,8 @@
       "open": 114.88,
       "high": 118.98,
       "low": 111.91,
-      "prev_close": 114.44
+      "prev_close": 114.44,
+      "source": "auto"
     },
     {
       "symbol": "603823",
@@ -1771,7 +1804,8 @@
       "open": 26.75,
       "high": 28.4,
       "low": 26.02,
-      "prev_close": 26.75
+      "prev_close": 26.75,
+      "source": "auto"
     },
     {
       "symbol": "002842",
@@ -1822,7 +1856,8 @@
       "open": 31.7,
       "high": 33.1,
       "low": 31.41,
-      "prev_close": 32.05
+      "prev_close": 32.05,
+      "source": "auto"
     },
     {
       "symbol": "601298",
@@ -1871,7 +1906,8 @@
       "open": 8.76,
       "high": 8.89,
       "low": 8.74,
-      "prev_close": 8.78
+      "prev_close": 8.78,
+      "source": "auto"
     },
     {
       "symbol": "603005",
@@ -1925,7 +1961,8 @@
       "open": 41.88,
       "high": 46.36,
       "low": 40.99,
-      "prev_close": 43.01
+      "prev_close": 43.01,
+      "source": "auto"
     },
     {
       "symbol": "002049",
@@ -1978,7 +2015,8 @@
       "open": 84.51,
       "high": 86.73,
       "low": 83.38,
-      "prev_close": 85.06
+      "prev_close": 85.06,
+      "source": "auto"
     },
     {
       "symbol": "600183",
@@ -2032,7 +2070,8 @@
       "open": 132.77,
       "high": 137.7,
       "low": 125.51,
-      "prev_close": 131.76
+      "prev_close": 131.76,
+      "source": "auto"
     },
     {
       "symbol": "002201",
@@ -2081,7 +2120,8 @@
       "open": 11.35,
       "high": 11.86,
       "low": 11.2,
-      "prev_close": 11.38
+      "prev_close": 11.38,
+      "source": "auto"
     },
     {
       "symbol": "603311",
@@ -2135,7 +2175,8 @@
       "open": 30.3,
       "high": 30.98,
       "low": 29.29,
-      "prev_close": 30.21
+      "prev_close": 30.21,
+      "source": "auto"
     },
     {
       "symbol": "002700",
@@ -2190,7 +2231,8 @@
       "open": 7.02,
       "high": 7.2,
       "low": 6.87,
-      "prev_close": 6.95
+      "prev_close": 6.95,
+      "source": "auto"
     },
     {
       "symbol": "000338",
@@ -2243,7 +2285,8 @@
       "open": 33.7,
       "high": 35.5,
       "low": 33.7,
-      "prev_close": 34.5
+      "prev_close": 34.5,
+      "source": "auto"
     },
     {
       "symbol": "002460",
@@ -2294,7 +2337,8 @@
       "open": 73.9,
       "high": 74.87,
       "low": 70.5,
-      "prev_close": 73.3
+      "prev_close": 73.3,
+      "source": "auto"
     },
     {
       "symbol": "002571",
@@ -2348,7 +2392,8 @@
       "open": 12.23,
       "high": 13.3,
       "low": 12.11,
-      "prev_close": 12.23
+      "prev_close": 12.23,
+      "source": "auto"
     },
     {
       "symbol": "605208",
@@ -2397,7 +2442,8 @@
       "open": 14.42,
       "high": 14.93,
       "low": 14.18,
-      "prev_close": 14.5
+      "prev_close": 14.5,
+      "source": "auto"
     },
     {
       "symbol": "002443",
@@ -2446,7 +2492,8 @@
       "open": 11.92,
       "high": 12.25,
       "low": 11.72,
-      "prev_close": 11.78
+      "prev_close": 11.78,
+      "source": "auto"
     },
     {
       "symbol": "000402",
@@ -2499,7 +2546,8 @@
       "open": 2.86,
       "high": 2.97,
       "low": 2.85,
-      "prev_close": 2.88
+      "prev_close": 2.88,
+      "source": "auto"
     },
     {
       "symbol": "600366",
@@ -2552,7 +2600,8 @@
       "open": 12.76,
       "high": 13.27,
       "low": 12.71,
-      "prev_close": 12.83
+      "prev_close": 12.83,
+      "source": "auto"
     },
     {
       "symbol": "603351",
@@ -2603,7 +2652,8 @@
       "open": 25.9,
       "high": 26.3,
       "low": 25.34,
-      "prev_close": 25.73
+      "prev_close": 25.73,
+      "source": "auto"
     }
   ]
 }

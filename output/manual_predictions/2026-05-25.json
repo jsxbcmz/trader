@@ -17,7 +17,8 @@
       "direction": "震荡",
       "confidence": "中",
       "risks": [],
-      "key_level": "支撑4.80 压力5.26"
+      "key_level": "支撑4.80 压力5.26",
+      "source": "manual"
     },
     {
       "symbol": "002674",
@@ -32,7 +33,8 @@
       "direction": "偏多",
       "confidence": "中",
       "risks": [],
-      "key_level": "支撑15.0 压力16.5"
+      "key_level": "支撑15.0 压力16.5",
+      "source": "manual"
     },
     {
       "symbol": "603203",
@@ -49,7 +51,8 @@
       "risks": [
         "高位S1"
       ],
-      "key_level": "支撑58 压力68"
+      "key_level": "支撑58 压力68",
+      "source": "manual"
     },
     {
       "symbol": "605588",
@@ -66,7 +69,8 @@
       "risks": [
         "三波追高-8"
       ],
-      "key_level": "支撑62 压力68"
+      "key_level": "支撑62 压力68",
+      "source": "manual"
     },
     {
       "symbol": "002745",
@@ -81,7 +85,8 @@
       "direction": "偏多",
       "confidence": "中",
       "risks": [],
-      "key_level": "支撑10.0 压力11.0"
+      "key_level": "支撑10.0 压力11.0",
+      "source": "manual"
     },
     {
       "symbol": "000682",
@@ -96,7 +101,8 @@
       "direction": "偏多",
       "confidence": "中",
       "risks": [],
-      "key_level": "支撑13.8 压力14.8"
+      "key_level": "支撑13.8 压力14.8",
+      "source": "manual"
     },
     {
       "symbol": "002409",
@@ -114,7 +120,8 @@
         "高位巨量S1",
         "三波追高-8"
       ],
-      "key_level": "支撑110 压力128"
+      "key_level": "支撑110 压力128",
+      "source": "manual"
     },
     {
       "symbol": "002951",
@@ -132,7 +139,8 @@
         "三波追高-8",
         "缩量涨停"
       ],
-      "key_level": "支撑16.5 压力18.0"
+      "key_level": "支撑16.5 压力18.0",
+      "source": "manual"
     },
     {
       "symbol": "605566",
@@ -147,7 +155,8 @@
       "direction": "偏多",
       "confidence": "中",
       "risks": [],
-      "key_level": "支撑37 压力41"
+      "key_level": "支撑37 压力41",
+      "source": "manual"
     },
     {
       "symbol": "000988",
@@ -165,7 +174,8 @@
         "三波追高-8",
         "高位加速"
       ],
-      "key_level": "支撑155 压力172"
+      "key_level": "支撑155 压力172",
+      "source": "manual"
     },
     {
       "symbol": "001289",
@@ -180,7 +190,8 @@
       "direction": "偏多",
       "confidence": "中",
       "risks": [],
-      "key_level": "支撑17.2 压力18.5"
+      "key_level": "支撑17.2 压力18.5",
+      "source": "manual"
     },
     {
       "symbol": "002947",
@@ -195,7 +206,8 @@
       "direction": "偏多",
       "confidence": "中",
       "risks": [],
-      "key_level": "支撑92 压力100"
+      "key_level": "支撑92 压力100",
+      "source": "manual"
     },
     {
       "symbol": "600863",
@@ -212,7 +224,8 @@
       "risks": [
         "白线<黄线"
       ],
-      "key_level": "支撑5.5 压力6.0"
+      "key_level": "支撑5.5 压力6.0",
+      "source": "manual"
     },
     {
       "symbol": "600483",
@@ -227,7 +240,8 @@
       "direction": "偏多",
       "confidence": "中",
       "risks": [],
-      "key_level": "支撑10.75 压力11.39"
+      "key_level": "支撑10.75 压力11.39",
+      "source": "manual"
     },
     {
       "symbol": "600206",
@@ -244,7 +258,8 @@
       "risks": [
         "S1放量阴线"
       ],
-      "key_level": "支撑28.92 压力30.78"
+      "key_level": "支撑28.92 压力30.78",
+      "source": "manual"
     },
     {
       "symbol": "002927",
@@ -261,7 +276,8 @@
       "risks": [
         "缩量涨停"
       ],
-      "key_level": "支撑22.43 压力24.5"
+      "key_level": "支撑22.43 压力24.5",
+      "source": "manual"
     },
     {
       "symbol": "002803",
@@ -278,7 +294,8 @@
       "risks": [
         "MACD死叉"
       ],
-      "key_level": "支撑21.37 压力22.44"
+      "key_level": "支撑21.37 压力22.44",
+      "source": "manual"
     },
     {
       "symbol": "000690",
@@ -293,7 +310,8 @@
       "direction": "偏多",
       "confidence": "中",
       "risks": [],
-      "key_level": "支撑5.21 压力5.73"
+      "key_level": "支撑5.21 压力5.73",
+      "source": "manual"
     },
     {
       "symbol": "600726",
@@ -310,7 +328,8 @@
       "risks": [
         "20日涨44%高位"
       ],
-      "key_level": "支撑6.57 压力7.16"
+      "key_level": "支撑6.57 压力7.16",
+      "source": "manual"
     },
     {
       "symbol": "000791",
@@ -327,7 +346,8 @@
       "risks": [
         "MACD死叉"
       ],
-      "key_level": "支撑8.78 压力9.37"
+      "key_level": "支撑8.78 压力9.37",
+      "source": "manual"
     }
   ]
 }

@@ -1,0 +1,167 @@
+{
+  "date": "2026-05-28",
+  "analyzed_at": "2026-05-28T22:00:00",
+  "next_trading_day": "2026-05-29",
+  "source": "manual",
+  "market": {
+    "avg_change": null,
+    "up_count": null,
+    "down_count": null,
+    "is_bearish": null,
+    "note": "2026-05-28(周四)晚间手动选股分析 — 次日(5/29周五)预测"
+  },
+  "stocks": [
+    {
+      "symbol": "600176",
+      "name": "中国巨石",
+      "score": null,
+      "grade": null,
+      "pattern": "涨停突破",
+      "is_limit_up": true,
+      "close": 43.48,
+      "day_change_pct": 10.72,
+      "prediction": "涨停板10.72%放量涨停，高开高走封板坚决，建材/玻纤龙头。短线惯性冲高概率大，但需警惕高开低走。次日竞价强度是关键信号。",
+      "expected_direction": "高开震荡",
+      "confidence": "中",
+      "key_risks": [
+        "涨停次日高开低走风险",
+        "放量过大尾盘分歧"
+      ],
+      "continuity_assessment": "涨停封板坚决有望延续，关注次日竞价",
+      "source": "manual"
+    },
+    {
+      "symbol": "002203",
+      "name": "海亮股份",
+      "score": null,
+      "grade": null,
+      "pattern": "涨停突破",
+      "is_limit_up": true,
+      "close": 20.97,
+      "day_change_pct": 10.43,
+      "prediction": "涨停板10.43%，铜加工龙头，低价+放量。封板较强次日有溢价，但普跌日涨停股需防补跌。",
+      "expected_direction": "偏多",
+      "confidence": "低",
+      "key_risks": [
+        "涨停次日补跌风险",
+        "大盘普跌日背景"
+      ],
+      "continuity_assessment": "低价涨停有溢价空间，关注大盘企稳",
+      "source": "manual"
+    },
+    {
+      "symbol": "002730",
+      "name": "电光科技",
+      "score": null,
+      "grade": null,
+      "pattern": "放量上攻",
+      "is_limit_up": false,
+      "close": 32.02,
+      "day_change_pct": 7.05,
+      "prediction": "放量7%+换手5.5%，矿用防爆电器概念。涨停未封但涨幅可观，次日有冲高动力但需防冲高回落。",
+      "expected_direction": "冲高震荡",
+      "confidence": "低",
+      "key_risks": [
+        "未封板次日溢价有限",
+        "大盘弱势拖累"
+      ],
+      "continuity_assessment": "放量不封板，短线获利盘压力大",
+      "source": "manual"
+    },
+    {
+      "symbol": "600246",
+      "name": "万通发展",
+      "score": null,
+      "grade": null,
+      "pattern": "放量上攻",
+      "is_limit_up": false,
+      "close": 16.81,
+      "day_change_pct": 6.87,
+      "prediction": "放量+6.87%换手13.27%，房地产板块活跃。高换手说明多空分歧大，次日需看板块持续性。",
+      "expected_direction": "偏多震荡",
+      "confidence": "低",
+      "key_risks": [
+        "高换手分歧大",
+        "地产板块政策波动"
+      ],
+      "continuity_assessment": "换手过高筹码松动，不宜追高",
+      "source": "manual"
+    },
+    {
+      "symbol": "000823",
+      "name": "超声电子",
+      "score": null,
+      "grade": null,
+      "pattern": "放量上攻",
+      "is_limit_up": false,
+      "close": 17.0,
+      "day_change_pct": 6.12,
+      "prediction": "放量+6.12%换手13.22%，PCB/元器件概念。电子板块整体偏强，但高换手需注意短线获利盘兑现。",
+      "expected_direction": "冲高震荡",
+      "confidence": "中",
+      "key_risks": [
+        "高换手获利盘抛压",
+        "板块轮动风险"
+      ],
+      "continuity_assessment": "量能充沛但短线需消化",
+      "source": "manual"
+    },
+    {
+      "symbol": "003026",
+      "name": "中晶科技",
+      "score": null,
+      "grade": null,
+      "pattern": "放量上攻",
+      "is_limit_up": false,
+      "close": 46.71,
+      "day_change_pct": 5.75,
+      "prediction": "放量+5.75%换手10.76%，半导体硅材料。半导体板块热度延续，量价配合良好次日有望继续上行。",
+      "expected_direction": "偏多",
+      "confidence": "中",
+      "key_risks": [
+        "高价股回调幅度大",
+        "板块轮动快"
+      ],
+      "continuity_assessment": "半导体板块活性好，有望延续",
+      "source": "manual"
+    },
+    {
+      "symbol": "000811",
+      "name": "冰轮环境",
+      "score": null,
+      "grade": null,
+      "pattern": "探底回升",
+      "is_limit_up": false,
+      "close": 35.21,
+      "day_change_pct": 3.26,
+      "prediction": "探底回升+3.26%换手6.08%，最低33.23收35.21。低开高走收中阳线，涨幅虽不及前面7%但走势扎实，次日有望延续反弹。",
+      "expected_direction": "偏多震荡",
+      "confidence": "中",
+      "key_risks": [
+        "涨幅偏小动能不足",
+        "若大盘继续走弱将受拖累"
+      ],
+      "continuity_assessment": "探底回升形态扎实，稳健型标的",
+      "source": "manual"
+    },
+    {
+      "symbol": "600360",
+      "name": "华微电子(数据缺失)",
+      "score": null,
+      "grade": null,
+      "pattern": "",
+      "is_limit_up": false,
+      "close": null,
+      "day_change_pct": null,
+      "prediction": "数据库中无该股票记录(未在stock_list和stock_daily中找到)，可能已更名或退市。无法进行技术分析。",
+      "expected_direction": "无法判断",
+      "confidence": "",
+      "key_risks": [
+        "数据缺失",
+        "可能已退市或更名"
+      ],
+      "continuity_assessment": "无法分析",
+      "source": "manual"
+    }
+  ]
+}

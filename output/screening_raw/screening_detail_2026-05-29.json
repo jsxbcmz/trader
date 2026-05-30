@@ -32,7 +32,8 @@
       "m_detail": "{'DIFF位置': 2, 'MACD柱状态': 6, '金叉确认': 3}",
       "s_detail": "{'T日涨幅': 10, '涨幅质量': 5}",
       "r_detail": "",
-      "is_limit_up": "True"
+      "is_limit_up": "True",
+      "source": "auto"
     },
     {
       "symbol": "603890",
@@ -59,7 +60,8 @@
       "m_detail": "{'DIFF位置': 6, 'MACD柱状态': 6, '金叉确认': 7}",
       "s_detail": "{'T日涨幅': 10, '涨幅质量': 5}",
       "r_detail": "",
-      "is_limit_up": "True"
+      "is_limit_up": "True",
+      "source": "auto"
     },
     {
       "symbol": "600857",
@@ -86,7 +88,8 @@
       "m_detail": "{'DIFF位置': 2, 'MACD柱状态': 6, '金叉确认': 3}",
       "s_detail": "{'T日涨幅': 10, '涨幅质量': 5}",
       "r_detail": "",
-      "is_limit_up": "True"
+      "is_limit_up": "True",
+      "source": "auto"
     },
     {
       "symbol": "600863",
@@ -113,7 +116,8 @@
       "m_detail": "{'DIFF位置': 2, 'MACD柱状态': 6, '金叉确认': 3}",
       "s_detail": "{'T日涨幅': 10, '涨幅质量': 5}",
       "r_detail": "",
-      "is_limit_up": "True"
+      "is_limit_up": "True",
+      "source": "auto"
     },
     {
       "symbol": "600377",
@@ -140,7 +144,8 @@
       "m_detail": "{'DIFF位置': 6, 'MACD柱状态': 6, '金叉确认': 7}",
       "s_detail": "{'T日涨幅': 4, '涨幅质量': 0}",
       "r_detail": "",
-      "is_limit_up": "False"
+      "is_limit_up": "False",
+      "source": "auto"
     },
     {
       "symbol": "600350",
@@ -167,7 +172,8 @@
       "m_detail": "{'DIFF位置': 2, 'MACD柱状态': 6, '金叉确认': 3}",
       "s_detail": "{'T日涨幅': 4, '涨幅质量': 0}",
       "r_detail": "三波追高",
-      "is_limit_up": "False"
+      "is_limit_up": "False",
+      "source": "auto"
     },
     {
       "symbol": "601518",
@@ -194,7 +200,8 @@
       "m_detail": "{'DIFF位置': 2, 'MACD柱状态': 6, '金叉确认': 3}",
       "s_detail": "{'T日涨幅': 6, '涨幅质量': 0}",
       "r_detail": "三波追高",
-      "is_limit_up": "False"
+      "is_limit_up": "False",
+      "source": "auto"
     },
     {
       "symbol": "600323",
@@ -221,7 +228,8 @@
       "m_detail": "{'DIFF位置': 7, 'MACD柱状态': 3, '金叉确认': 2}",
       "s_detail": "{'T日涨幅': 4, '涨幅质量': 0}",
       "r_detail": "",
-      "is_limit_up": "False"
+      "is_limit_up": "False",
+      "source": "auto"
     },
     {
       "symbol": "600674",
@@ -248,7 +256,8 @@
       "m_detail": "{'DIFF位置': 7, 'MACD柱状态': 8, '金叉确认': 4}",
       "s_detail": "{'T日涨幅': 4, '涨幅质量': 0}",
       "r_detail": "三波追高",
-      "is_limit_up": "False"
+      "is_limit_up": "False",
+      "source": "auto"
     },
     {
       "symbol": "002422",
@@ -275,7 +284,8 @@
       "m_detail": "{'DIFF位置': 6, 'MACD柱状态': 6, '金叉确认': 7}",
       "s_detail": "{'T日涨幅': 4, '涨幅质量': 0}",
       "r_detail": "",
-      "is_limit_up": "False"
+      "is_limit_up": "False",
+      "source": "auto"
     }
   ]
 }

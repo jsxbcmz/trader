@@ -14,7 +14,8 @@
       "range": 8.23,
       "result": "✅ 正确",
       "mark": "✅",
-      "close_price": 40.0
+      "close_price": 40.0,
+      "source": "auto"
     },
     {
       "symbol": "001331",
@@ -28,7 +29,8 @@
       "range": 4.88,
       "result": "✅ 正确",
       "mark": "✅",
-      "close_price": 69.78
+      "close_price": 69.78,
+      "source": "auto"
     },
     {
       "symbol": "603608",
@@ -42,7 +44,8 @@
       "range": 6.49,
       "result": "❌ 错误",
       "mark": "❌",
-      "close_price": 18.79
+      "close_price": 18.79,
+      "source": "auto"
     },
     {
       "symbol": "600590",
@@ -56,7 +59,8 @@
       "range": 7.53,
       "result": "⚠️ 偏差",
       "mark": "⚠️",
-      "close_price": 14.45
+      "close_price": 14.45,
+      "source": "auto"
     },
     {
       "symbol": "603353",
@@ -70,7 +74,8 @@
       "range": 12.06,
       "result": "❌ 错误",
       "mark": "❌",
-      "close_price": 51.62
+      "close_price": 51.62,
+      "source": "auto"
     },
     {
       "symbol": "601958",
@@ -84,7 +89,8 @@
       "range": 5.34,
       "result": "✅ 正确",
       "mark": "✅",
-      "close_price": 24.41
+      "close_price": 24.41,
+      "source": "auto"
     },
     {
       "symbol": "000408",
@@ -98,7 +104,8 @@
       "range": 5.06,
       "result": "⚠️ 偏差",
       "mark": "⚠️",
-      "close_price": 80.79
+      "close_price": 80.79,
+      "source": "auto"
     },
     {
       "symbol": "002747",
@@ -112,7 +119,8 @@
       "range": 6.43,
       "result": "⚠️ 偏差",
       "mark": "⚠️",
-      "close_price": 28.43
+      "close_price": 28.43,
+      "source": "auto"
     },
     {
       "symbol": "603306",
@@ -126,7 +134,8 @@
       "range": 4.2,
       "result": "⚠️ 偏差",
       "mark": "⚠️",
-      "close_price": 114.44
+      "close_price": 114.44,
+      "source": "auto"
     },
     {
       "symbol": "600784",
@@ -140,7 +149,8 @@
       "range": 5.29,
       "result": "⚠️ 偏差",
       "mark": "⚠️",
-      "close_price": 8.06
+      "close_price": 8.06,
+      "source": "auto"
     }
   ],
   "manual_review": [
@@ -156,7 +166,8 @@
       "range": 4.88,
       "result": "✅ 正确",
       "mark": "✅",
-      "close_price": 69.78
+      "close_price": 69.78,
+      "source": "manual"
     },
     {
       "symbol": "002747",
@@ -170,7 +181,8 @@
       "range": 6.43,
       "result": "⚠️ 偏差",
       "mark": "⚠️",
-      "close_price": 28.43
+      "close_price": 28.43,
+      "source": "manual"
     },
     {
       "symbol": "600378",
@@ -184,7 +196,8 @@
       "range": 8.23,
       "result": "✅ 正确",
       "mark": "✅",
-      "close_price": 40.0
+      "close_price": 40.0,
+      "source": "manual"
     },
     {
       "symbol": "000700",
@@ -198,7 +211,8 @@
       "range": 6.51,
       "result": "✅ 正确",
       "mark": "✅",
-      "close_price": 15.2
+      "close_price": 15.2,
+      "source": "manual"
     },
     {
       "symbol": "603608",
@@ -212,7 +226,8 @@
       "range": 6.49,
       "result": "❌ 错误",
       "mark": "❌",
-      "close_price": 18.79
+      "close_price": 18.79,
+      "source": "manual"
     },
     {
       "symbol": "600590",
@@ -226,7 +241,8 @@
       "range": 7.53,
       "result": "✅ 正确",
       "mark": "✅",
-      "close_price": 14.45
+      "close_price": 14.45,
+      "source": "manual"
     }
   ],
   "screening_stats": {

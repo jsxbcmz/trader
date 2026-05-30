@@ -21,7 +21,8 @@
       "ma_status": "完美多头",
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
-      "r_items": []
+      "r_items": [],
+      "source": "manual"
     },
     {
       "symbol": "002046",
@@ -41,7 +42,8 @@
       "ma_status": "完美多头",
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
-      "r_items": []
+      "r_items": [],
+      "source": "manual"
     },
     {
       "symbol": "002158",
@@ -61,7 +63,8 @@
       "ma_status": "完美多头",
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
-      "r_items": []
+      "r_items": [],
+      "source": "manual"
     },
     {
       "symbol": "002453",
@@ -81,7 +84,8 @@
       "ma_status": "偏多",
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
-      "r_items": []
+      "r_items": [],
+      "source": "manual"
     },
     {
       "symbol": "002815",
@@ -101,7 +105,8 @@
       "ma_status": "完美多头",
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
-      "r_items": []
+      "r_items": [],
+      "source": "manual"
     },
     {
       "symbol": "600152",
@@ -121,7 +126,8 @@
       "ma_status": "完美多头",
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
-      "r_items": []
+      "r_items": [],
+      "source": "manual"
     },
     {
       "symbol": "002522",
@@ -141,7 +147,8 @@
       "ma_status": "完美多头",
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
-      "r_items": []
+      "r_items": [],
+      "source": "manual"
     },
     {
       "symbol": "002174",
@@ -163,7 +170,8 @@
       "r_penalty": -8.0,
       "r_items": [
         "三波追高"
-      ]
+      ],
+      "source": "manual"
     },
     {
       "symbol": "002613",
@@ -185,7 +193,8 @@
       "r_penalty": -8.0,
       "r_items": [
         "三波追高"
-      ]
+      ],
+      "source": "manual"
     },
     {
       "symbol": "600673",
@@ -209,7 +218,8 @@
         "高位放量大阴线",
         "三波追高",
         "冲高回落"
-      ]
+      ],
+      "source": "manual"
     },
     {
       "symbol": "000967",
@@ -232,7 +242,8 @@
       "r_items": [
         "高位放量大阴线",
         "冲高回落"
-      ]
+      ],
+      "source": "manual"
     },
     {
       "symbol": "600300",
@@ -255,7 +266,8 @@
       "r_items": [
         "短趋势跌破多空线",
         "锤子线"
-      ]
+      ],
+      "source": "manual"
     }
   ]
 }

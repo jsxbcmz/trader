@@ -92,6 +92,7 @@ def run_screening(date: str | None = None, pattern: str = "砖型图",
                     "score": score,
                     "grade": match.grade or "",
                     "summary": match.format_summary(),
+                    "source": "auto",
                 })
 
         if match.error:

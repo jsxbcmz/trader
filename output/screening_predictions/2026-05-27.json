@@ -40,7 +40,8 @@
         "缩量涨停(承接需确认)",
         "板块弱(-2.5%)"
       ],
-      "continuity_assessment": "技术面扎实(金叉+短趋>多空)，但需次日放量确认，缩量则警惕一日游"
+      "continuity_assessment": "技术面扎实(金叉+短趋>多空)，但需次日放量确认，缩量则警惕一日游",
+      "source": "auto"
     },
     {
       "symbol": "002927",
@@ -75,7 +76,8 @@
         "放量2.2x",
         "板块偏弱(-1.0%)"
       ],
-      "continuity_assessment": "消息面+技术面共振，但需次日量能维持"
+      "continuity_assessment": "消息面+技术面共振，但需次日量能维持",
+      "source": "auto"
     },
     {
       "symbol": "605055",
@@ -111,7 +113,8 @@
         "板块弱(-2.2%)",
         "放量1.8x"
       ],
-      "continuity_assessment": "加速赶顶，持续性差"
+      "continuity_assessment": "加速赶顶，持续性差",
+      "source": "auto"
     },
     {
       "symbol": "001301",
@@ -145,7 +148,8 @@
       "key_risks": [
         "评分偏低"
       ],
-      "continuity_assessment": "待观察"
+      "continuity_assessment": "待观察",
+      "source": "auto"
     },
     {
       "symbol": "002881",
@@ -180,7 +184,8 @@
         "巨量5.5x",
         "龙虎榜博弈"
       ],
-      "continuity_assessment": "N型起跳形态有效，但巨量需要次日缩量确认"
+      "continuity_assessment": "N型起跳形态有效，但巨量需要次日缩量确认",
+      "source": "auto"
     },
     {
       "symbol": "600353",
@@ -215,7 +220,8 @@
         "巨量4.2x",
         "封板晚(11:15)"
       ],
-      "continuity_assessment": "封板晚+巨量，持续性存疑"
+      "continuity_assessment": "封板晚+巨量，持续性存疑",
+      "source": "auto"
     },
     {
       "symbol": "600885",
@@ -249,7 +255,8 @@
       "key_risks": [
         "评分偏低"
       ],
-      "continuity_assessment": "待观察"
+      "continuity_assessment": "待观察",
+      "source": "auto"
     },
     {
       "symbol": "603693",
@@ -283,7 +290,8 @@
       "key_risks": [
         "评分偏低"
       ],
-      "continuity_assessment": "待观察"
+      "continuity_assessment": "待观察",
+      "source": "auto"
     },
     {
       "symbol": "000601",
@@ -317,7 +325,8 @@
       "key_risks": [
         "放量2.4x"
       ],
-      "continuity_assessment": "板块强势支撑，延续性较好"
+      "continuity_assessment": "板块强势支撑，延续性较好",
+      "source": "auto"
     },
     {
       "symbol": "002150",
@@ -352,7 +361,8 @@
         "板块极弱(-3.6%)",
         "冲高回落风险"
       ],
-      "continuity_assessment": "板块拖累严重，不宜追"
+      "continuity_assessment": "板块拖累严重，不宜追",
+      "source": "auto"
     }
   ],
   "note": "⚠️ 今日为普跌日(涨跌比539:2514,均跌-1.79%)，所有偏多预测置信度降一档。若明日低开则偏多判断失效。"

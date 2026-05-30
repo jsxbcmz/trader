@@ -1,0 +1,146 @@
+{
+  "date": "2026-05-27",
+  "analyzed_at": "2026-05-27T15:42:00",
+  "next_trading_day": "2026-05-28",
+  "source": "manual",
+  "market": {
+    "avg_change": -1.79,
+    "up_count": 539,
+    "down_count": 2514,
+    "is_bearish": true,
+    "note": "普跌日 — 所有偏多预测置信度降一档"
+  },
+  "stocks": [
+    {
+      "symbol": "002452",
+      "name": "长高电新",
+      "score": 40,
+      "grade": "B",
+      "pattern": "N型起跳",
+      "is_limit_up": false,
+      "close": 12.33,
+      "day_change_pct": 2.66,
+      "prediction": "零风险扣分+MACD满分，裸分40但技术面最干净。普跌日仅+2.66%抗跌性强，MACD零轴上金叉红柱温和。次日偏多震荡，关注能否放量突破12.5。",
+      "expected_direction": "偏多震荡",
+      "confidence": "中",
+      "key_risks": [],
+      "continuity_assessment": "技术面扎实，零风险扣分，有望延续上行",
+      "source": "manual"
+    },
+    {
+      "symbol": "002150",
+      "name": "通润装备",
+      "score": 56,
+      "grade": "B",
+      "pattern": "上升波段延续",
+      "is_limit_up": false,
+      "close": 35.47,
+      "day_change_pct": 7.48,
+      "prediction": "强势MACD金叉+4倍放量+7.48%，正泰电源概念联动。自动选股B级56分，手动裸分39。但机械基件板块均跌-3.64%极弱，个股逆势抗跌含金量高。次日偏多，但板块拖累需警惕。",
+      "expected_direction": "偏多",
+      "confidence": "中",
+      "key_risks": [
+        "板块极弱(-3.64%)",
+        "放量过大"
+      ],
+      "continuity_assessment": "强势金叉+概念驱动，技术面优于板块面",
+      "source": "manual"
+    },
+    {
+      "symbol": "002273",
+      "name": "水晶光电",
+      "score": 0,
+      "grade": "",
+      "pattern": "",
+      "is_limit_up": false,
+      "close": 42.05,
+      "day_change_pct": 7.0,
+      "prediction": "三波追高扣-18分+高位放量7%，风险信号极重。元器件板块偏弱，不建议追入。次日大概率冲高回落。",
+      "expected_direction": "冲高回落",
+      "confidence": "高",
+      "key_risks": [
+        "三波追高(-18)",
+        "高位放量"
+      ],
+      "continuity_assessment": "加速赶顶特征明显，持续性差",
+      "source": "manual"
+    },
+    {
+      "symbol": "601991",
+      "name": "大唐发电",
+      "score": 54,
+      "grade": "C",
+      "pattern": "上升波段延续",
+      "is_limit_up": false,
+      "close": 7.71,
+      "day_change_pct": 7.68,
+      "prediction": "自动选股C级54分，放量7.68%但新型电力板块今日最强。火力发电板块有望延续热度。次日偏多震荡，关注8元整数压力。",
+      "expected_direction": "偏多震荡",
+      "confidence": "低",
+      "key_risks": [
+        "评分偏低(C级)",
+        "普跌日背景"
+      ],
+      "continuity_assessment": "板块支撑但评分不高，观望为主",
+      "source": "manual"
+    },
+    {
+      "symbol": "600869",
+      "name": "远东股份",
+      "score": 0,
+      "grade": "",
+      "pattern": "",
+      "is_limit_up": false,
+      "close": 21.17,
+      "day_change_pct": 2.27,
+      "prediction": "MACD偏弱+涨幅微弱2.27%，缺乏量能支撑。普跌日下，建议回避。次日震荡偏空。",
+      "expected_direction": "震荡偏空",
+      "confidence": "中",
+      "key_risks": [
+        "MACD偏弱",
+        "量能不足"
+      ],
+      "continuity_assessment": "趋势偏弱，不建议参与",
+      "source": "manual"
+    },
+    {
+      "symbol": "002348",
+      "name": "高乐股份",
+      "score": 0,
+      "grade": "",
+      "pattern": "",
+      "is_limit_up": false,
+      "close": 13.3,
+      "day_change_pct": 3.02,
+      "prediction": "走势偏弱，涨幅仅3.02%且缺乏技术信号支撑。死叉风险，建议回避。",
+      "expected_direction": "偏空",
+      "confidence": "中",
+      "key_risks": [
+        "走势偏弱",
+        "缺乏技术信号"
+      ],
+      "continuity_assessment": "弱势整理，不建议参与",
+      "source": "manual"
+    },
+    {
+      "symbol": "603826",
+      "name": "坤彩科技",
+      "score": 0,
+      "grade": "",
+      "pattern": "",
+      "is_limit_up": false,
+      "close": 32.8,
+      "day_change_pct": -1.06,
+      "prediction": "唯一下跌股-1.06%，MACD死叉趋势向下。普跌日+个股走弱双重打压，次日继续看空。",
+      "expected_direction": "看空下跌",
+      "confidence": "高",
+      "key_risks": [
+        "MACD死叉",
+        "普跌日拖累",
+        "唯一下跌股"
+      ],
+      "continuity_assessment": "趋势向下，回避",
+      "source": "manual"
+    }
+  ]
+}

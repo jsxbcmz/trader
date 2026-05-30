@@ -16,8 +16,12 @@
       "prediction": "N型起跳+电力板块龙头，金叉节点涨停。次日大概率惯性高开。高开<3%可关注回踩确认机会，高开>5%不追",
       "expected_direction": "高开震荡偏强",
       "confidence": "中高",
-      "key_risks": ["近期死叉痕迹-3", "放量2.4倍"],
-      "continuity_assessment": "N型结构完整+MACD金叉+板块联动，延续性较好。关注是否出现B1确认信号"
+      "key_risks": [
+        "近期死叉痕迹-3",
+        "放量2.4倍"
+      ],
+      "continuity_assessment": "N型结构完整+MACD金叉+板块联动，延续性较好。关注是否出现B1确认信号",
+      "source": "auto"
     },
     {
       "symbol": "002674",
@@ -33,8 +37,11 @@
       "prediction": "MACD满分+缩量涨停筹码锁定好，次日应继续强势。小市值低换手，主力控盘度高，惯性上行概率大",
       "expected_direction": "高开上行",
       "confidence": "高",
-      "key_risks": ["换手仅2.98%缩量涨停=主力完全控盘，走势取决于主力意图"],
-      "continuity_assessment": "MACD双线均为满分，中期动能充足。缩量涨停质量高，延续性在六股中最优之一"
+      "key_risks": [
+        "换手仅2.98%缩量涨停=主力完全控盘，走势取决于主力意图"
+      ],
+      "continuity_assessment": "MACD双线均为满分，中期动能充足。缩量涨停质量高，延续性在六股中最优之一",
+      "source": "auto"
     },
     {
       "symbol": "603203",
@@ -50,8 +57,12 @@
       "prediction": "回调极短(1天修复)+通用质量28分，趋势极强。次日高开后关注是否回踩63.5附近（前高区域）",
       "expected_direction": "高开震荡偏强",
       "confidence": "中高",
-      "key_risks": ["量比仅1.61放量不充分", "中高价股"],
-      "continuity_assessment": "趋势质量高+回调极短，延续性强。但前日大阴线-5.4%是隐忧"
+      "key_risks": [
+        "量比仅1.61放量不充分",
+        "中高价股"
+      ],
+      "continuity_assessment": "趋势质量高+回调极短，延续性强。但前日大阴线-5.4%是隐忧",
+      "source": "auto"
     },
     {
       "symbol": "605588",
@@ -67,8 +78,12 @@
       "prediction": "技术面几乎满分但三波追高-8。次日大概率高开但可能冲高回落。持股者关注S1放量阴线，未持者观望",
       "expected_direction": "冲高回落概率偏大",
       "confidence": "中",
-      "key_risks": ["三波追高-8(4红1绿6红2绿)", "距前高0%"],
-      "continuity_assessment": "三波加速赶顶阶段，短期空间有限但有惯性。出现S1信号必须果断离场"
+      "key_risks": [
+        "三波追高-8(4红1绿6红2绿)",
+        "距前高0%"
+      ],
+      "continuity_assessment": "三波加速赶顶阶段，短期空间有限但有惯性。出现S1信号必须果断离场",
+      "source": "auto"
     },
     {
       "symbol": "002745",
@@ -84,8 +99,13 @@
       "prediction": "低价股N型涨停+金叉，次日高开概率大。换手10.7%偏高，若高开>4%谨防获利盘涌出",
       "expected_direction": "高开震荡",
       "confidence": "中",
-      "key_risks": ["换手率10.73%偏高", "前期死叉-3", "低价股散户跟风风险"],
-      "continuity_assessment": "N型结构完整但换手偏高，低价股散户多需时间消化。中期趋势向好但短期波动大"
+      "key_risks": [
+        "换手率10.73%偏高",
+        "前期死叉-3",
+        "低价股散户跟风风险"
+      ],
+      "continuity_assessment": "N型结构完整但换手偏高，低价股散户多需时间消化。中期趋势向好但短期波动大",
+      "source": "auto"
     }
   ]
 }

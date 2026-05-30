@@ -9,7 +9,8 @@
 
 ## 文件格式
 - 文件名：`YYYY-MM-DD.json`
-- 内容：JSON 数组，每只股票包含 symbol/name/pattern/score/grade/prediction 等字段
+- 内容：JSON，每只股票含 symbol/name/pattern/score/grade/prediction 等字段
+- **每条股票记录必须含 `"source": "manual"` 字段**，与自动选股严格区分
 
 ## 规则
 - 只放 JSON 文件

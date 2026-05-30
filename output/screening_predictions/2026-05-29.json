@@ -9,8 +9,20 @@
     "is_bearish": true,
     "note": "普跌日 — 所有偏多预测置信度自动降一档"
   },
-  "top_sectors_up": ["超市连锁+5.38%", "火力发电+4.71%", "啤酒+3.91%", "水力发电+3.59%", "白酒+3.52%"],
-  "top_sectors_down": ["半导体-6.06%", "玻璃-5.19%", "机床制造-4.85%", "电器连锁-4.53%", "航空-4.13%"],
+  "top_sectors_up": [
+    "超市连锁+5.38%",
+    "火力发电+4.71%",
+    "啤酒+3.91%",
+    "水力发电+3.59%",
+    "白酒+3.52%"
+  ],
+  "top_sectors_down": [
+    "半导体-6.06%",
+    "玻璃-5.19%",
+    "机床制造-4.85%",
+    "电器连锁-4.53%",
+    "航空-4.13%"
+  ],
   "stocks": [
     {
       "symbol": "000767",
@@ -28,15 +40,19 @@
       "macd_diff": 0.3113,
       "brick_val": 122.25,
       "st_val": 4.72,
-      "ls_val": 4.30,
+      "ls_val": 4.3,
       "score_breakdown": "Q27 M11 S15 P2 R0",
       "limit_up_reason": "电力板块龙头，火力发电行业+4.71%领涨两市。5月13日曾上龙虎榜（深股通+机构+游资联手）。MACD金叉（DIFF=0.31>DEA），ST=4.72突破LS=4.30多空线，砖值122高位加速。概念：国企改革+迎峰度夏用电高峰预期。量比1.62温和放量，持续性较好。",
       "prediction": "电力板块连续走强，晋控作为龙头惯性高开概率大。但涨停日距上次龙虎榜已过两周，需关注是否有新催化。高开>4%不追，等回踩5.30（多空线附近）再考虑。",
       "expected_direction": "震荡偏多",
       "confidence": "中",
       "confidence_note": "原置信「高」→ 普跌日降一档至「中」。若明日低开则偏多判断失效",
-      "key_risks": ["普跌日背景", "涨停次日低开风险"],
-      "continuity_assessment": "技术面金叉+多空线突破有延续性，板块联动强"
+      "key_risks": [
+        "普跌日背景",
+        "涨停次日低开风险"
+      ],
+      "continuity_assessment": "技术面金叉+多空线突破有延续性，板块联动强",
+      "source": "auto"
     },
     {
       "symbol": "603890",
@@ -61,8 +77,13 @@
       "expected_direction": "高开震荡",
       "confidence": "中",
       "confidence_note": "原置信「高」→ 普跌日降一档至「中」。个股阿尔法强但行业拖累",
-      "key_risks": ["元器件行业-3.86%", "普跌日", "缩量可能转为无量回调"],
-      "continuity_assessment": "液冷赛道+业绩双驱动，技术形态好，但需次日放量确认"
+      "key_risks": [
+        "元器件行业-3.86%",
+        "普跌日",
+        "缩量可能转为无量回调"
+      ],
+      "continuity_assessment": "液冷赛道+业绩双驱动，技术形态好，但需次日放量确认",
+      "source": "auto"
     },
     {
       "symbol": "600857",
@@ -74,9 +95,9 @@
       "industry_perf": 2.72,
       "is_limit_up": true,
       "close": 15.51,
-      "day_change_pct": 10.00,
+      "day_change_pct": 10.0,
       "vol": 4.82,
-      "vol_ratio": 3.30,
+      "vol_ratio": 3.3,
       "macd_diff": 0.6082,
       "brick_val": 109.84,
       "st_val": 13.95,
@@ -87,8 +108,13 @@
       "expected_direction": "高开低走",
       "confidence": "低",
       "confidence_note": "普跌日+短期涨幅过大+巨量涨停，偏空为主",
-      "key_risks": ["巨量涨停量比3.3", "短期已连板透支", "若低开则普跌日下更弱"],
-      "continuity_assessment": "控股权变更属一次性利好，技术面需缩量整固后再看"
+      "key_risks": [
+        "巨量涨停量比3.3",
+        "短期已连板透支",
+        "若低开则普跌日下更弱"
+      ],
+      "continuity_assessment": "控股权变更属一次性利好，技术面需缩量整固后再看",
+      "source": "auto"
     },
     {
       "symbol": "600863",
@@ -99,7 +125,7 @@
       "industry": "火力发电",
       "industry_perf": 4.71,
       "is_limit_up": true,
-      "close": 7.30,
+      "close": 7.3,
       "day_change_pct": 9.94,
       "vol": 6.12,
       "vol_ratio": 4.42,
@@ -113,8 +139,13 @@
       "expected_direction": "高开震荡回落",
       "confidence": "低",
       "confidence_note": "巨量涨停+普跌日双重压制。若明日低开则偏多判断失效",
-      "key_risks": ["量比4.42巨量见顶风险", "板块超买", "普跌日背景"],
-      "continuity_assessment": "板块强但个股量能过快放大，次日承接是关键"
+      "key_risks": [
+        "量比4.42巨量见顶风险",
+        "板块超买",
+        "普跌日背景"
+      ],
+      "continuity_assessment": "板块强但个股量能过快放大，次日承接是关键",
+      "source": "auto"
     }
   ]
 }

@@ -9,6 +9,7 @@
 - 文件名：`YYYY-MM-DD.json`
 - 来源：screen_stocks.py 全量扫描 market.db 中所有股票
 - 内容：每只匹配股票的 symbol/name/pattern/score/grade/close/day_change/vol/q_score/q_items 等完整字段
+- **每条股票记录必须含 `"source": "auto"` 字段**
 - 单文件约 10-60KB（取决于当日匹配数量）
 
 ### 市场上下文快照

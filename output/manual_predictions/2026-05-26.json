@@ -7,66 +7,150 @@
     "down_count": 2156,
     "avg_change": -0.92,
     "is_bear": false,
-    "weakest_sectors": ["通信设备(-3.08%)", "新型电力(-2.32%)", "航空(-2.35%)"],
-    "strongest_sectors": ["黄金(+4.45%)", "超市连锁(+3.01%)", "铅锌(+2.00%)"]
+    "weakest_sectors": [
+      "通信设备(-3.08%)",
+      "新型电力(-2.32%)",
+      "航空(-2.35%)"
+    ],
+    "strongest_sectors": [
+      "黄金(+4.45%)",
+      "超市连锁(+3.01%)",
+      "铅锌(+2.00%)"
+    ]
   },
   "stocks": [
     {
-      "symbol": "001331", "name": "胜通能源", "industry": "供气供热",
-      "score": 81, "grade": "A", "pattern": "上升波段延续",
-      "is_limit_up": true, "close": 67.83, "day_change_pct": 10.01,
-      "diff": 3.0936, "dea": 1.4800,
+      "symbol": "001331",
+      "name": "胜通能源",
+      "industry": "供气供热",
+      "score": 81,
+      "grade": "A",
+      "pattern": "上升波段延续",
+      "is_limit_up": true,
+      "close": 67.83,
+      "day_change_pct": 10.01,
+      "diff": 3.0936,
+      "dea": 1.48,
       "prediction": "MACD满分+控制权变更催化，次日大概率高开上行。若高开<3%可关注，>5%不追。逼近14连板高点需警惕。",
-      "expected_direction": "高开上行", "confidence": "高",
-      "key_risks": ["逼近前期高点"], "continuity_assessment": "技术面+消息面共振，延续性强"
+      "expected_direction": "高开上行",
+      "confidence": "高",
+      "key_risks": [
+        "逼近前期高点"
+      ],
+      "continuity_assessment": "技术面+消息面共振，延续性强",
+      "source": "manual"
     },
     {
-      "symbol": "002747", "name": "埃斯顿", "industry": "机械基件",
-      "score": 57, "grade": "B", "pattern": "上升波段延续",
-      "is_limit_up": false, "close": 30.03, "day_change_pct": 4.96,
-      "diff": 2.0086, "dea": 1.4526,
+      "symbol": "002747",
+      "name": "埃斯顿",
+      "industry": "机械基件",
+      "score": 57,
+      "grade": "B",
+      "pattern": "上升波段延续",
+      "is_limit_up": false,
+      "close": 30.03,
+      "day_change_pct": 4.96,
+      "diff": 2.0086,
+      "dea": 1.4526,
       "prediction": "MACD金叉+多头排列+4倍放量，机器人概念强势。三波追高-8，追高需谨慎。支撑位多空线23.7。",
-      "expected_direction": "偏多", "confidence": "中",
-      "key_risks": ["三波追高(-8)", "放量过大"], "continuity_assessment": "趋势健康，回调后可持续"
+      "expected_direction": "偏多",
+      "confidence": "中",
+      "key_risks": [
+        "三波追高(-8)",
+        "放量过大"
+      ],
+      "continuity_assessment": "趋势健康，回调后可持续",
+      "source": "manual"
     },
     {
-      "symbol": "600378", "name": "昊华科技", "industry": "化工原料",
-      "score": 84, "grade": "A", "pattern": "横盘起跳",
-      "is_limit_up": true, "close": 39.25, "day_change_pct": 10.01,
-      "diff": 0.7547, "dea": 0.5660,
+      "symbol": "600378",
+      "name": "昊华科技",
+      "industry": "化工原料",
+      "score": 84,
+      "grade": "A",
+      "pattern": "横盘起跳",
+      "is_limit_up": true,
+      "close": 39.25,
+      "day_change_pct": 10.01,
+      "diff": 0.7547,
+      "dea": 0.566,
       "prediction": "MACD刚金叉翻红+横盘起跳，化工板块今日不弱。次日惯性高开概率大，高开>5%不追。",
-      "expected_direction": "高开震荡偏多", "confidence": "中",
-      "key_risks": ["大盘偏弱"], "continuity_assessment": "技术面扎实，涨停逻辑健康"
+      "expected_direction": "高开震荡偏多",
+      "confidence": "中",
+      "key_risks": [
+        "大盘偏弱"
+      ],
+      "continuity_assessment": "技术面扎实，涨停逻辑健康",
+      "source": "manual"
     },
     {
-      "symbol": "000700", "name": "模塑科技", "industry": "汽车配件",
-      "score": 46, "grade": "C", "pattern": "上升波段延续",
-      "is_limit_up": false, "close": 15.98, "day_change_pct": 7.46,
-      "diff": 0.8561, "dea": 0.6310,
+      "symbol": "000700",
+      "name": "模塑科技",
+      "industry": "汽车配件",
+      "score": 46,
+      "grade": "C",
+      "pattern": "上升波段延续",
+      "is_limit_up": false,
+      "close": 15.98,
+      "day_change_pct": 7.46,
+      "diff": 0.8561,
+      "dea": 0.631,
       "prediction": "5日涨15%+三波追高-18+冲高回落，风险信号极重。短期涨幅过大，等回调到MA14(14.3)附近再考虑。",
-      "expected_direction": "冲高回落", "confidence": "低",
-      "key_risks": ["三波追高(-18)", "冲高回落", "短期涨幅过大"],
-      "continuity_assessment": "需要充分回调才能继续"
+      "expected_direction": "冲高回落",
+      "confidence": "低",
+      "key_risks": [
+        "三波追高(-18)",
+        "冲高回落",
+        "短期涨幅过大"
+      ],
+      "continuity_assessment": "需要充分回调才能继续",
+      "source": "manual"
     },
     {
-      "symbol": "603608", "name": "天创时尚", "industry": "服饰",
-      "score": 79, "grade": "A", "pattern": "上升波段延续",
-      "is_limit_up": true, "close": 19.11, "day_change_pct": 10.02,
-      "diff": 1.5907, "dea": 1.2394,
+      "symbol": "603608",
+      "name": "天创时尚",
+      "industry": "服饰",
+      "score": 79,
+      "grade": "A",
+      "pattern": "上升波段延续",
+      "is_limit_up": true,
+      "close": 19.11,
+      "day_change_pct": 10.02,
+      "diff": 1.5907,
+      "dea": 1.2394,
       "prediction": "砖值134高位+三波追高+板块偏弱，涨停次日大概率高开低走。不建议追入。",
-      "expected_direction": "高开低走", "confidence": "中",
-      "key_risks": ["砖值高位(134)", "三波追高", "板块偏弱"],
-      "continuity_assessment": "加速赶顶，持续性存疑"
+      "expected_direction": "高开低走",
+      "confidence": "中",
+      "key_risks": [
+        "砖值高位(134)",
+        "三波追高",
+        "板块偏弱"
+      ],
+      "continuity_assessment": "加速赶顶，持续性存疑",
+      "source": "manual"
     },
     {
-      "symbol": "600590", "name": "泰豪科技", "industry": "通信设备",
-      "score": 75, "grade": "A", "pattern": "横盘起跳",
-      "is_limit_up": false, "close": 15.28, "day_change_pct": 8.91,
-      "diff": -0.2529, "dea": -0.0641,
+      "symbol": "600590",
+      "name": "泰豪科技",
+      "industry": "通信设备",
+      "score": 75,
+      "grade": "A",
+      "pattern": "横盘起跳",
+      "is_limit_up": false,
+      "close": 15.28,
+      "day_change_pct": 8.91,
+      "diff": -0.2529,
+      "dea": -0.0641,
       "prediction": "MACD零轴下死叉+未封板+通信设备板块暴跌3%。板块系统性风险无法忽视，震荡偏空。",
-      "expected_direction": "震荡偏空", "confidence": "中",
-      "key_risks": ["MACD死叉", "板块暴跌3%", "未封板"],
-      "continuity_assessment": "板块拖累严重，持续性差"
+      "expected_direction": "震荡偏空",
+      "confidence": "中",
+      "key_risks": [
+        "MACD死叉",
+        "板块暴跌3%",
+        "未封板"
+      ],
+      "continuity_assessment": "板块拖累严重，持续性差",
+      "source": "manual"
     }
   ]
 }

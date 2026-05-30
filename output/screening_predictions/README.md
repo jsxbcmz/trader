@@ -8,9 +8,11 @@
 ### 每日预测
 - 文件名：`YYYY-MM-DD.json`
 - 内容：JSON，包含 date/market_bg/stocks[]（每只股票含 symbol/name/score/grade/pattern/pred_direction/confidence/note）
+- **每条股票记录必须含 `"source": "auto"` 字段**
 
 ### 回顾结果
 - `review_YYYY-MM-DD.json` — 某日对前一日预测的回顾验证结果
+- 内含 `screening_review`（source="auto"）和 `manual_review`（source="manual"）两组
 
 ## 与 screening_analysis 的关系
 - `screening_analysis/` 的 .md 报告是人看的
