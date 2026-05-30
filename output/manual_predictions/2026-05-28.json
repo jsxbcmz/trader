@@ -28,7 +28,13 @@
         "放量过大尾盘分歧"
       ],
       "continuity_assessment": "涨停封板坚决有望延续，关注次日竞价",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 0.0,
+      "day_chg": -3.17,
+      "direction_norm": "bull",
+      "open_correct": false,
+      "close_correct": false,
+      "sector_reverted": true
     },
     {
       "symbol": "002203",
@@ -47,7 +53,13 @@
         "大盘普跌日背景"
       ],
       "continuity_assessment": "低价涨停有溢价空间，关注大盘企稳",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 0.62,
+      "day_chg": -2.19,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": false,
+      "sector_reverted": false
     },
     {
       "symbol": "002730",
@@ -66,7 +78,13 @@
         "大盘弱势拖累"
       ],
       "continuity_assessment": "放量不封板，短线获利盘压力大",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 1.5,
+      "day_chg": -5.9,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": false,
+      "sector_reverted": false
     },
     {
       "symbol": "600246",
@@ -85,7 +103,13 @@
         "地产板块政策波动"
       ],
       "continuity_assessment": "换手过高筹码松动，不宜追高",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 3.93,
+      "day_chg": -3.81,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": false,
+      "sector_reverted": false
     },
     {
       "symbol": "000823",
@@ -104,7 +128,13 @@
         "板块轮动风险"
       ],
       "continuity_assessment": "量能充沛但短线需消化",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 0.0,
+      "day_chg": -4.35,
+      "direction_norm": "bull",
+      "open_correct": false,
+      "close_correct": false,
+      "sector_reverted": false
     },
     {
       "symbol": "003026",
@@ -123,7 +153,13 @@
         "板块轮动快"
       ],
       "continuity_assessment": "半导体板块活性好，有望延续",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 0.06,
+      "day_chg": -6.87,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": false,
+      "sector_reverted": false
     },
     {
       "symbol": "000811",
@@ -142,7 +178,13 @@
         "若大盘继续走弱将受拖累"
       ],
       "continuity_assessment": "探底回升形态扎实，稳健型标的",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 0.0,
+      "day_chg": -6.48,
+      "direction_norm": "bull",
+      "open_correct": false,
+      "close_correct": false,
+      "sector_reverted": false
     },
     {
       "symbol": "600360",
@@ -161,7 +203,14 @@
         "可能已退市或更名"
       ],
       "continuity_assessment": "无法分析",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": null,
+      "day_chg": null,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": null
     }
-  ]
+  ],
+  "backfilled_against": "2026-05-29"
 }

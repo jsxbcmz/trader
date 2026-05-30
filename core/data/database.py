@@ -321,6 +321,26 @@ class ScoringDatabase(DatabaseManager):
                 t3_is_green   INTEGER,
                 PRIMARY KEY (score_date, symbol)
             );
+
+            CREATE TABLE IF NOT EXISTS intraday_review (
+                review_date          TEXT    NOT NULL,
+                score_date           TEXT,
+                symbol               TEXT    NOT NULL,
+                expected_direction   TEXT,
+                path_shape           TEXT,
+                intraday_verdict     TEXT,
+                seal_time            TEXT,
+                unseal_count         INTEGER,
+                high_time            TEXT,
+                close_vs_vwap        REAL,
+                tail_chg             REAL,
+                morning_vol_pct      REAL,
+                intraday_drawdown    REAL,
+                is_failed_limit      INTEGER,
+                vwap_cross_count     INTEGER,
+                amount_weighted_late REAL,
+                PRIMARY KEY (review_date, symbol)
+            );
         """)
 
     def save_cross_section(self, date: str, df: pd.DataFrame):
@@ -385,6 +405,69 @@ class ScoringDatabase(DatabaseManager):
             "t2_return, t2_is_green, t3_return, t3_is_green "
             "FROM outcomes WHERE score_date = ?",
             [score_date],
+        )
+
+    def save_intraday_review(self, review_date: str, rows: list[dict]):
+        """先 DELETE WHERE review_date 再 append 写入（仿 save_outcomes）。"""
+        self.execute("DELETE FROM intraday_review WHERE review_date = ?", [review_date])
+        if not rows:
+            return
+
+        def _safe_int(v):
+            if v is None:
+                return None
+            if isinstance(v, bool):
+                return int(v)
+            if isinstance(v, float) and pd.isna(v):
+                return None
+            return int(v)
+
+        def _safe_float(v):
+            if v is None:
+                return None
+            if isinstance(v, float) and pd.isna(v):
+                return None
+            return float(v)
+
+        sql = (
+            "INSERT INTO intraday_review "
+            "(review_date, score_date, symbol, expected_direction, path_shape, "
+            "intraday_verdict, seal_time, unseal_count, high_time, close_vs_vwap, "
+            "tail_chg, morning_vol_pct, intraday_drawdown, is_failed_limit, "
+            "vwap_cross_count, amount_weighted_late) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        params = [
+            (
+                review_date,
+                r.get("score_date"),
+                r["symbol"],
+                r.get("expected_direction"),
+                r.get("path_shape"),
+                r.get("intraday_verdict"),
+                r.get("seal_time"),
+                _safe_int(r.get("unseal_count")),
+                r.get("high_time"),
+                _safe_float(r.get("close_vs_vwap")),
+                _safe_float(r.get("tail_chg")),
+                _safe_float(r.get("morning_vol_pct")),
+                _safe_float(r.get("intraday_drawdown")),
+                _safe_int(r.get("is_failed_limit")),
+                _safe_int(r.get("vwap_cross_count")),
+                _safe_float(r.get("amount_weighted_late")),
+            )
+            for r in rows
+        ]
+        self.executemany(sql, params)
+
+    def load_intraday_review(self, review_date: str) -> pd.DataFrame:
+        return self.read_df(
+            "SELECT review_date, score_date, symbol, expected_direction, path_shape, "
+            "intraday_verdict, seal_time, unseal_count, high_time, close_vs_vwap, "
+            "tail_chg, morning_vol_pct, intraday_drawdown, is_failed_limit, "
+            "vwap_cross_count, amount_weighted_late "
+            "FROM intraday_review WHERE review_date = ?",
+            [review_date],
         )
 
 

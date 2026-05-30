@@ -22,7 +22,13 @@
         "放量57%"
       ],
       "continuity_assessment": "技术面有延续性（金叉+红柱首翻红+砖值走强），但前期死叉意味着趋势还未完全确立，需次日放量确认",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 2.97,
+      "day_chg": 2.48,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": true,
+      "sector_reverted": false
     },
     {
       "symbol": "600563",
@@ -44,7 +50,13 @@
         "成交额翻2.7倍"
       ],
       "continuity_assessment": "趋势质量最高但已三波，短期空间有限。中期趋势仍在，回调不破白线可持股",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 1.03,
+      "day_chg": -1.02,
+      "direction_norm": "bear",
+      "open_correct": false,
+      "close_correct": true,
+      "sector_reverted": false
     },
     {
       "symbol": "002080",
@@ -66,7 +78,13 @@
         "短趋远离多空乖离偏大"
       ],
       "continuity_assessment": "缩量涨停质量较高，筹码锁定说明抛压小。但死叉痕迹+乖离偏大是隐忧",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 2.41,
+      "day_chg": 5.05,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": true,
+      "sector_reverted": false
     },
     {
       "symbol": "002916",
@@ -88,7 +106,13 @@
         "放量55%"
       ],
       "continuity_assessment": "技术面最优：横盘充分+金叉+砖值跳升满分。是六股中延续性最有保证的一只",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 6.81,
+      "day_chg": 5.74,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": true,
+      "sector_reverted": false
     },
     {
       "symbol": "600596",
@@ -111,7 +135,13 @@
         "成交额翻2.9倍"
       ],
       "continuity_assessment": "六股中最需谨慎。趋势未确立+爆量，延续性存疑。等缩量回踩12.20（多空线）再评估",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 3.09,
+      "day_chg": -1.21,
+      "direction_norm": "bear",
+      "open_correct": false,
+      "close_correct": true,
+      "sector_reverted": false
     },
     {
       "symbol": "603267",
@@ -132,7 +162,14 @@
         "成交额翻3.5倍"
       ],
       "continuity_assessment": "趋势质量高+无三波风险，延续性在上升波段类中最优。关注放量是否过度",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 7.1,
+      "day_chg": 4.47,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": true,
+      "sector_reverted": false
     }
-  ]
+  ],
+  "backfilled_against": "2026-05-25"
 }

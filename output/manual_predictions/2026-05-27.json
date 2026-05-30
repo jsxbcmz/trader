@@ -25,7 +25,13 @@
       "confidence": "中",
       "key_risks": [],
       "continuity_assessment": "技术面扎实，零风险扣分，有望延续上行",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -0.73,
+      "day_chg": 0.81,
+      "direction_norm": "bull",
+      "open_correct": false,
+      "close_correct": true,
+      "sector_reverted": false
     },
     {
       "symbol": "002150",
@@ -44,7 +50,13 @@
         "放量过大"
       ],
       "continuity_assessment": "强势金叉+概念驱动，技术面优于板块面",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -1.27,
+      "day_chg": -4.88,
+      "direction_norm": "bull",
+      "open_correct": false,
+      "close_correct": false,
+      "sector_reverted": false
     },
     {
       "symbol": "002273",
@@ -63,7 +75,13 @@
         "高位放量"
       ],
       "continuity_assessment": "加速赶顶特征明显，持续性差",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 0.12,
+      "day_chg": 4.0,
+      "direction_norm": "bear",
+      "open_correct": false,
+      "close_correct": false,
+      "sector_reverted": false
     },
     {
       "symbol": "601991",
@@ -82,7 +100,13 @@
         "普跌日背景"
       ],
       "continuity_assessment": "板块支撑但评分不高，观望为主",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 0.26,
+      "day_chg": 3.76,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": true,
+      "sector_reverted": false
     },
     {
       "symbol": "600869",
@@ -101,7 +125,13 @@
         "量能不足"
       ],
       "continuity_assessment": "趋势偏弱，不建议参与",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -1.7,
+      "day_chg": 3.5,
+      "direction_norm": "bear",
+      "open_correct": true,
+      "close_correct": false,
+      "sector_reverted": false
     },
     {
       "symbol": "002348",
@@ -120,7 +150,13 @@
         "缺乏技术信号"
       ],
       "continuity_assessment": "弱势整理，不建议参与",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -1.05,
+      "day_chg": 10.0,
+      "direction_norm": "bear",
+      "open_correct": true,
+      "close_correct": false,
+      "sector_reverted": false
     },
     {
       "symbol": "603826",
@@ -140,7 +176,14 @@
         "唯一下跌股"
       ],
       "continuity_assessment": "趋势向下，回避",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 0.4,
+      "day_chg": -0.88,
+      "direction_norm": "bear",
+      "open_correct": false,
+      "close_correct": true,
+      "sector_reverted": false
     }
-  ]
+  ],
+  "backfilled_against": "2026-05-28"
 }

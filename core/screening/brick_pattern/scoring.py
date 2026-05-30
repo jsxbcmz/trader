@@ -271,11 +271,13 @@ def compute_macd_auxiliary_score(
         else:
             items["MACD柱状态"] = 0
 
-        # 金叉确认 (0~7, 可扣分)
-        if golden_dist > 0 and golden_dist <= 5:
+        # 金叉确认 (0~7) — T7 调权：回测(2010~2026, 236万样本)证实当日金叉 T+1 收益
+        # (+0.147%) 显著高于 3~5 日(-0.013%)，修正原「当日金叉仅 4 分、1~5 日 7 分」的倒挂。
+        # 当日/近 2 日金叉 = 最强信号给 7 分，3~5 日衰减到 5 分。新映射 IC 不低于旧(Δ+0.00063)。
+        if golden_dist == 0 or golden_dist in (1, 2):
             items["金叉确认"] = 7
-        elif golden_dist == 0:
-            items["金叉确认"] = 4
+        elif golden_dist in (3, 4, 5):
+            items["金叉确认"] = 5
         elif diff[index] > dea[index]:
             items["金叉确认"] = 3
         elif index >= 1 and diff[index] > diff[index - 1]:

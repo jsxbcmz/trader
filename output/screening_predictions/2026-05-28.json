@@ -28,7 +28,15 @@
         "若低开则偏多失效"
       ],
       "continuity_assessment": "技术面+行业面双优，有延续性",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 0.0,
+      "day_chg": -3.17,
+      "direction_norm": "bull",
+      "open_correct": false,
+      "close_correct": false,
+      "sector_reverted": true,
+      "intraday_verdict": "❌ 完全错",
+      "path_shape": "low_open_low_close"
     },
     {
       "symbol": "002613",
@@ -49,7 +57,15 @@
         "若低开则偏多失效"
       ],
       "continuity_assessment": "板块联动效应强，可跟涨",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 6.3,
+      "day_chg": -9.96,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": false,
+      "sector_reverted": true,
+      "intraday_verdict": "❌ 高开低走陷阱",
+      "path_shape": "high_open_low_close"
     },
     {
       "symbol": "600246",
@@ -71,7 +87,15 @@
         "若低开则偏多失效"
       ],
       "continuity_assessment": "放量涨停有接力意愿，但高位风险需警惕",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 3.93,
+      "day_chg": -3.81,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": false,
+      "sector_reverted": false,
+      "intraday_verdict": "❌ 高开低走陷阱",
+      "path_shape": "high_open_low_close"
     },
     {
       "symbol": "603527",
@@ -87,7 +111,15 @@
       "key_risks": [
         "若低开则偏多失效"
       ],
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 3.31,
+      "day_chg": -6.07,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": false,
+      "sector_reverted": false,
+      "intraday_verdict": "❌ 高开低走陷阱",
+      "path_shape": "high_open_low_close"
     },
     {
       "symbol": "603050",
@@ -103,7 +135,15 @@
       "key_risks": [
         "若低开则偏多失效"
       ],
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 2.53,
+      "day_chg": 0.32,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": true,
+      "sector_reverted": false,
+      "intraday_verdict": "❌ 高开低走陷阱",
+      "path_shape": "high_open_low_close"
     },
     {
       "symbol": "603931",
@@ -123,7 +163,15 @@
         "若低开则偏多失效"
       ],
       "continuity_assessment": "金叉翻红配合涨停，技术面健康",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": -1.95,
+      "day_chg": 0.41,
+      "direction_norm": "bull",
+      "open_correct": false,
+      "close_correct": true,
+      "sector_reverted": false,
+      "intraday_verdict": "⚠️ 蒙对",
+      "path_shape": "low_open_red"
     },
     {
       "symbol": "601588",
@@ -142,7 +190,15 @@
         "低价股波动大",
         "MACD死叉不支持持续上涨"
       ],
-      "source": "auto"
+      "source": "auto",
+      "open_chg": -3.4,
+      "day_chg": 2.43,
+      "direction_norm": "bear",
+      "open_correct": true,
+      "close_correct": false,
+      "sector_reverted": false,
+      "intraday_verdict": "❌ 看空踏空",
+      "path_shape": "low_open_red"
     },
     {
       "symbol": "002203",
@@ -161,7 +217,15 @@
         "需消息面确认"
       ],
       "continuity_assessment": "技术面不支持，可能是消息脉冲",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 0.62,
+      "day_chg": -2.19,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false,
+      "intraday_verdict": "—（无裁定）",
+      "path_shape": "high_open_low_close"
     },
     {
       "symbol": "000823",
@@ -180,7 +244,13 @@
         "砖值暴拉无金叉确认",
         "放量滞涨"
       ],
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 0.0,
+      "day_chg": -4.35,
+      "direction_norm": "bear",
+      "open_correct": false,
+      "close_correct": true,
+      "sector_reverted": false
     },
     {
       "symbol": "000811",
@@ -199,7 +269,15 @@
         "板块拖累"
       ],
       "continuity_assessment": "反弹出货性质",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 0.0,
+      "day_chg": -6.48,
+      "direction_norm": "bear",
+      "open_correct": false,
+      "close_correct": true,
+      "sector_reverted": false,
+      "intraday_verdict": "✅ 真对",
+      "path_shape": "low_open_low_close"
     },
     {
       "symbol": "003026",
@@ -216,7 +294,15 @@
         "MACD死叉扩大",
         "缩量反弹不可持续"
       ],
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 0.06,
+      "day_chg": -6.87,
+      "direction_norm": "bear",
+      "open_correct": false,
+      "close_correct": true,
+      "sector_reverted": false,
+      "intraday_verdict": "✅ 真对",
+      "path_shape": "high_open_low_close"
     },
     {
       "symbol": "002730",
@@ -232,7 +318,15 @@
       "key_risks": [
         "MACD仍未翻红"
       ],
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 1.5,
+      "day_chg": -5.9,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false,
+      "intraday_verdict": "—（无裁定）",
+      "path_shape": "high_open_low_close"
     },
     {
       "symbol": "600158",
@@ -247,7 +341,15 @@
       "prediction": "+8.51%未封板+死叉，明日可能冲高回落",
       "expected_direction": "冲高回落",
       "confidence": "低",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": -1.12,
+      "day_chg": -2.76,
+      "direction_norm": "bear",
+      "open_correct": true,
+      "close_correct": true,
+      "sector_reverted": false,
+      "intraday_verdict": "✅ 真对",
+      "path_shape": "low_open_low_close"
     },
     {
       "symbol": "603006",
@@ -267,7 +369,13 @@
         "MACD死叉",
         "板块偏弱不支持"
       ],
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 3.7,
+      "day_chg": -3.63,
+      "direction_norm": "bear",
+      "open_correct": false,
+      "close_correct": true,
+      "sector_reverted": false
     },
     {
       "symbol": "002553",
@@ -280,7 +388,15 @@
       "prediction": "金叉翻红+76分高评分，未封板但趋势向上。明日可观察",
       "expected_direction": "震荡偏多",
       "confidence": "中",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 0.73,
+      "day_chg": -4.82,
+      "direction_norm": "bull",
+      "open_correct": true,
+      "close_correct": false,
+      "sector_reverted": false,
+      "intraday_verdict": "❌ 高开低走陷阱",
+      "path_shape": "high_open_low_close"
     },
     {
       "symbol": "002916",
@@ -294,7 +410,17 @@
       "prediction": "高价股涨停但MACD死叉，高位风险较大",
       "expected_direction": "谨慎",
       "confidence": "低",
-      "source": "auto"
+      "source": "auto",
+      "open_chg": 1.69,
+      "day_chg": 3.3,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false,
+      "intraday_verdict": "—（无裁定）",
+      "path_shape": "high_open_low_close"
     }
-  ]
+  ],
+  "backfilled_against": "2026-05-29",
+  "intraday_reviewed_against": "2026-05-29"
 }

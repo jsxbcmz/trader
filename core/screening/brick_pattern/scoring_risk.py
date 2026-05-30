@@ -347,6 +347,35 @@ def _check_chase_high_pullback(close, index):
     return detail, ("冲高回落" if triggered else None)
 
 
+# ── 新增风险9：短期过热（5日累计涨幅过大）──
+def _check_overheat(close, index):
+    """5 日累计涨幅过大扣分。砖形图找起涨点，不追末端。
+
+    >25% 重扣 -15；>=15% 轻扣 -5。复用 CHASE_HIGH 枚举避免改 models。
+    """
+    triggered = False
+    penalty = 0.0
+    desc = ""
+    if index >= 5 and close[index - 5] > 0:
+        cum_chg_5d = (close[index] - close[index - 5]) / close[index - 5] * 100
+        if cum_chg_5d > 25:
+            penalty = -15.0
+            triggered = True
+            desc = f"短期过热(5日涨{cum_chg_5d:.1f}%>25%)"
+        elif cum_chg_5d >= 15:
+            penalty = -5.0
+            triggered = True
+            desc = f"短期偏热(5日涨{cum_chg_5d:.1f}%)"
+
+    detail = RiskFilterDetail(
+        filter_type=RiskFilterType.CHASE_HIGH,
+        triggered=triggered,
+        description=desc,
+        penalty=penalty,
+    )
+    return detail, ("短期过热" if triggered else None)
+
+
 # ── 新增风险8：横盘MACD死叉 ──
 def _check_sideways_macd_dead_cross(indicators, index):
     diff = indicators["macd_diff"]
@@ -418,6 +447,7 @@ def compute_risk_penalty(
     _record(_check_large_upper_shadow(close, open_, high, low, index))
     _record(_check_third_wave(brick, close, high, index))
     _record(_check_chase_high_pullback(close, index))
+    _record(_check_overheat(close, index))
 
     if pattern_type == PatternType.SIDEWAYS_JUMP:
         _record(_check_sideways_macd_dead_cross(indicators, index))

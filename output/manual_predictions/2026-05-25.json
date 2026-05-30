@@ -18,7 +18,13 @@
       "confidence": "中",
       "risks": [],
       "key_level": "支撑4.80 压力5.26",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -0.19,
+      "day_chg": -1.54,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "002674",
@@ -34,7 +40,13 @@
       "confidence": "中",
       "risks": [],
       "key_level": "支撑15.0 压力16.5",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -0.81,
+      "day_chg": -1.0,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "603203",
@@ -52,7 +64,13 @@
         "高位S1"
       ],
       "key_level": "支撑58 压力68",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 5.97,
+      "day_chg": 3.5,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "605588",
@@ -70,7 +88,13 @@
         "三波追高-8"
       ],
       "key_level": "支撑62 压力68",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 0.0,
+      "day_chg": -4.08,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "002745",
@@ -86,7 +110,13 @@
       "confidence": "中",
       "risks": [],
       "key_level": "支撑10.0 压力11.0",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 2.13,
+      "day_chg": -3.33,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "000682",
@@ -102,7 +132,13 @@
       "confidence": "中",
       "risks": [],
       "key_level": "支撑13.8 压力14.8",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 0.21,
+      "day_chg": -1.04,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "002409",
@@ -121,7 +157,13 @@
         "三波追高-8"
       ],
       "key_level": "支撑110 压力128",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -2.04,
+      "day_chg": -3.85,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "002951",
@@ -140,7 +182,13 @@
         "缩量涨停"
       ],
       "key_level": "支撑16.5 压力18.0",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -2.21,
+      "day_chg": -5.56,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "605566",
@@ -156,7 +204,13 @@
       "confidence": "中",
       "risks": [],
       "key_level": "支撑37 压力41",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -0.65,
+      "day_chg": 0.99,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "000988",
@@ -175,7 +229,13 @@
         "高位加速"
       ],
       "key_level": "支撑155 压力172",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 0.0,
+      "day_chg": -0.94,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "001289",
@@ -191,7 +251,13 @@
       "confidence": "中",
       "risks": [],
       "key_level": "支撑17.2 压力18.5",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -0.72,
+      "day_chg": -2.15,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "002947",
@@ -207,7 +273,13 @@
       "confidence": "中",
       "risks": [],
       "key_level": "支撑92 压力100",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 1.12,
+      "day_chg": 3.53,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "600863",
@@ -225,7 +297,13 @@
         "白线<黄线"
       ],
       "key_level": "支撑5.5 压力6.0",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -0.17,
+      "day_chg": 2.87,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "600483",
@@ -241,7 +319,13 @@
       "confidence": "中",
       "risks": [],
       "key_level": "支撑10.75 压力11.39",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -0.99,
+      "day_chg": -0.36,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "600206",
@@ -259,7 +343,13 @@
         "S1放量阴线"
       ],
       "key_level": "支撑28.92 压力30.78",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -1.28,
+      "day_chg": -4.21,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "002927",
@@ -277,7 +367,13 @@
         "缩量涨停"
       ],
       "key_level": "支撑22.43 压力24.5",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -0.97,
+      "day_chg": -9.99,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "002803",
@@ -295,7 +391,13 @@
         "MACD死叉"
       ],
       "key_level": "支撑21.37 压力22.44",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 0.13,
+      "day_chg": -1.29,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "000690",
@@ -311,7 +413,13 @@
       "confidence": "中",
       "risks": [],
       "key_level": "支撑5.21 压力5.73",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 0.0,
+      "day_chg": -0.18,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "600726",
@@ -329,7 +437,13 @@
         "20日涨44%高位"
       ],
       "key_level": "支撑6.57 压力7.16",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": 5.06,
+      "day_chg": 9.97,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     },
     {
       "symbol": "000791",
@@ -347,7 +461,14 @@
         "MACD死叉"
       ],
       "key_level": "支撑8.78 压力9.37",
-      "source": "manual"
+      "source": "manual",
+      "open_chg": -1.33,
+      "day_chg": -2.22,
+      "direction_norm": "neutral",
+      "open_correct": null,
+      "close_correct": null,
+      "sector_reverted": false
     }
-  ]
+  ],
+  "backfilled_against": "2026-05-26"
 }
