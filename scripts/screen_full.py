@@ -188,13 +188,65 @@ if is_bearish_day:
 
 results.sort(key=lambda r: r["score"], reverse=True)
 
-# T5 分组：🔴涨停组 / 🟡强势未封板组 / 普通组
-top_results = results[:50]
-grouped = {
-    "limit_up": [r for r in top_results if r["group"] == "limit_up"],
-    "strong_unsealed": [r for r in top_results if r["group"] == "strong_unsealed"],
-    "normal": [r for r in top_results if r["group"] == "normal"],
+# ── 分组配额制 + 精选门槛（改造点）──
+# 原实现：先全局 results[:50] 截断，再分组 → 强势优质票可能在贴 T4/T5 标签前被全局排名挤出。
+# 现实现：① 先按最终分门槛 MIN_SCORE 砍掉 C/D 级凑数票；
+#         ② 再对【全部命中票】按 T5 分组，组内截 TopN 配额，避免某一类被另一类挤光。
+# 每条记录的 group / limit_up_quality（T4/T5）已在循环内对所有命中票算好，此处只做过滤+分组+排序。
+#
+# MIN_SCORE：精选门槛，只保留最终分 ≥ 此值的高确信度标的。
+# score≥45 在常规交易日约落 ~10 只，符合"精选"诉求；想更精调高、想更宽调低。
+MIN_SCORE = 45.0
+
+# 配额作为兜底：极端放量日命中过多时仍按组截顶，避免单组淹没结果。
+GROUP_QUOTA = {
+    "limit_up": 6,        # 🔴 涨停组：方向不确定，给适中配额
+    "strong_unsealed": 8, # 🟡 强势未封板组：次日方向可信度最高，给最大配额
+    "normal": 6,          # ⚪ 普通组
 }
+
+
+def _rank_within_group(rows: list[dict], group_name: str) -> list[dict]:
+    """组内排序后截配额。
+
+    涨停组特殊处理：T4 判定为 strong 的优质涨停优先级最高（strong→neutral→weak），
+    同质量内再按 score 降序——避免「缩量锁仓的优质涨停」被「放量分歧的高分涨停」挤出。
+    其余组直接按 score 降序。
+    """
+    quota = GROUP_QUOTA.get(group_name, len(rows))
+    if group_name == "limit_up":
+        quality_rank = {"strong": 0, "neutral": 1, "weak": 2}
+        rows = sorted(
+            rows,
+            key=lambda r: (quality_rank.get(r.get("limit_up_quality"), 1), -r["score"]),
+        )
+    else:
+        rows = sorted(rows, key=lambda r: r["score"], reverse=True)
+    return rows[:quota]
+
+
+# 精选门槛：砍掉最终分 < MIN_SCORE 的 C/D 级凑数票（放在普跌日降权之后，作用于最终调整分）
+results = [r for r in results if r["score"] >= MIN_SCORE]
+
+# 先对全部命中票分组（不再先做全局 [:50] 截断）
+all_grouped = {
+    "limit_up": [r for r in results if r["group"] == "limit_up"],
+    "strong_unsealed": [r for r in results if r["group"] == "strong_unsealed"],
+    "normal": [r for r in results if r["group"] == "normal"],
+}
+
+# 各组内排序 + 截配额
+grouped = {
+    name: _rank_within_group(rows, name)
+    for name, rows in all_grouped.items()
+}
+
+# 落盘用的 top_results：合并三组配额结果，统一按 score 降序便于人工浏览
+top_results = sorted(
+    [r for rows in grouped.values() for r in rows],
+    key=lambda r: r["score"],
+    reverse=True,
+)
 
 # 保存原始结果
 output_dir = Path('/opt/data/output/screening_raw')
