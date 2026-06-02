@@ -1,0 +1,33 @@
+时间序号:=IF(HOUR>12,(HOUR-13)*60+MINUTE+120,(HOUR-9)*60+MINUTE-30)+1;
+量比:=SUM(V,0)/时间序号/DYNAINFO(16);
+
+
+价:=CLOSE;
+均:=ZSTJJ;
+
+开盘价:=REF(价,时间序号-1);
+开盘量比:=REF(量比,时间序号-1);
+开盘价涨幅:=REF(价,MAX(时间序号-16,0))/开盘价;
+开盘量涨幅:=REF(量比,MAX(时间序号-16,0))/开盘量比;
+量价齐升:=价/REF(价,5)>1.01 AND 量比/LLV(REF(量比,1),10)>1.3;
+DRAWTEXT(FILTER(量价齐升,5),C,'攻'),COLORRED;
+
+{MACD}
+DIFF:=EMA(C,12)-EMA(C,26);
+DEA:=EMA(DIFF,9);
+MACD:=2*(DIFF-DEA);
+MACD大于0:=DIFF>0;
+
+显著峰值:=DIFF>REF(DIFF,1) AND DIFF>REFX(DIFF,1) AND DIFF>MAX(0,0.5*HHV(REF(DIFF,1),0)) AND DIFF>DEA AND 价>均;
+显著谷值:=DIFF>REF(DIFF,1) AND REFX(DIFF,1)>DIFF AND MIN(0,0.5*LLV(REF(DIFF,1),0))>DIFF AND DEA>DIFF AND 均>价;
+
+DRAWICON(FILTERX(显著峰值,5),0.99*价,2);
+DRAWICON(FILTERX(显著谷值,5),0.99*价,1);
+
+
+上攻:=IF(开盘价涨幅>=1.02 AND ((开盘量涨幅>1 AND 开盘量比>=7 AND 开盘量比<=17) OR 开盘量比>=20 OR 开盘量涨幅>2),1,IF(COUNT(量价齐升,-1)>0,1,0));
+下杀:=IF(开盘量比>=10 AND 0.98>开盘价涨幅,1,0);
+
+
+盘面语言:=IF(上攻,'上攻',IF(下杀,'下杀','震荡'));
+DRAWTEXT_FIX(ISLASTBAR,0,0.13,0,盘面语言),COLORYELLOW;

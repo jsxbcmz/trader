@@ -51,8 +51,9 @@ python -m run  # 或 python run.py
 | 改图表副图动态切换 | `app/chart_widget_subcharts.py` | modules/chart_system.md |
 | 改图表范围管理 | `app/chart_widget_ranges.py` | modules/chart_system.md |
 | 改图表布局/面板结构 | `app/chart_layout.py` | modules/chart_system.md |
-| 改K线/砖型图元绘制 | `app/chart_primitives.py` | modules/chart_system.md |
-| 改指标计算(EMA/KDJ/Brick/MACD/Needle20) | `app/chart_indicators.py` | modules/chart_system.md |
+| 改K线/砖型图元/滴滴标记绘制 | `app/chart_primitives.py` | modules/chart_system.md |
+| 改指标计算(EMA/KDJ/Brick/MACD/Needle20/滴滴) | `app/chart_indicators.py` | modules/chart_system.md |
+| 改滴滴战法上下车点算法 | `core/indicators/algorithms.py: compute_didi_indicator` | modules/chart_system.md |
 | 改信息浮窗/标签HTML | `app/chart_overlays.py` | modules/chart_system.md |
 | 改迷你K线图 | `app/mini_chart.py` | modules/chart_system.md |
 | 改进度对话框 | `app/progress_dialogs.py` | modules/app_framework.md |
@@ -73,7 +74,13 @@ python -m run  # 或 python run.py
 ## 图表指标速览
 
 ### 价格面板（固定）
-蜡烛图 + 趋势EMA(EMA(C,10),10) + 多空MA均值
+蜡烛图 + 趋势EMA(EMA(C,10),10) + 多空MA均值 + **滴滴战法上下车标记**（默认常显）
+
+#### 滴滴战法（地铁战法）上下车标记
+源自"地铁战法"：把一段趋势看作坐地铁，**黄框黑底空心柱=上车点(买)**、**青蓝实心柱=下车点(卖)**，一买一卖配对，叠加在主图 K 线上。
+- 公式核心：用 `下沿/上沿` 构造滚动通道（`MIN(L,REF(H,1))` / `MAX(H,REF(L,1))`，首根特判），收盘突破前一根通道产生`上滴/下滴`信号，再用 `BARSLAST` 去重，每段趋势只标第一个点。
+- `上滴`→上车(买,黄)，`下滴`→下车(卖,绿/青蓝)。原公式见 `新内容/滴滴战法/代码.txt`，调研见 `新内容/滴滴战法/调研文档.md`。
+- 实现：算法 `core/indicators/algorithms.py: compute_didi_indicator`，图元 `app/chart_primitives.py: DidiMarkerItem`，绘制入口 `app/chart_widget_panels.py: _update_didi_markers`。默认常显，不接选股。
 
 ### 可选子图面板
 

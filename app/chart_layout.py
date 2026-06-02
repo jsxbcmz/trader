@@ -6,7 +6,7 @@ from enum import Enum
 import pyqtgraph as pg
 from PySide6 import QtCore, QtWidgets
 
-from .chart_primitives import BrickDeltaItem, CandlestickItem, DateAxisItem
+from .chart_primitives import BrickDeltaItem, CandlestickItem, DateAxisItem, DidiMarkerItem
 from .chart_interaction import StockChartViewBox
 
 
@@ -56,6 +56,7 @@ class PlotBundle:
 class PriceItems:
     """K 线面板的图形项集合。"""
     candle_item: CandlestickItem
+    didi_marker: DidiMarkerItem
     zx_short_trend: pg.PlotDataItem
     zx_long_short: pg.PlotDataItem
     v_line: pg.InfiniteLine
@@ -303,6 +304,8 @@ def _create_date_bar() -> DateBarItems:
 def create_price_items(price_plot) -> PriceItems:
     candle_item = CandlestickItem()
     price_plot.addItem(candle_item)
+    didi_marker = DidiMarkerItem()
+    price_plot.addItem(didi_marker)
     zx_short_trend = price_plot.plot(
         pen=pg.mkPen((255, 255, 255), width=1.5),
         name="知行短期趋势线",
@@ -360,6 +363,7 @@ def create_price_items(price_plot) -> PriceItems:
 
     return PriceItems(
         candle_item=candle_item,
+        didi_marker=didi_marker,
         zx_short_trend=zx_short_trend,
         zx_long_short=zx_long_short,
         v_line=v_line,

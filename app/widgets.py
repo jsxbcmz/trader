@@ -89,6 +89,8 @@ class StockChartWidget(
         self._macd_diff_values = np.array([])
         self._macd_dea_values = np.array([])
         self._macd_macd_values = np.array([])
+        self._didi_buy_values = np.array([], dtype=bool)
+        self._didi_sell_values = np.array([], dtype=bool)
         self._last_hover_index: int | None = None
         self._last_hover_y: float | None = None
         self._last_visible_range_indices: tuple[int, int] | None = None
@@ -147,6 +149,7 @@ class StockChartWidget(
 
         price_items = create_price_items(self.pricePlot)
         self.candleItem = price_items.candle_item
+        self.didiMarker = price_items.didi_marker
         self.zx_short_trend = price_items.zx_short_trend
         self.zx_long_short = price_items.zx_long_short
         self.vLine = price_items.v_line

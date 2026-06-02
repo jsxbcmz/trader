@@ -1,0 +1,29 @@
+{
+    滴滴战法（地铁战法）优化点：
+告诉你上下车点，结合B1找对上下车；
+
+黄色k线为上车点，绿色为下车点，一一对应。
+
+中间不标的地方是别人的下一站，与己无关。
+
+艺术：坐过站、坐错车都要止损下车！别坐环线等回到起点才换车。
+}
+
+下沿:=IF(CURRBARSCOUNT=1,L,MIN(L,REF(H,1)));
+上沿:=IF(CURRBARSCOUNT=1,H,MAX(H,REF(L,1)));
+下滴:=REF(下沿,1)>C;
+上滴:=C>REF(上沿,1);
+第一次下滴:=IF(下滴 AND BARSLAST(REF(下滴,1))+1>BARSLAST(上滴),1,0);
+第一次上滴:=IF(上滴 AND BARSLAST(REF(上滴,1))+1>BARSLAST(下滴),1,0);
+
+{每一站都显示}
+{DRAWSL(REF(下沿,1)>C,下沿,0,1,0),COLORGREEN;
+DRAWSL(C>REF(上沿,1),上沿,0,1,0),COLOR008CFF;}
+
+{只显示始终点}
+{DRAWSL(第一次下滴,REF(下沿,1),0,1,1),COLORGREEN;
+DRAWSL(第一次上滴,REF(上沿,1),0,1,1),COLOR800080;}
+
+{只显示始终点}
+STICKLINE(第一次下滴,C,O,3,0),COLORGREEN;
+STICKLINE(第一次上滴,C,O,3,1),COLORYELLOW;

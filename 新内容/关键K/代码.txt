@@ -1,0 +1,108 @@
+{控制横盘合并最小振幅}
+LAMBDA:=0.0;
+{0:不画对称轴，1:画对称轴}
+对称轴:=1;
+{0:全部，其他：N对对称线}
+对称数量:=0;
+
+
+振幅范围:=IF(CODELIKE('688') OR CODELIKE('300'),0.07,0.04);
+{红绿量}
+红柱量:=IF(C>=REF(C,1),V,0);
+绿柱量:=IF(REF(C,1)>C,V,0);
+
+{获取最值}
+谷值0:=TROUGHBARS(2,5,1);
+峰值0:=PEAKBARS(1,5,1);
+谷值位置0 := VALUEWHEN(谷值0=0, CURRBARSCOUNT);
+峰值位置0 := VALUEWHEN(峰值0=0, CURRBARSCOUNT);
+谷值值0:=VALUEWHEN(谷值0=0, L);
+峰值值0:=VALUEWHEN(峰值0=0, H);
+峰值量0:=VALUEWHEN(峰值0=0, V);
+
+{存在关键K}
+MA40:= SUM(REF(V,1),40)/40;
+当天阳:= C>=O AND (C/REF(C,1)-1)>=(振幅范围/2);
+巨量:=V>=2*MA40 AND V>REF(V,1);
+关键K:=EXIST(当天阳 AND 巨量,40);
+STICKLINE(当天阳 AND 巨量,C,O,3,0),COLOR008CFF;
+DRAWTEXT(当天阳 AND 巨量 AND C>REF(峰值值0,2) AND REF(峰值值0,2)>O AND V>REF(峰值量0,2),(C+O)/2,'+'),COLORBLACK;
+
+
+{顶部大大绿帽}
+放量倍数:=1.5;
+影线比例:=0.25;
+阴线:=O>C AND REF(C,1)>C;
+阴线均量:=SUM(REF(绿柱量,1),40)/MAX(SUM(IF(REF(绿柱量,1)>0,1,0),40),1);
+放量:=V>(IF(阴线均量=0,MA(REF(V,1),20),阴线均量))*放量倍数 AND V>REF(V,1);{过去阴线的倍数量}
+近期高点:=H>=HHV(H,10) AND H>REF(H,1) AND H>REFX(H,1) AND H/LLV(L,40)>=1.25;
+顶部阴线放量:=阴线 AND 放量 AND 近期高点;
+STICKLINE(顶部阴线放量=1,C,O,3,0),COLORGREEN;
+DRAWTEXT(顶部阴线放量,(C+O)/2,'S'),COLORBLACK; 
+
+{剔除右连续最值}
+谷值1:=IF(CURRBARSCOUNT=谷值位置0 AND 峰值位置0>REF(谷值位置0,1) AND 谷值值0>REF(谷值值0,1),-1,谷值0)=0;
+峰值1:=IF(CURRBARSCOUNT=峰值位置0 AND 谷值位置0>REF(峰值位置0,1) AND REF(峰值值0,1)>峰值值0,-1,峰值0)=0;
+谷值位置1 := VALUEWHEN(谷值1=1, CURRBARSCOUNT);
+峰值位置1 := VALUEWHEN(峰值1=1, CURRBARSCOUNT);
+谷值值1:=VALUEWHEN(谷值1=1, L);
+峰值值1:=VALUEWHEN(峰值1=1, H);
+
+{剔除左连续最值}
+谷值:=IF(CURRBARSCOUNT=谷值位置1 AND MAX(REFX(谷值位置1,BARSNEXT(REFX(谷值1,1))+1)>REFX(峰值位置1,BARSNEXT(峰值1)+1),0) AND MAX(谷值值1>REFX(谷值值1,BARSNEXT(REFX(谷值1,1))+1),0),0,谷值1)=1;
+峰值:=IF(CURRBARSCOUNT=峰值位置1 AND MAX(REFX(峰值位置1,BARSNEXT(REFX(峰值1,1))+1)>REFX(谷值位置1,BARSNEXT(谷值1)+1),0) AND MAX(REFX(峰值值1,BARSNEXT(REFX(峰值1,1))+1)>峰值值1,0),0,峰值1)=1;
+谷值位置 := VALUEWHEN(谷值=1, CURRBARSCOUNT);
+峰值位置 := VALUEWHEN(峰值=1, CURRBARSCOUNT);
+谷值值:=VALUEWHEN(谷值=1, L);
+峰值值:=VALUEWHEN(峰值=1, H);
+
+{横盘问题}
+上谷值值0:=MAX(VALUEWHEN(谷值=1,REFX(谷值值,REFX(BARSNEXT(谷值),1)+1)),0);
+上峰值值0:=MAX(VALUEWHEN(峰值=1, REFX(峰值值,REFX(BARSNEXT(峰值),1)+1)),0);
+上谷值值1:=VALUEWHEN(上谷值值0>0,上谷值值0);
+上峰值值1:=VALUEWHEN(上峰值值0>0,上峰值值0);
+上谷值值:=IF(谷值=1,REF(上谷值值1,1),上谷值值1);
+上峰值值:=IF(峰值=1,REF(上峰值值1,1),上峰值值1);
+
+{横盘合并同类项}
+谷左点:=BARSLAST(ABS(L/上谷值值-1)>LAMBDA);
+TMP_T_NN1:=MAX(BARSNEXT(ABS(L/谷值值-1)>LAMBDA),0);
+谷右点:=IF(TMP_T_NN1>0,TMP_T_NN1,谷值位置);
+
+峰左点:=BARSLAST(ABS(H/上峰值值-1)>LAMBDA);
+TMP_P_NN1:=MAX(BARSNEXT(ABS(H/峰值值-1)>LAMBDA),0);
+峰右点:=IF(TMP_P_NN1>0,TMP_P_NN1,峰值位置);
+
+谷点:=IF(谷值=1,INTPART((谷左点-谷右点)/2)+谷值位置,0);
+峰点:=IF(峰值=1,INTPART((峰左点-峰右点)/2)+峰值位置,0);
+谷点值:= IF(CURRBARSCOUNT=REFX(谷点,BARSNEXT(谷值)) OR CURRBARSCOUNT=REF(谷点,BARSLAST(谷值)),1,0);
+峰点值:= IF(CURRBARSCOUNT=REFX(峰点,BARSNEXT(峰值)) OR CURRBARSCOUNT=REF(峰点,BARSLAST(峰值)),1,0);
+
+谷点位置:= VALUEWHEN(谷点值=1,CURRBARSCOUNT);
+峰点位置:= VALUEWHEN(峰点值=1,CURRBARSCOUNT);
+谷点值值:= VALUEWHEN(谷点值=1,L);
+峰点值值:= VALUEWHEN(峰点值=1,H);
+
+{正V}
+起点1:=CURRBARSCOUNT=峰点位置;
+起点值1:=峰点值值;
+终点1:=CURRBARSCOUNT=谷点位置;
+正V次数:=CONST(COUNT(终点1,-1))-COUNT(终点1,-1);
+终点值1:=谷点值值;
+终点1_2:=CURRBARSCOUNT=谷点位置-1;
+终点值1_2:=1/(峰点位置-谷点位置)*ABS(起点值1-终点值1)+终点值1;
+DRAWLINE(起点1 AND (对称数量=0 OR 正V次数<=对称数量),起点值1,终点1 AND (对称数量=0 OR 对称数量>正V次数),终点值1,0),COLORYELLOW,DOTLINE;
+STICKLINE(终点1 AND (对称数量=0 OR 对称数量>正V次数) AND 对称轴=1, H*1.1, L, 0, 0), COLORYELLOW;
+DRAWLINE(终点1 AND (对称数量=0 OR 正V次数<=对称数量),终点值1,终点1_2 AND (对称数量=0 OR 对称数量>正V次数),终点值1_2,1),COLORYELLOW,DOTLINE;
+
+{倒V}
+起点2:=CURRBARSCOUNT=谷点位置;
+起点值2:=谷点值值;
+终点2:=CURRBARSCOUNT=峰点位置;
+倒V次数:=CONST(COUNT(终点2,-1))-COUNT(终点2,-1);
+终点值2:=峰点值值;
+终点2_2:=CURRBARSCOUNT=峰点位置-1;
+终点值2_2:=1/(谷点位置-峰点位置)*(起点值2-终点值2)+终点值2;
+DRAWLINE(起点2 AND (对称数量=0 OR 倒V次数<=对称数量),起点值2,终点2 AND (对称数量=0 OR 对称数量>正V次数),终点值2,0),COLORYELLOW;
+STICKLINE(终点2 AND (对称数量=0 OR 对称数量>正V次数) AND 对称轴=1, L*0.9, H, 0, 0), COLORYELLOW;
+DRAWLINE(终点2 AND (对称数量=0 OR 倒V次数<=对称数量),终点值2,终点2_2 AND (对称数量=0 OR 对称数量>正V次数),终点值2_2,1),COLORYELLOW;

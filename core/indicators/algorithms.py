@@ -281,6 +281,103 @@ def compute_needle20_indicator(high: np.ndarray, low: np.ndarray, close: np.ndar
     return {"short": short, "mid": mid, "long": long}
 
 
+def _ref(values: np.ndarray, period: int = 1) -> np.ndarray:
+    """向前引用 period 个周期（通达信 REF），越界处填 nan。"""
+    values = np.asarray(values, dtype=float)
+    result = np.full(len(values), np.nan, dtype=float)
+    if period < len(values):
+        result[period:] = values[: len(values) - period]
+    return result
+
+
+def _barslast(condition: np.ndarray) -> np.ndarray:
+    """距上次满足条件的周期数（通达信 BARSLAST）。
+
+    满足当天返回 0，之前从未满足返回 nan。复刻自
+    ``core.indicators.builtin.barslast``，避免 core 层循环依赖。
+    """
+    flags = np.asarray(condition, dtype=bool)
+    result = np.full(len(flags), np.nan, dtype=float)
+    last_true_idx = -1
+    for i in range(len(flags)):
+        if flags[i]:
+            last_true_idx = i
+            result[i] = 0.0
+        elif last_true_idx >= 0:
+            result[i] = float(i - last_true_idx)
+    return result
+
+
+def _greater_with_nan(left: np.ndarray, right: np.ndarray) -> np.ndarray:
+    """逐元素 left > right；right 为 nan（从未出现反向滴）时按通达信约定判 True。
+
+    通达信中 BARSLAST 从未满足时为缺省态，与之比较的条件视为成立。
+    left 为 nan 时判 False。
+    """
+    left = np.asarray(left, dtype=float)
+    right = np.asarray(right, dtype=float)
+    result = np.zeros(len(left), dtype=bool)
+    left_valid = np.isfinite(left)
+    right_nan = ~np.isfinite(right)
+    result |= left_valid & right_nan
+    both_valid = left_valid & np.isfinite(right)
+    result |= both_valid & (left > right)
+    return result
+
+
+def compute_didi_indicator(
+    open_: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    close: np.ndarray,
+):
+    """滴滴战法（地铁战法）上下车点。
+
+    通达信原公式：
+        下沿:=IF(CURRBARSCOUNT=1,L,MIN(L,REF(H,1)));
+        上沿:=IF(CURRBARSCOUNT=1,H,MAX(H,REF(L,1)));
+        下滴:=REF(下沿,1)>C;
+        上滴:=C>REF(上沿,1);
+        第一次下滴:=IF(下滴 AND BARSLAST(REF(下滴,1))+1>BARSLAST(上滴),1,0);
+        第一次上滴:=IF(上滴 AND BARSLAST(REF(上滴,1))+1>BARSLAST(下滴),1,0);
+
+    CURRBARSCOUNT=1 即序列首根，这里用 index 0 特判替代。
+
+    Returns:
+        dict: ``{"buy": bool ndarray, "sell": bool ndarray}``
+        buy=第一次上滴（黄柱/上车点），sell=第一次下滴（绿柱/下车点）。
+    """
+    high = np.asarray(high, dtype=float)
+    low = np.asarray(low, dtype=float)
+    close = np.asarray(close, dtype=float)
+    length = len(close)
+
+    if length == 0:
+        empty = np.zeros(0, dtype=bool)
+        return {"buy": empty, "sell": empty}
+
+    # 下沿 / 上沿：首根特判（CURRBARSCOUNT=1），其余取通道边界
+    lower_band = np.minimum(low, _ref(high, 1))
+    upper_band = np.maximum(high, _ref(low, 1))
+    lower_band[0] = low[0]
+    upper_band[0] = high[0]
+
+    # 下滴：REF(下沿,1) > C；上滴：C > REF(上沿,1)
+    down_drip = _ref(lower_band, 1) > close
+    up_drip = close > _ref(upper_band, 1)
+
+    # 去重：一段同向通道里只取第一次
+    barslast_ref_down = _barslast(np.nan_to_num(_ref(down_drip.astype(float), 1)).astype(bool))
+    barslast_ref_up = _barslast(np.nan_to_num(_ref(up_drip.astype(float), 1)).astype(bool))
+    barslast_up = _barslast(up_drip)
+    barslast_down = _barslast(down_drip)
+
+    sell = down_drip & _greater_with_nan(barslast_ref_down + 1.0, barslast_up)
+    buy = up_drip & _greater_with_nan(barslast_ref_up + 1.0, barslast_down)
+
+    return {"buy": np.asarray(buy, dtype=bool), "sell": np.asarray(sell, dtype=bool)}
+
+
 def compute_oamv(
     open_prices: np.ndarray,
     high_prices: np.ndarray,

@@ -14,6 +14,7 @@ from core.indicators.algorithms import (  # noqa: F401
     _tdx_sma_numba,
     calc_brick_threshold_price,
     compute_brick_indicator,
+    compute_didi_indicator,
     compute_kdj_indicator,
     compute_macd_indicator,
     compute_needle20_indicator,

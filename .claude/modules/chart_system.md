@@ -9,7 +9,7 @@
 | `app/widgets.py` | ~1340 | StockChartWidget 主组件 + 进度弹窗 |
 | `app/chart_layout.py` | ~574 | SubChartType 枚举 + PlotBundle/Items dataclass + 工厂函数 + SubChartSelector |
 | `app/chart_primitives.py` | ~169 | CandlestickItem, BrickDeltaItem, DateAxisItem |
-| `app/chart_indicators.py` | ~280 | 指标计算（EMA, MA, SMA, KDJ, Brick, MACD, Needle20, 临界价格） |
+| `app/chart_indicators.py` | ~280 | 指标计算 shim（EMA, MA, SMA, KDJ, Brick, MACD, Needle20, 滴滴, 临界价格）→ 实际在 `core/indicators/algorithms.py` |
 | `app/chart_overlays.py` | ~118 | HTML 浮窗/标签构建 |
 | `app/chart_interaction.py` | ~45 | StockChartViewBox 鼠标交互 |
 | `app/chart_ranges.py` | ~60 | 范围 clamp 逻辑 |
@@ -65,7 +65,8 @@ widgets.py (StockChartWidget)
 | 方法 | 说明 |
 |------|------|
 | `_prepare_daily_arrays(df)` | DataFrame → numpy 数组 |
-| `_update_price_panel(x, o, h, l, c, is_up)` | 更新蜡烛图+指标线 |
+| `_update_price_panel(x, o, h, l, c, is_up)` | 更新蜡烛图+指标线，末尾调 `_update_didi_markers` |
+| `_update_didi_markers(x, o, c)` | 计算滴滴上下车点并在主图叠加黄/青蓝标记柱（`chart_widget_panels.py`） |
 | `_update_volume_panel(x, is_up, amount_yi)` | 重绘成交额柱状图 |
 | `_update_brick_panel(x, h, l, c)` | 计算+绘制砖型差值 |
 | `_update_kdj_panel(x, h, l, c)` | 计算+绘制 KDJ |
@@ -98,7 +99,8 @@ widgets.py (StockChartWidget)
 
 ```
 DataFrame → set_daily() → _prepare_daily_arrays()
-  → _update_price_panel()      [蜡烛图 + EMA + MA]
+  → _update_price_panel()      [蜡烛图 + EMA + MA + 滴滴上下车标记]
+      └ _update_didi_markers() [compute_didi_indicator → DidiMarker.setData]
   → _update_volume_panel()     [红绿柱]（如可见）
   → _update_brick_panel()      [砖型差值]（如可见）
   → _update_kdj_panel()        [K/D/J 三线]（如可见）
@@ -133,7 +135,7 @@ DataFrame → set_daily() → _prepare_daily_arrays()
 | 类名 | 说明 |
 |------|------|
 | `PlotBundle` | 价格+5种子图的 Axis/ViewBox/PlotWidget |
-| `PriceItems` | K线面板所有图形项（蜡烛、曲线、十字线、浮窗、参考线等） |
+| `PriceItems` | K线面板所有图形项（蜡烛、滴滴标记 didi_marker、曲线、十字线、浮窗、参考线等） |
 | `VolumeItems` | 成交额面板（竖线） |
 | `BrickItems` | 砖型差值面板图形项 |
 | `KdjItems` | KDJ 面板图形项（三曲线+三参考线） |
@@ -148,7 +150,7 @@ DataFrame → set_daily() → _prepare_daily_arrays()
 |------|------|
 | `create_plot_bundle(owner)` | 创建价格+5种子图的 DateAxisItem + StockChartViewBox + PlotWidget，链接 X 轴 |
 | `create_chart_layout(owner, ...)` | 组装 QVBoxLayout（价格面板+动态子图面板） |
-| `create_price_items(price_plot)` | 蜡烛图+指标线+十字线+浮窗+参考线 |
+| `create_price_items(price_plot)` | 蜡烛图+滴滴标记(DidiMarkerItem)+指标线+十字线+浮窗+参考线 |
 | `create_volume_items(vol_plot)` | 竖线 |
 | `create_brick_items(brick_plot)` | BrickDeltaItem+零线+竖线+标签 |
 | `create_kdj_items(kdj_plot)` | K/D/J 三线+20/50/80 参考线 |
@@ -184,6 +186,12 @@ DataFrame → set_daily() → _prepare_daily_arrays()
 砖型差值柱状图（QPainter 手绘），`BODY_WIDTH = 0.6`。
 - `setData(data: ndarray)` — shape `(N, 3)` → `[x, prev_brick, current_brick]`
 
+### DidiMarkerItem(pg.GraphicsObject)
+滴滴战法（地铁战法）上下车标记柱，叠加在**主图 K 线**上（`ZValue=900`），`BODY_WIDTH = 0.6`。
+- `setData(data: ndarray)` — shape `(N, 4)` → `[x, open, close, kind]`，kind=1 上车/0 下车，仅信号 K 线入数据。
+- 在 open→close 区间画实体柱，还原通达信 `STICKLINE(条件, C, O, 3, kind)`。
+- 上车=黄框黑底空心（`buy_pen (255,215,0)` + `buy_brush (0,0,0)`）；下车=青蓝实心（`(0,170,180)`）。
+
 ---
 
 ## chart_indicators.py — 指标计算
@@ -204,6 +212,7 @@ DataFrame → set_daily() → _prepare_daily_arrays()
 | `compute_kdj_indicator(high, low, close)` | 标准 KDJ，返回 `{k, d, j}` |
 | `compute_macd_indicator(close)` | MACD，返回 `{diff, dea, macd, cross_up, cross_down}` |
 | `compute_needle20_indicator(high, low, close)` | 单针下20，返回 `{short, mid, long}` |
+| `compute_didi_indicator(open, high, low, close)` | 滴滴战法上下车点，返回 `{buy, sell}`（布尔数组）。定义在 `core/indicators/algorithms.py`，含 `_ref`/`_barslast`/`_greater_with_nan` 辅助 |
 | `calc_brick_threshold_price(h, l, c, idx, target)` | 计算砖型差值恰好为零的临界收盘价 |
 
 ---

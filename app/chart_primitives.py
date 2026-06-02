@@ -90,6 +90,77 @@ class CandlestickItem(pg.GraphicsObject):
         return QtCore.QRectF(xmin, ymin, xmax - xmin, ymax - ymin)
 
 
+class DidiMarkerItem(pg.GraphicsObject):
+    """滴滴战法上下车标记柱（叠加在主图 K 线上）。
+
+    还原通达信 STICKLINE(条件, C, O, 3, kind)：在信号 K 线的 open→close
+    区间画一根实体柱。黄柱=上车点(买)，绿柱=下车点(卖)。
+
+    Data: ndarray of rows [x, open, close, kind]，kind=1 黄(上车)/0 蓝(下车)。
+    上车柱为空心（仅描边），下车柱为蓝色实心。
+    """
+
+    BODY_WIDTH = 0.6
+
+    def __init__(self):
+        super().__init__()
+        self._data: np.ndarray | None = None
+        # 上车：黄色边框 + 黑色填充（空心视觉，内部为背景黑）
+        self._buy_pen = pg.mkPen((255, 215, 0), width=1.5)
+        self._buy_brush = pg.mkBrush((0, 0, 0))
+        # 下车：蓝中带绿（青蓝）实心
+        self._sell_pen = pg.mkPen((0, 170, 180), width=1)
+        self._sell_brush = pg.mkBrush((0, 170, 180))
+        self.setZValue(900)
+
+    def setData(self, data: np.ndarray):
+        self.prepareGeometryChange()
+        self._data = data
+        self.update()
+
+    def paint(self, p, *args):
+        if self._data is None or len(self._data) == 0:
+            return
+
+        body_width = self.BODY_WIDTH
+        half_width = body_width / 2
+
+        for x, open_price, close_price, kind in self._data:
+            if np.isnan([open_price, close_price]).any():
+                continue
+
+            is_buy = kind >= 0.5
+            pen = self._buy_pen if is_buy else self._sell_pen
+            brush = self._buy_brush if is_buy else self._sell_brush
+
+            low = min(open_price, close_price)
+            high = max(open_price, close_price)
+            height = high - low
+            if height <= 1e-12:
+                height = 0.001
+
+            p.setPen(pen)
+            p.setBrush(brush)
+            p.drawRect(QtCore.QRectF(x - half_width, low, body_width, height))
+
+    def boundingRect(self):
+        if self._data is None or len(self._data) == 0:
+            return QtCore.QRectF()
+
+        xs = self._data[:, 0]
+        opens = self._data[:, 1]
+        closes = self._data[:, 2]
+        valid = ~(np.isnan(opens) | np.isnan(closes))
+        if not np.any(valid):
+            return QtCore.QRectF()
+
+        xmin = float(np.min(xs[valid])) - 1
+        xmax = float(np.max(xs[valid])) + 1
+        ymin = float(np.min(np.minimum(opens[valid], closes[valid])))
+        ymax = float(np.max(np.maximum(opens[valid], closes[valid])))
+        return QtCore.QRectF(xmin, ymin, xmax - xmin, ymax - ymin)
+
+
 class BrickDeltaItem(pg.GraphicsObject):
     """Stickline-style brick segment item."""
 

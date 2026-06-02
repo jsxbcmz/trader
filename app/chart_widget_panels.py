@@ -8,6 +8,7 @@ from .chart_indicators import (
     ZX_MULTI_PERIODS,
     calc_brick_threshold_price,
     compute_brick_indicator,
+    compute_didi_indicator,
     compute_kdj_indicator,
     compute_macd_indicator,
     compute_needle20_indicator,
@@ -67,6 +68,26 @@ class PanelsMixin:
         self._long_short_values = long_short
         self.zx_short_trend.setData(x, short_trend)
         self.zx_long_short.setData(x, long_short)
+
+        self._update_didi_markers(x, o, c)
+
+    def _update_didi_markers(self, x, o, c):
+        """计算滴滴战法上下车点并在主图叠加黄/绿实体柱。"""
+        didi = compute_didi_indicator(o, self._high_values, self._low_values, c)
+        buy = didi["buy"]
+        sell = didi["sell"]
+        self._didi_buy_values = buy
+        self._didi_sell_values = sell
+
+        signal_mask = buy | sell
+        if not np.any(signal_mask):
+            self.didiMarker.setData(np.empty((0, 4), dtype=float))
+            return
+
+        indices = np.where(signal_mask)[0]
+        kind = buy[indices].astype(float)  # 1=黄(上车) / 0=绿(下车)
+        marker_data = np.column_stack([x[indices], o[indices], c[indices], kind])
+        self.didiMarker.setData(marker_data)
 
     def _update_brick_green_thresholds(self, h, l, c, brick_values):
         """在主图用横向虚线标注最后一天砖形图转绿的临界价格。
