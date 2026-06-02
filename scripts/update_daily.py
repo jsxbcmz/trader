@@ -4,18 +4,22 @@
 - 不依赖 init_databases()，不碰 scoring.db
 - 直接 raw SQLite 写入 market.db，避免 WAL 锁冲突
 - CLI 和微信端均可使用，行为一致
+
+注意：除个股日线外，还会更新 930903 中证A股指数日线并重建 OAMV 活跃市值。
 """
 import os, sys, time, sqlite3 as lite
 from pathlib import Path
 from collections import deque
 
 import pandas as pd
+import numpy as np
 
 PROJECT = Path(__file__).resolve().parents[1]
 os.chdir(str(PROJECT))
 sys.path.insert(0, str(PROJECT))
 
 from app.tushare_client import TushareClient, DEFAULT_TUSHARE_TOKEN
+from core.indicators.algorithms import compute_oamv, moving_average
 
 
 def to_ts_code(sym: str) -> str:
@@ -195,6 +199,115 @@ def update_all(client: TushareClient, force_full: bool = False, skip_existing: b
     return results, details, elapsed
 
 
+def update_index_and_oamv(client: TushareClient, limiter: RateLimiter):
+    """更新 930903 中证A股指数日线并重建 OAMV 活跃市值。"""
+    t0 = time.perf_counter()
+    conn = lite.connect(str(PROJECT / "db" / "market.db"), timeout=10)
+    ts_code = "930903.CSI"
+
+    # 1. 确定起止日期
+    cur = conn.execute("SELECT MAX(date) FROM index_daily WHERE ts_code = ?", (ts_code,))
+    row = cur.fetchone()
+    last_date = row[0] if row and row[0] else None
+    if last_date:
+        start_date = (pd.Timestamp(last_date) + pd.Timedelta(days=1)).strftime("%Y%m%d")
+    else:
+        start_date = "20100101"
+    end_date = pd.Timestamp.today().strftime("%Y%m%d")
+
+    if start_date > end_date:
+        print("  指数已是最新，跳过")
+        conn.close()
+        return
+
+    # 2. 拉取指数日线
+    limiter.acquire()
+    remote_df = client.fetch_index_daily(ts_code, start_date=start_date, end_date=end_date)
+    if remote_df.empty:
+        print("  指数接口无新数据，跳过")
+        conn.close()
+        return
+
+    # 3. 列映射并写入
+    mapped = pd.DataFrame({
+        "date": pd.to_datetime(remote_df["trade_date"], format="%Y%m%d"),
+        "open": pd.to_numeric(remote_df["open"], errors="coerce"),
+        "close": pd.to_numeric(remote_df["close"], errors="coerce"),
+        "high": pd.to_numeric(remote_df["high"], errors="coerce"),
+        "low": pd.to_numeric(remote_df["low"], errors="coerce"),
+        "volume": pd.to_numeric(remote_df["amount"], errors="coerce"),
+        "turnover_rate": None,
+    }).dropna(subset=["date", "open", "close", "high", "low", "volume"])
+    if mapped.empty:
+        print("  指数数据映射后为空，跳过")
+        conn.close()
+        return
+
+    sql = (
+        "INSERT OR REPLACE INTO index_daily "
+        "(ts_code, date, open, close, high, low, volume, turnover_rate) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    )
+    written = 0
+    for r in mapped.itertuples(index=False):
+        conn.execute(sql, (
+            ts_code,
+            str(r.date.date()),
+            float(r.open), float(r.close), float(r.high), float(r.low),
+            float(r.volume), None,
+        ))
+        written += 1
+    conn.commit()
+    print(f"  指数 {ts_code}: 新增 {written} 条")
+
+    # 4. 重建 OAMV
+    all_index = conn.execute(
+        "SELECT date, open, close, high, low, volume FROM index_daily "
+        "WHERE ts_code = ? ORDER BY date", (ts_code,)
+    ).fetchall()
+    if len(all_index) < 16:
+        print("  指数数据不足16条，无法计算 OAMV")
+        conn.close()
+        return
+
+    idx_df = pd.DataFrame(all_index, columns=["date", "open", "close", "high", "low", "volume"])
+    idx_df["date"] = pd.to_datetime(idx_df["date"])
+
+    result = compute_oamv(
+        open_prices=idx_df["open"].to_numpy(np.float64),
+        high_prices=idx_df["high"].to_numpy(np.float64),
+        low_prices=idx_df["low"].to_numpy(np.float64),
+        close_prices=idx_df["close"].to_numpy(np.float64),
+        amount=idx_df["volume"].to_numpy(np.float64),
+        amount_divisor=1000.0,
+    )
+
+    oamv_df = pd.DataFrame({
+        "date": idx_df["date"],
+        "open": result["oamv_open"],
+        "high": result["oamv_high"],
+        "low": result["oamv_low"],
+        "close": result["oamv_close"],
+    }).dropna(subset=["open", "high", "low", "close"]).reset_index(drop=True)
+    oamv_df["date"] = oamv_df["date"].dt.strftime("%Y-%m-%d")
+
+    # 批量写入
+    oamv_sql = (
+        "INSERT OR REPLACE INTO oamv_daily "
+        "(date, open, close, high, low) VALUES (?, ?, ?, ?, ?)"
+    )
+    oamv_rows = [
+        (str(r.date), float(r.open), float(r.close), float(r.high), float(r.low))
+        for r in oamv_df.itertuples(index=False)
+    ]
+    conn.executemany(oamv_sql, oamv_rows)
+    conn.commit()
+
+    idx_elapsed = time.perf_counter() - t0
+    print(f"  OAMV 活跃市值: 已重建 ({len(oamv_df)} 条, {idx_elapsed:.1f}s)")
+    conn.close()
+
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="更新 trader 股票日线数据")
@@ -226,4 +339,8 @@ if __name__ == "__main__":
         conn.close()
         print(f"  {'✓' if r['status']=='updated' else '✗'} {r['msg']} ({r['elapsed']:.1f}s)")
     else:
-        update_all(client, force_full=args.full, skip_existing=args.skip_existing)
+        results, details, elapsed = update_all(client, force_full=args.full, skip_existing=args.skip_existing)
+        print(f"\n--- 更新指数与 OAMV ---")
+        limiter = RateLimiter()
+        update_index_and_oamv(client, limiter)
+        print("--- 完成 ---")
