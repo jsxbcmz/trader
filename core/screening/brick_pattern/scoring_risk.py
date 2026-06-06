@@ -263,6 +263,27 @@ def _check_fake_sideways(brick, index):
     return detail, None
 
 
+# ── 横盘专属3：高砖值横盘假突破 ──
+def _check_high_brick_sideways(brick, index):
+    """砖值≥120时横盘起跳，T+1红砖率显著下降(48.6% vs 63.3%)，扣2分。"""
+    brick_val = float(brick[index])
+    triggered = brick_val >= 120
+    if triggered:
+        penalty = -2.0
+        desc = f"高砖值横盘(砖值{brick_val:.0f}≥120,假突破风险)"
+    else:
+        penalty = 0.0
+        desc = ""
+
+    detail = RiskFilterDetail(
+        filter_type=RiskFilterType.HIGH_BRICK_SIDEWAYS,
+        triggered=triggered,
+        description=desc,
+        penalty=penalty,
+    )
+    return detail, ("高砖值横盘" if triggered else None)
+
+
 # ── 通用风险4：锤子线禁忌 ──
 def _check_hammer(close, open_, high, low, index):
     body = abs(close[index] - open_[index])
@@ -315,7 +336,7 @@ def _check_large_upper_shadow(close, open_, high, low, index):
 # ── 通用风险6：三波不做 ──
 def _check_third_wave(brick, close, high, index):
     triggered, _, desc = _detect_third_wave(brick, close, high, index)
-    penalty = -8.0 if triggered else 0.0
+    penalty = -3.0 if triggered else 0.0
     detail = RiskFilterDetail(
         filter_type=RiskFilterType.THIRD_WAVE,
         triggered=triggered,
@@ -359,11 +380,11 @@ def _check_overheat(close, index):
     if index >= 5 and close[index - 5] > 0:
         cum_chg_5d = (close[index] - close[index - 5]) / close[index - 5] * 100
         if cum_chg_5d > 25:
-            penalty = -15.0
+            penalty = -5.0
             triggered = True
             desc = f"短期过热(5日涨{cum_chg_5d:.1f}%>25%)"
         elif cum_chg_5d >= 15:
-            penalty = -5.0
+            penalty = -2.0
             triggered = True
             desc = f"短期偏热(5日涨{cum_chg_5d:.1f}%)"
 
@@ -441,6 +462,7 @@ def compute_risk_penalty(
     if pattern_type == PatternType.SIDEWAYS_JUMP:
         _record(_check_trend_exhaust(short_trend, close, index))
         _record(_check_fake_sideways(brick, index))
+        _record(_check_high_brick_sideways(brick, index))
 
     # 通用风险（K线形态等）
     _record(_check_hammer(close, open_, high, low, index))

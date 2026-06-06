@@ -11,7 +11,7 @@ except ImportError:  # pragma: no cover
     ts = None
 
 
-DEFAULT_TUSHARE_TOKEN = "23bcd49c307d6a664820333badbd8f5e879fa74f428037991bca9b13"
+DEFAULT_TUSHARE_TOKEN = "baa3a931901e75c4dd05f5770d21bdb21671eee539b78683bfe0ddce"
 
 
 class TushareClientError(RuntimeError):

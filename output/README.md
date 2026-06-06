@@ -14,6 +14,7 @@
 | `screening_predictions/` | 自动预测 JSON（机器读） | Agent 加工 raw 后生成，供回顾脚本消费 |
 | `screening_analysis/` | 分析报告（人读） | Agent 生成的 .md 报告 |
 | `manual_predictions/` | 用户手动分析结果 | 对话中发股票代码请求分析 |
+| `weekly_review/` | 周度回顾分析 | Copilot 对话式生成分析报告 |
 
 ## 全局硬性规则
 

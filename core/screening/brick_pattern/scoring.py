@@ -49,10 +49,11 @@ def compute_common_quality_score(
     pattern_type: PatternType,
     cs_pcts: dict[str, float] | None = None,
 ) -> tuple[float, dict[str, float]]:
-    """计算通用质量评分(30分) V4：K线形态(10) + 信号日涨幅(8) + 翻红力度比(3) + 短趋vs多空(3) + 均线排列(3) + 短趋斜率(3)。
+    """计算通用质量评分(33分) V5：K线形态(10) + 信号日涨幅(8) + 翻红力度比(6) + 短趋vs多空(3) + 均线排列(3) + 短趋斜率(3)。
 
+    V5变更：翻红力度比增权(3→6)，回测验证强翻红(增量>15)T+1红砖率89%、均收益为整体5.7倍。
     V4变更：K线形态大幅增权(4→10,跨定式最强通用因子)；信号日涨幅增权(6→8)；
-    翻红力度比大幅降权(7→3,无效因子)；短趋vs多空降权(6→3)；均线排列降权(4→3)。
+    短趋vs多空降权(6→3)；均线排列降权(4→3)。
 
     P1-2 截面归一化：当传入 ``cs_pcts``（含 day_change_pct/force_ratio_pct/short_trend_slope_pct）时，
     信号日涨幅 / 翻红力度比 / 短趋斜率 改用分位查表评分；不传则走原绝对阈值（向后兼容）。
@@ -71,9 +72,9 @@ def compute_common_quality_score(
 
     items: dict[str, float] = {}
 
-    # ── 翻红力度比 (3分, V4大幅降权 — 回测显示无效因子) ──
+    # ── 翻红力度比 (6分, V5增权 — 回测验证强翻红T+1红砖率89%,均收益5.7倍) ──
     if cs_pcts is not None and "force_ratio_pct" in cs_pcts:
-        items["翻红力度比"] = _pct_to_score(cs_pcts["force_ratio_pct"], 3)
+        items["翻红力度比"] = _pct_to_score(cs_pcts["force_ratio_pct"], 6)
     else:
         delta_today = brick[index] - brick[index - 1]
         delta_yesterday = abs(brick[index - 1] - brick[index - 2]) if index >= 2 else 0
@@ -81,11 +82,13 @@ def compute_common_quality_score(
         force_ratio = delta_today / divisor
 
         if force_ratio >= 3:
-            items["翻红力度比"] = 3
+            items["翻红力度比"] = 6
         elif force_ratio >= 2:
-            items["翻红力度比"] = 2
+            items["翻红力度比"] = 4
+        elif force_ratio >= 1.5:
+            items["翻红力度比"] = 3
         elif force_ratio >= 1:
-            items["翻红力度比"] = 1
+            items["翻红力度比"] = 2
         else:
             items["翻红力度比"] = 0
 

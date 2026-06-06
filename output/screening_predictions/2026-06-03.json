@@ -20,7 +20,6 @@
       "hist": 0.4897,
       "brick_val": 126.9475,
       "macd_trend": "强势金叉放量",
-      "direction": "偏多",
       "confidence": "中",
       "resistance1": 21.34,
       "resistance2": 21.34,
@@ -31,7 +30,8 @@
         "⚠️ 涨停质量中性，次日需观察集合竞价",
         "换手率20.8%偏高，筹码交换剧烈"
       ],
-      "source": "auto"
+      "source": "auto",
+      "pred_direction": "偏多"
     },
     {
       "symbol": "600310",
@@ -51,7 +51,6 @@
       "hist": 0.1369,
       "brick_val": 106.5961,
       "macd_trend": "强势金叉放量",
-      "direction": "偏多",
       "confidence": "高",
       "resistance1": 6.35,
       "resistance2": 6.35,
@@ -61,7 +60,8 @@
       "risks": [
         "涨停质量强，但追板风险高"
       ],
-      "source": "auto"
+      "source": "auto",
+      "pred_direction": "偏多"
     },
     {
       "symbol": "601231",
@@ -81,7 +81,6 @@
       "hist": 0.0553,
       "brick_val": 88.1855,
       "macd_trend": "金叉初期",
-      "direction": "偏多",
       "confidence": "中",
       "resistance1": 45.68,
       "resistance2": 45.7,
@@ -91,7 +90,8 @@
       "risks": [
         "涨停质量强，但追板风险高"
       ],
-      "source": "auto"
+      "source": "auto",
+      "pred_direction": "偏多"
     },
     {
       "symbol": "603663",
@@ -111,7 +111,6 @@
       "hist": 3.4857,
       "brick_val": 109.046,
       "macd_trend": "强势金叉放量",
-      "direction": "偏多",
       "confidence": "中",
       "resistance1": 67.97,
       "resistance2": 67.97,
@@ -121,7 +120,8 @@
       "risks": [
         "涨停质量强，但追板风险高"
       ],
-      "source": "auto"
+      "source": "auto",
+      "pred_direction": "偏多"
     },
     {
       "symbol": "600172",
@@ -141,7 +141,6 @@
       "hist": 0.5584,
       "brick_val": 100.8569,
       "macd_trend": "强势金叉放量",
-      "direction": "偏多",
       "confidence": "中",
       "resistance1": 16.06,
       "resistance2": 16.06,
@@ -151,7 +150,8 @@
       "risks": [
         "换手率26.2%偏高，筹码交换剧烈"
       ],
-      "source": "auto"
+      "source": "auto",
+      "pred_direction": "偏多"
     },
     {
       "symbol": "600163",
@@ -171,7 +171,6 @@
       "hist": 0.1096,
       "brick_val": 119.7694,
       "macd_trend": "强势金叉放量",
-      "direction": "偏多",
       "confidence": "中",
       "resistance1": 7.28,
       "resistance2": 7.56,
@@ -179,7 +178,8 @@
       "support2": 6.93,
       "chg_5d": 7.7,
       "risks": [],
-      "source": "auto"
+      "source": "auto",
+      "pred_direction": "偏多"
     },
     {
       "symbol": "600188",
@@ -199,7 +199,6 @@
       "hist": 0.8269,
       "brick_val": 115.1309,
       "macd_trend": "强势金叉放量",
-      "direction": "偏多",
       "confidence": "中",
       "resistance1": 26.25,
       "resistance2": 26.25,
@@ -207,7 +206,8 @@
       "support2": 22.46,
       "chg_5d": 22.79,
       "risks": [],
-      "source": "auto"
+      "source": "auto",
+      "pred_direction": "偏多"
     },
     {
       "symbol": "600780",
@@ -227,7 +227,6 @@
       "hist": 0.1022,
       "brick_val": 119.2396,
       "macd_trend": "强势金叉放量",
-      "direction": "偏多",
       "confidence": "中",
       "resistance1": 7.89,
       "resistance2": 7.92,
@@ -235,7 +234,8 @@
       "support2": 7.6,
       "chg_5d": 7.86,
       "risks": [],
-      "source": "auto"
+      "source": "auto",
+      "pred_direction": "偏多"
     },
     {
       "symbol": "000862",
@@ -255,7 +255,6 @@
       "hist": 0.1211,
       "brick_val": 98.2132,
       "macd_trend": "强势金叉放量",
-      "direction": "偏多",
       "confidence": "中",
       "resistance1": 7.66,
       "resistance2": 7.72,
@@ -263,7 +262,8 @@
       "support2": 7.08,
       "chg_5d": 10.9,
       "risks": [],
-      "source": "auto"
+      "source": "auto",
+      "pred_direction": "偏多"
     },
     {
       "symbol": "002056",
@@ -283,7 +283,6 @@
       "hist": 1.3044,
       "brick_val": 120.4808,
       "macd_trend": "强势金叉放量",
-      "direction": "偏多",
       "confidence": "中",
       "resistance1": 28.23,
       "resistance2": 28.23,
@@ -293,7 +292,8 @@
       "risks": [
         "量比2.9倍偏高，谨防放量滞涨"
       ],
-      "source": "auto"
+      "source": "auto",
+      "pred_direction": "偏多"
     }
   ],
   "source": "auto"

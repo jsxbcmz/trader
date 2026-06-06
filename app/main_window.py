@@ -138,6 +138,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _save_settings_from_page(self, app_settings: AppSettings):
         current_settings = self.settingsService.load()
         request = AppSettings(
+            tushare_token=app_settings.tushare_token,
             min_visible_days=app_settings.min_visible_days,
             max_visible_days=app_settings.max_visible_days,
             last_selected_symbol=current_settings.last_selected_symbol,

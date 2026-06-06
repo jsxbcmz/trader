@@ -72,7 +72,9 @@
           "若次日低开，可能触发止损盘"
         ]
       },
-      "source": "auto"
+      "source": "auto",
+      "pred_direction": "偏多",
+      "confidence": "中高"
     },
     {
       "symbol": "002137",
@@ -124,7 +126,9 @@
           "量比2.94偏高"
         ]
       },
-      "source": "auto"
+      "source": "auto",
+      "pred_direction": "偏多偏谨慎",
+      "confidence": "中"
     },
     {
       "symbol": "600114",
@@ -162,7 +166,9 @@
           "三波扣分说明前期已有两波上涨"
         ]
       },
-      "source": "auto"
+      "source": "auto",
+      "pred_direction": "偏多偏谨慎",
+      "confidence": "中低"
     }
   ],
   "source": "auto"

@@ -33,6 +33,7 @@ class RiskFilterType(Enum):
     HAMMER = "锤子线"
     LARGE_UPPER_SHADOW = "大上影线"
     THIRD_WAVE = "三波追高"
+    HIGH_BRICK_SIDEWAYS = "高砖值横盘"
 
 
 @dataclass(frozen=True)
