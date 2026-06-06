@@ -2,6 +2,10 @@
 
 所有选股流水线的输出产物统一存放于此。**根目录不放任何裸文件**，全部归入子目录。
 
+> **关联项目**：此目录是 `/opt/data/workspace/trader/`（StockViewer 选股项目）的正式 output 目录。
+> 项目内脚本 `scripts/screen_full.py` 写 `screening_raw/`，`scripts/review_intraday.py` 读 `screening_predictions/`，
+> 流水线 cron job 也统一指向此处。不属于 trader 选股体系的数据**严禁写入**。
+
 ## 子目录
 
 | 目录 | 用途 | 数据来源 |

@@ -131,3 +131,25 @@ python -m run  # 或 python run.py
 5. `screen_with_cache()` 缓存+断点续选
 6. 子图切换不重建面板 —— 只控制 show/hide + 重新链接 X 轴（`SubChartsMixin`）
 7. 图表 Widget 通过 Mixin 拆分职责（Hover/Panels/Ranges/SubCharts）
+
+## output/ 目录规则（选股分析产出）
+
+**正式路径**：`/opt/data/output/`（软链指向本项目的正式 output，所有脚本均引用此路径）
+
+### 子目录
+| 目录 | 用途 | 写入来源 |
+|------|------|----------|
+| `screening_raw/` | 原始扫描 JSON | `scripts/screen_full.py` |
+| `screening_predictions/` | 自动预测 JSON | Agent 流水线（cron job） |
+| `screening_analysis/` | 分析报告 .md | Agent 流水线 |
+| `manual_predictions/` | 手动分析 JSON | Hermes Agent 对话中生成 |
+
+### 写入规则
+- 文件名严格 `YYYY-MM-DD` 格式，**禁止** `YYYYMMDD` 紧凑格式
+- 每条股票记录**必须**含 `source` 字段（`auto` 或 `manual`）
+- 每条股票记录**必须**含 `detailed_analysis` 字段
+- 预测 JSON **必须**用 `stocks` key，禁止用 `predictions`、`results` 等
+- **禁止**在 output 下放任何与选股无关的文件
+- **禁止**擅自添加/修改字段结构
+
+> 子目录各有独立的 README.md，内含完整字段定义。如需修改字段，先问用户确认。
