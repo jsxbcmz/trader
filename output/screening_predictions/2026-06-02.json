@@ -1,0 +1,169 @@
+{
+  "date": "2026-06-02",
+  "next_trading_day": "2026-06-03",
+  "market_context": {
+    "date_avg_chg": -0.98,
+    "is_bearish": false
+  },
+  "notes": "仅对得分 >= 68 的个股做详细预测，其余低分个股不予预测。涨停组次日方向需结合 limit_up_quality 判断，不可机械看多。",
+  "stocks": [
+    {
+      "symbol": "002962",
+      "name": "五方光电",
+      "score": 87.0,
+      "grade": "S",
+      "group": "limit_up",
+      "today": {
+        "open": 18.51,
+        "high": 20.9,
+        "low": 18.36,
+        "close": 20.9,
+        "change": 10.0,
+        "limit_up_quality": "strong"
+      },
+      "prediction": {
+        "direction": "偏多",
+        "confidence": "中高",
+        "key_resistance": [
+          21.5,
+          22.99
+        ],
+        "key_support": [
+          20.0,
+          19.0
+        ],
+        "scenarios": {
+          "bullish": {
+            "probability": 0.55,
+            "description": "惯性高开，冲高回落或高位震荡，收盘涨幅0~5%",
+            "target_range": [
+              20.9,
+              22.99
+            ]
+          },
+          "neutral": {
+            "probability": 0.3,
+            "description": "高开后获利盘涌出，回踩20元整数关口，收盘±2%以内",
+            "target_range": [
+              20.5,
+              21.3
+            ]
+          },
+          "bearish": {
+            "probability": 0.15,
+            "description": "涨停次日直接低开（概率低），回补19.00附近缺口",
+            "target_range": [
+              19.0,
+              20.0
+            ]
+          }
+        },
+        "sustainability": "短期有惯性（金叉+涨停质量强），但前高19.88附近需回踩确认支撑后才能看第二波",
+        "key_factors": [
+          "MACD金叉刚形成（DIFF/DEA交叉，柱状刚翻红）",
+          "N型起跳突破前高，但需要回踩确认",
+          "涨停质量'强'，封板坚决无炸板",
+          "5日累计涨幅5.98%，不算过度透支",
+          "元器件板块近期较强"
+        ],
+        "risks": [
+          "前高19.72-19.88区间大量换手，追涨盘获利回吐压力",
+          "市场整体偏弱（-0.98%），独立行情持续性存疑",
+          "若次日低开，可能触发止损盘"
+        ]
+      },
+      "source": "auto"
+    },
+    {
+      "symbol": "002137",
+      "name": "实益达",
+      "score": 73.0,
+      "grade": "A",
+      "group": "limit_up",
+      "today": {
+        "open": 8.55,
+        "high": 9.45,
+        "low": 8.49,
+        "close": 9.45,
+        "change": 10.01,
+        "limit_up_quality": "strong"
+      },
+      "prediction": {
+        "direction": "偏多偏谨慎",
+        "confidence": "中",
+        "key_resistance": [
+          9.8,
+          10.39
+        ],
+        "key_support": [
+          9.0,
+          8.59
+        ],
+        "scenarios": {
+          "bullish": {
+            "probability": 0.35,
+            "description": "连板或高开震荡，目标9.80-10.39"
+          },
+          "neutral": {
+            "probability": 0.4,
+            "description": "高开回落，收盘+2%~-2%"
+          },
+          "bearish": {
+            "probability": 0.25,
+            "description": "直接低开补缺口，风险三波追高-8"
+          }
+        },
+        "sustainability": "中低（三波追高风险-8分是大隐患，A级72分靠涨停溢价撑着）",
+        "key_factors": [
+          "涨停质量强",
+          "放量2.94倍",
+          "三波追高-8风险"
+        ],
+        "risks": [
+          "三波结构已走完两波以上，追高容易站岗",
+          "量比2.94偏高"
+        ]
+      },
+      "source": "auto"
+    },
+    {
+      "symbol": "600114",
+      "name": "东睦股份",
+      "score": 70.0,
+      "grade": "A",
+      "group": "limit_up",
+      "today": {
+        "open": 35.96,
+        "high": 38.79,
+        "low": 35.59,
+        "close": 38.79,
+        "change": 10.01,
+        "limit_up_quality": "strong"
+      },
+      "prediction": {
+        "direction": "偏多偏谨慎",
+        "confidence": "中低",
+        "key_resistance": [
+          40.19,
+          42.0
+        ],
+        "key_support": [
+          37.0,
+          35.26
+        ],
+        "sustainability": "中低（三波追高-8扣分，5日累计-1.2%说明是底部启动首日）",
+        "key_factors": [
+          "底部涨停首日（此前连跌）",
+          "涨停质量强",
+          "三波追高-8风险"
+        ],
+        "risks": [
+          "底部首日涨停次日容易高开低走",
+          "三波扣分说明前期已有两波上涨"
+        ]
+      },
+      "source": "auto"
+    }
+  ],
+  "source": "auto"
+}

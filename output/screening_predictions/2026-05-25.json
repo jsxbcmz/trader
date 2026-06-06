@@ -21,13 +21,7 @@
         "放量2.4倍"
       ],
       "continuity_assessment": "N型结构完整+MACD金叉+板块联动，延续性较好。关注是否出现B1确认信号",
-      "source": "auto",
-      "open_chg": -0.19,
-      "day_chg": -1.54,
-      "direction_norm": "bull",
-      "open_correct": false,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "002674",
@@ -47,13 +41,7 @@
         "换手仅2.98%缩量涨停=主力完全控盘，走势取决于主力意图"
       ],
       "continuity_assessment": "MACD双线均为满分，中期动能充足。缩量涨停质量高，延续性在六股中最优之一",
-      "source": "auto",
-      "open_chg": -0.81,
-      "day_chg": -1.0,
-      "direction_norm": "bull",
-      "open_correct": false,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "603203",
@@ -74,13 +62,7 @@
         "中高价股"
       ],
       "continuity_assessment": "趋势质量高+回调极短，延续性强。但前日大阴线-5.4%是隐忧",
-      "source": "auto",
-      "open_chg": 5.97,
-      "day_chg": 3.5,
-      "direction_norm": "bull",
-      "open_correct": true,
-      "close_correct": true,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "605588",
@@ -101,13 +83,7 @@
         "距前高0%"
       ],
       "continuity_assessment": "三波加速赶顶阶段，短期空间有限但有惯性。出现S1信号必须果断离场",
-      "source": "auto",
-      "open_chg": 0.0,
-      "day_chg": -4.08,
-      "direction_norm": "bear",
-      "open_correct": false,
-      "close_correct": true,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "002745",
@@ -129,14 +105,7 @@
         "低价股散户跟风风险"
       ],
       "continuity_assessment": "N型结构完整但换手偏高，低价股散户多需时间消化。中期趋势向好但短期波动大",
-      "source": "auto",
-      "open_chg": 2.13,
-      "day_chg": -3.33,
-      "direction_norm": "bull",
-      "open_correct": true,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     }
-  ],
-  "backfilled_against": "2026-05-26"
+  ]
 }

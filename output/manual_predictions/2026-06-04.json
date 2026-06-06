@@ -1,0 +1,152 @@
+{
+  "date": "2026-06-04",
+  "analyzed_at": "2026-06-04",
+  "source": "manual",
+  "stocks": [
+    {
+      "symbol": "600226",
+      "name": "亨通股份",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏多",
+        "confidence": "中高",
+        "support": "6.20",
+        "resistance": "7.38",
+        "analysis": "倍量涨停+MACD金叉+滴滴上车三信号共振，唯一双认证票"
+      }
+    },
+    {
+      "symbol": "002733",
+      "name": "雄韬股份",
+      "source": "manual",
+      "prediction": {
+        "direction": "谨慎偏多",
+        "confidence": "中",
+        "support": "30.80",
+        "resistance": "35.90",
+        "analysis": "涨停但缩量0.79x，MACD多头排列，需次日放量验证"
+      }
+    },
+    {
+      "symbol": "605006",
+      "name": "山东玻纤",
+      "source": "manual",
+      "prediction": {
+        "direction": "谨慎偏多",
+        "confidence": "中低",
+        "support": "16.40",
+        "resistance": "18.90",
+        "analysis": "MACD刚金叉+滴滴上车+超跌反弹，换手12.32%偏高"
+      }
+    },
+    {
+      "symbol": "002669",
+      "name": "康达新材",
+      "source": "manual",
+      "prediction": {
+        "direction": "中性",
+        "confidence": "低",
+        "support": "15.50",
+        "resistance": "16.70",
+        "analysis": "MACD多头但换手16.55%极高，筹码交换剧烈"
+      }
+    },
+    {
+      "symbol": "002979",
+      "name": "雷赛智能",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏空",
+        "confidence": "低",
+        "support": "51.00",
+        "resistance": "54.00",
+        "analysis": "缩量0.6x+MACD空头hist-2.96，无人气"
+      }
+    },
+    {
+      "symbol": "002635",
+      "name": "安洁科技",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏空",
+        "confidence": "低",
+        "support": "16.80",
+        "resistance": "17.50",
+        "analysis": "缩量+MACD空头+无催化"
+      }
+    },
+    {
+      "symbol": "603063",
+      "name": "禾望电气",
+      "source": "manual",
+      "prediction": {
+        "direction": "谨慎偏空",
+        "confidence": "中",
+        "support": "52.00",
+        "resistance": "57.00",
+        "analysis": "滴滴上车但MACD空头hist-2.27，反弹性质"
+      }
+    },
+    {
+      "symbol": "002126",
+      "name": "银轮股份",
+      "source": "manual",
+      "prediction": {
+        "direction": "谨慎偏空",
+        "confidence": "中",
+        "support": "49.00",
+        "resistance": "52.00",
+        "analysis": "滴滴上车但MACD空头hist-1.56+KDJ超卖"
+      }
+    },
+    {
+      "symbol": "002277",
+      "name": "友阿股份",
+      "source": "manual",
+      "prediction": {
+        "direction": "谨慎偏空",
+        "confidence": "低",
+        "support": "6.50",
+        "resistance": "6.90",
+        "analysis": "滴滴上车但MACD空头+换手仅2.48%+百货冷门板块"
+      }
+    },
+    {
+      "symbol": "002185",
+      "name": "华天科技",
+      "source": "manual",
+      "prediction": {
+        "direction": "中性偏弱",
+        "confidence": "中",
+        "support": "18.50",
+        "resistance": "19.50",
+        "analysis": "5日跌10.38%+反弹力度极弱+换手13%偏高"
+      }
+    },
+    {
+      "symbol": "603916",
+      "name": "苏博特",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏空",
+        "confidence": "低",
+        "support": "13.00",
+        "resistance": "13.80",
+        "analysis": "缩量+MACD空头+KDJ超卖J24，无量阴跌反弹"
+      }
+    },
+    {
+      "symbol": "603867",
+      "name": "新化股份",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏空",
+        "confidence": "低",
+        "support": "36.00",
+        "resistance": "37.50",
+        "analysis": "缩量+MACD空头+KDJ超卖J26+当日唯一收跌"
+      }
+    }
+  ],
+  "next_trading_day": "2026-06-05"
+}

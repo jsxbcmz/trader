@@ -41,13 +41,7 @@
         "板块弱(-2.5%)"
       ],
       "continuity_assessment": "技术面扎实(金叉+短趋>多空)，但需次日放量确认，缩量则警惕一日游",
-      "source": "auto",
-      "open_chg": 2.74,
-      "day_chg": -2.76,
-      "direction_norm": "bull",
-      "open_correct": true,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "002927",
@@ -83,13 +77,7 @@
         "板块偏弱(-1.0%)"
       ],
       "continuity_assessment": "消息面+技术面共振，但需次日量能维持",
-      "source": "auto",
-      "open_chg": 0.0,
-      "day_chg": -1.31,
-      "direction_norm": "bull",
-      "open_correct": false,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "605055",
@@ -126,13 +114,7 @@
         "放量1.8x"
       ],
       "continuity_assessment": "加速赶顶，持续性差",
-      "source": "auto",
-      "open_chg": 1.21,
-      "day_chg": 0.34,
-      "direction_norm": "bear",
-      "open_correct": false,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "001301",
@@ -167,13 +149,7 @@
         "评分偏低"
       ],
       "continuity_assessment": "待观察",
-      "source": "auto",
-      "open_chg": -0.57,
-      "day_chg": -0.93,
-      "direction_norm": "bear",
-      "open_correct": true,
-      "close_correct": true,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "002881",
@@ -209,13 +185,7 @@
         "龙虎榜博弈"
       ],
       "continuity_assessment": "N型起跳形态有效，但巨量需要次日缩量确认",
-      "source": "auto",
-      "open_chg": -2.01,
-      "day_chg": -0.5,
-      "direction_norm": "bull",
-      "open_correct": false,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "600353",
@@ -251,13 +221,7 @@
         "封板晚(11:15)"
       ],
       "continuity_assessment": "封板晚+巨量，持续性存疑",
-      "source": "auto",
-      "open_chg": -3.07,
-      "day_chg": -3.55,
-      "direction_norm": "bear",
-      "open_correct": true,
-      "close_correct": true,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "600885",
@@ -292,13 +256,7 @@
         "评分偏低"
       ],
       "continuity_assessment": "待观察",
-      "source": "auto",
-      "open_chg": -0.28,
-      "day_chg": 1.01,
-      "direction_norm": "bear",
-      "open_correct": true,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "603693",
@@ -333,13 +291,7 @@
         "评分偏低"
       ],
       "continuity_assessment": "待观察",
-      "source": "auto",
-      "open_chg": -0.95,
-      "day_chg": -4.86,
-      "direction_norm": "bear",
-      "open_correct": true,
-      "close_correct": true,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "000601",
@@ -374,13 +326,7 @@
         "放量2.4x"
       ],
       "continuity_assessment": "板块强势支撑，延续性较好",
-      "source": "auto",
-      "open_chg": 0.87,
-      "day_chg": -0.25,
-      "direction_norm": "bull",
-      "open_correct": true,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "002150",
@@ -416,15 +362,8 @@
         "冲高回落风险"
       ],
       "continuity_assessment": "板块拖累严重，不宜追",
-      "source": "auto",
-      "open_chg": -1.27,
-      "day_chg": -4.88,
-      "direction_norm": "bear",
-      "open_correct": true,
-      "close_correct": true,
-      "sector_reverted": false
+      "source": "auto"
     }
   ],
-  "note": "⚠️ 今日为普跌日(涨跌比539:2514,均跌-1.79%)，所有偏多预测置信度降一档。若明日低开则偏多判断失效。",
-  "backfilled_against": "2026-05-28"
+  "note": "⚠️ 今日为普跌日(涨跌比539:2514,均跌-1.79%)，所有偏多预测置信度降一档。若明日低开则偏多判断失效。"
 }

@@ -22,13 +22,7 @@
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
       "r_items": [],
-      "source": "manual",
-      "open_chg": 7.1,
-      "day_chg": 4.47,
-      "direction_norm": "neutral",
-      "open_correct": null,
-      "close_correct": null,
-      "sector_reverted": false
+      "source": "manual"
     },
     {
       "symbol": "002046",
@@ -49,13 +43,7 @@
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
       "r_items": [],
-      "source": "manual",
-      "open_chg": 3.62,
-      "day_chg": 2.44,
-      "direction_norm": "neutral",
-      "open_correct": null,
-      "close_correct": null,
-      "sector_reverted": false
+      "source": "manual"
     },
     {
       "symbol": "002158",
@@ -76,13 +64,7 @@
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
       "r_items": [],
-      "source": "manual",
-      "open_chg": 0.0,
-      "day_chg": -6.27,
-      "direction_norm": "neutral",
-      "open_correct": null,
-      "close_correct": null,
-      "sector_reverted": false
+      "source": "manual"
     },
     {
       "symbol": "002453",
@@ -103,13 +85,7 @@
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
       "r_items": [],
-      "source": "manual",
-      "open_chg": 2.08,
-      "day_chg": 1.44,
-      "direction_norm": "neutral",
-      "open_correct": null,
-      "close_correct": null,
-      "sector_reverted": false
+      "source": "manual"
     },
     {
       "symbol": "002815",
@@ -130,13 +106,7 @@
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
       "r_items": [],
-      "source": "manual",
-      "open_chg": 1.41,
-      "day_chg": 3.86,
-      "direction_norm": "neutral",
-      "open_correct": null,
-      "close_correct": null,
-      "sector_reverted": false
+      "source": "manual"
     },
     {
       "symbol": "600152",
@@ -157,13 +127,7 @@
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
       "r_items": [],
-      "source": "manual",
-      "open_chg": 0.08,
-      "day_chg": -5.35,
-      "direction_norm": "neutral",
-      "open_correct": null,
-      "close_correct": null,
-      "sector_reverted": false
+      "source": "manual"
     },
     {
       "symbol": "002522",
@@ -184,13 +148,7 @@
       "trend_status": "短趋>多空(强势)",
       "r_penalty": 0,
       "r_items": [],
-      "source": "manual",
-      "open_chg": 0.29,
-      "day_chg": -1.03,
-      "direction_norm": "neutral",
-      "open_correct": null,
-      "close_correct": null,
-      "sector_reverted": false
+      "source": "manual"
     },
     {
       "symbol": "002174",
@@ -213,13 +171,7 @@
       "r_items": [
         "三波追高"
       ],
-      "source": "manual",
-      "open_chg": -0.96,
-      "day_chg": -4.02,
-      "direction_norm": "neutral",
-      "open_correct": null,
-      "close_correct": null,
-      "sector_reverted": false
+      "source": "manual"
     },
     {
       "symbol": "002613",
@@ -242,13 +194,7 @@
       "r_items": [
         "三波追高"
       ],
-      "source": "manual",
-      "open_chg": 0.96,
-      "day_chg": 10.07,
-      "direction_norm": "neutral",
-      "open_correct": null,
-      "close_correct": null,
-      "sector_reverted": false
+      "source": "manual"
     },
     {
       "symbol": "600673",
@@ -273,13 +219,7 @@
         "三波追高",
         "冲高回落"
       ],
-      "source": "manual",
-      "open_chg": -0.03,
-      "day_chg": -1.19,
-      "direction_norm": "neutral",
-      "open_correct": null,
-      "close_correct": null,
-      "sector_reverted": false
+      "source": "manual"
     },
     {
       "symbol": "000967",
@@ -303,13 +243,7 @@
         "高位放量大阴线",
         "冲高回落"
       ],
-      "source": "manual",
-      "open_chg": 2.47,
-      "day_chg": -0.46,
-      "direction_norm": "neutral",
-      "open_correct": null,
-      "close_correct": null,
-      "sector_reverted": false
+      "source": "manual"
     },
     {
       "symbol": "600300",
@@ -333,14 +267,7 @@
         "短趋势跌破多空线",
         "锤子线"
       ],
-      "source": "manual",
-      "open_chg": -0.29,
-      "day_chg": -0.88,
-      "direction_norm": "neutral",
-      "open_correct": null,
-      "close_correct": null,
-      "sector_reverted": false
+      "source": "manual"
     }
-  ],
-  "backfilled_against": "2026-05-25"
+  ]
 }

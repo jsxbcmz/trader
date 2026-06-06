@@ -1,0 +1,133 @@
+{
+  "date": "2026-06-02",
+  "analyzed_at": "2026-06-02",
+  "source": "manual",
+  "stocks": [
+    {
+      "symbol": "000733",
+      "name": "振华科技",
+      "source": "manual",
+      "prediction": {
+        "direction": "强烈偏多",
+        "confidence": "高",
+        "key_resistance": [
+          56.0,
+          58.5
+        ],
+        "key_support": [
+          51.2,
+          48.5
+        ],
+        "reason": "288亿倍量关键K+元器件板块领涨"
+      }
+    },
+    {
+      "symbol": "000700",
+      "name": "模塑科技",
+      "source": "manual",
+      "prediction": {
+        "direction": "谨慎偏多",
+        "confidence": "中",
+        "key_resistance": [
+          16.0,
+          16.58
+        ],
+        "key_support": [
+          14.5,
+          13.8
+        ],
+        "reason": "涨停反包，天量需注意承接"
+      }
+    },
+    {
+      "symbol": "000993",
+      "name": "闽东电力",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏多",
+        "confidence": "中",
+        "key_resistance": [
+          15.5,
+          16.0
+        ],
+        "key_support": [
+          14.5,
+          14.0
+        ],
+        "reason": "砖值117+唯一选股入选，电力板块走强"
+      }
+    },
+    {
+      "symbol": "002066",
+      "name": "瑞泰科技",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏多",
+        "confidence": "中低",
+        "key_resistance": [
+          25.5,
+          26.5
+        ],
+        "key_support": [
+          23.0,
+          22.0
+        ],
+        "reason": "放量63%，但信号偏弱需要进一步确认"
+      }
+    },
+    {
+      "symbol": "600552",
+      "name": "凯盛科技",
+      "source": "manual",
+      "prediction": {
+        "direction": "温和偏多",
+        "confidence": "低",
+        "key_resistance": [
+          19.5,
+          20.0
+        ],
+        "key_support": [
+          18.0,
+          17.5
+        ],
+        "reason": "元器件跟涨，151亿平量，稳健但缺弹性"
+      }
+    },
+    {
+      "symbol": "002536",
+      "name": "飞龙股份",
+      "source": "manual",
+      "prediction": {
+        "direction": "观察",
+        "confidence": "低",
+        "key_resistance": [
+          42.0,
+          43.5
+        ],
+        "key_support": [
+          38.0,
+          36.5
+        ],
+        "reason": "5/29暴跌-9.7%后反弹，量没跟上，等待补量"
+      }
+    },
+    {
+      "symbol": "603155",
+      "name": "新亚强",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏弱",
+        "confidence": "中",
+        "key_resistance": [
+          19.0,
+          20.0
+        ],
+        "key_support": [
+          17.5,
+          16.8
+        ],
+        "reason": "换手1.5%，量能萎缩，放弃关注"
+      }
+    }
+  ]
+}

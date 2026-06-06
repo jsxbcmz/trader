@@ -1,0 +1,133 @@
+{
+  "date": "2026-06-03",
+  "analyzed_at": "2026-06-03",
+  "source": "manual",
+  "stocks": [
+    {
+      "symbol": "002747",
+      "name": "埃斯顿",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏多",
+        "confidence": "中",
+        "key_resistance": [
+          30.5,
+          31.5
+        ],
+        "key_support": [
+          27.5,
+          26.5
+        ],
+        "reason": "当日滴滴上车+增量1.58x+KDJ超买J=166但放量突破前高29.07"
+      }
+    },
+    {
+      "symbol": "002297",
+      "name": "博云新材",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏多",
+        "confidence": "中低",
+        "key_resistance": [
+          22.0,
+          23.0
+        ],
+        "key_support": [
+          20.0,
+          19.5
+        ],
+        "reason": "当日滴滴上车+放量208亿+逼近前高压力区22附近"
+      }
+    },
+    {
+      "symbol": "000862",
+      "name": "银星能源",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏多",
+        "confidence": "中",
+        "key_resistance": [
+          7.6,
+          7.8
+        ],
+        "key_support": [
+          7.1,
+          6.9
+        ],
+        "reason": "选股入选B/62分+滴滴上车持续+电力板块主线+放量55亿温和放量"
+      }
+    },
+    {
+      "symbol": "000518",
+      "name": "四环生物",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏多偏谨慎",
+        "confidence": "中低",
+        "key_resistance": [
+          4.1,
+          4.3
+        ],
+        "key_support": [
+          3.6,
+          3.5
+        ],
+        "reason": "6/3涨停+滴滴上车+生物医药超跌反弹，但长期低价股换手19%偏高"
+      }
+    },
+    {
+      "symbol": "603738",
+      "name": "泰晶科技",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏多",
+        "confidence": "中低",
+        "key_resistance": [
+          48.0,
+          50.0
+        ],
+        "key_support": [
+          43.5,
+          41.5
+        ],
+        "reason": "当日滴滴上车+放量276亿反弹+但前几周持续下跌趋势未完全扭转"
+      }
+    },
+    {
+      "symbol": "601133",
+      "name": "柏诚股份",
+      "source": "manual",
+      "prediction": {
+        "direction": "偏多",
+        "confidence": "中低",
+        "key_resistance": [
+          28.5,
+          29.5
+        ],
+        "key_support": [
+          26.0,
+          25.0
+        ],
+        "reason": "当日滴滴上车+放量1.65x+底部反弹形态,但建筑工程板块非当前主线"
+      }
+    },
+    {
+      "symbol": "002730",
+      "name": "电光科技",
+      "source": "manual",
+      "prediction": {
+        "direction": "震荡",
+        "confidence": "中",
+        "key_resistance": [
+          31.2,
+          32.0
+        ],
+        "key_support": [
+          29.4,
+          28.3
+        ],
+        "reason": "6/2滴滴上车后6/3又上车(反复信号)+缩量仅0.86x+换手3.8%偏低,信号可靠性存疑"
+      }
+    }
+  ]
+}

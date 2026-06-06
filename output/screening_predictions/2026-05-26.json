@@ -78,13 +78,7 @@
         "{}"
       ],
       "continuity_assessment": "MACD 金叉/红柱, 趋势 多头",
-      "source": "auto",
-      "open_chg": 4.13,
-      "day_chg": 1.91,
-      "direction_norm": "bull",
-      "open_correct": true,
-      "close_correct": true,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "001331",
@@ -124,13 +118,7 @@
         "{}"
       ],
       "continuity_assessment": "MACD 金叉/红柱, 趋势 多头",
-      "source": "auto",
-      "open_chg": 2.99,
-      "day_chg": 2.87,
-      "direction_norm": "bull",
-      "open_correct": true,
-      "close_correct": true,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "603608",
@@ -170,13 +158,7 @@
         "{三波追高: -8.0}"
       ],
       "continuity_assessment": "MACD 金叉/红柱, 趋势 多头",
-      "source": "auto",
-      "open_chg": -2.56,
-      "day_chg": -1.67,
-      "direction_norm": "bull",
-      "open_correct": false,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "600590",
@@ -216,13 +198,7 @@
         "{}"
       ],
       "continuity_assessment": "MACD 绿柱, 趋势 多头",
-      "source": "auto",
-      "open_chg": 0.26,
-      "day_chg": -5.43,
-      "direction_norm": "bull",
-      "open_correct": true,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "603353",
@@ -262,13 +238,7 @@
         "{横盘MACD死叉: -10.0}"
       ],
       "continuity_assessment": "MACD 金叉/红柱, 趋势 多头",
-      "source": "auto",
-      "open_chg": 1.31,
-      "day_chg": -6.26,
-      "direction_norm": "bull",
-      "open_correct": true,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "601958",
@@ -308,13 +278,7 @@
         "{横盘MACD死叉: -10.0}"
       ],
       "continuity_assessment": "MACD 金叉/红柱, 趋势 多头",
-      "source": "auto",
-      "open_chg": 2.84,
-      "day_chg": 5.08,
-      "direction_norm": "bull",
-      "open_correct": true,
-      "close_correct": true,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "000408",
@@ -354,13 +318,7 @@
         "{冲高回落: -10.0}"
       ],
       "continuity_assessment": "MACD 绿柱, 趋势 多头",
-      "source": "auto",
-      "open_chg": -0.52,
-      "day_chg": -4.1,
-      "direction_norm": "bull",
-      "open_correct": false,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "002747",
@@ -400,13 +358,7 @@
         "{三波追高: -8.0}"
       ],
       "continuity_assessment": "MACD 金叉/红柱, 趋势 多头",
-      "source": "auto",
-      "open_chg": -3.76,
-      "day_chg": -5.33,
-      "direction_norm": "bull",
-      "open_correct": false,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "603306",
@@ -446,13 +398,7 @@
         "{三波追高: -8.0}"
       ],
       "continuity_assessment": "MACD 金叉/红柱, 趋势 多头",
-      "source": "auto",
-      "open_chg": -0.33,
-      "day_chg": -3.34,
-      "direction_norm": "bull",
-      "open_correct": false,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     },
     {
       "symbol": "600784",
@@ -493,14 +439,7 @@
         "冲高回落: -10.0}"
       ],
       "continuity_assessment": "MACD 金叉/红柱, 趋势 多头",
-      "source": "auto",
-      "open_chg": -2.99,
-      "day_chg": -7.36,
-      "direction_norm": "bull",
-      "open_correct": false,
-      "close_correct": false,
-      "sector_reverted": false
+      "source": "auto"
     }
-  ],
-  "backfilled_against": "2026-05-27"
+  ]
 }
