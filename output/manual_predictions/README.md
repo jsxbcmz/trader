@@ -10,6 +10,8 @@
 | 存储位置 | `screening_raw/` + `screening_predictions/` | 本目录 |
 | `source` | `"auto"` | `"manual"` |
 
+除此以外，**字段格式与 screening_predictions/ 完全一致**。
+
 ## 文件命名
 - 文件名：`YYYY-MM-DD.json`
 - 禁止使用 `YYYYMMDD` 紧凑格式
@@ -24,33 +26,41 @@
 | `analyzed_at` | string |  | 分析时间 |
 | `next_trading_day` | string | ✅ | 下一交易日 |
 | `source` | string | ✅ | 固定为 `"manual"` |
-| `stocks` | array | ✅ | 股票列表 |
+| `stocks` | array | ✅ | 股票列表（**必须用此 key 名**） |
 
 ### stocks 中每只股票的字段
+与 `screening_predictions/` 完全一致：
+
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `symbol` | string | ✅ | 6位代码 |
 | `name` | string | ✅ | 股票名称 |
 | `industry` | string |  | 所属行业 |
-| `pattern` | string |  | 定式/形态描述 |
-| `score` | float |  | 评分（如有） |
-| `grade` | string |  | 等级 |
+| `pattern` | string |  | 定式名称 |
+| `score` | float |  | 评分 |
+| `grade` | string |  | 等级：S/A/B/C/D |
+| `group` | string |  | 分组：`limit_up`/`strong_unsealed`/`normal` |
+| `is_limit_up` | bool |  | 是否涨停 |
+| `limit_up_quality` | string |  | 涨停质量：`strong`/`weak` |
 | `close` | float |  | 分析时收盘价 |
 | `day_change` | float |  | 当日涨跌幅(%) |
 | `vol_ratio` | float |  | 量比 |
-| `macd_status` | string |  | MACD状态描述 |
-| `ma_status` | string |  | 均线状态描述 |
+| `macd_diff` | float |  | MACD DIFF值 |
+| `macd_hist` | float |  | MACD柱值 |
+| `brick_val` | float |  | 砖值 |
+| `cum_chg_5d` | float |  | 5日累计涨幅(%) |
 | `pred_direction` | string | ✅ | 预测方向：`偏多`/`震荡偏多`/`中性`/`中性偏空`/`偏空` |
 | `confidence` | string | ✅ | 置信度：`高`/`中高`/`中`/`中低`/`低` |
 | `key_risks` | array |  | 风险列表 |
-| `detailed_analysis` | string | ✅ | 完整分析文字 |
+| `detailed_analysis` | string | ✅ | **完整分析文字**：含形态/量价/MACD/支撑阻力/次日方向预判 |
 | `source` | string | ✅ | 固定为 `"manual"` |
+
+> 有则填，无则省略。但 `symbol`、`name`、`pred_direction`、`confidence`、`detailed_analysis`、`source` 必须存在。
 
 ## 硬性规则
 - ✅ 文件名严格 `YYYY-MM-DD.json`
 - ✅ 只放 `source=manual` 的 JSON 文件
-- ✅ 每只股票必须有 `source` 字段（值为 `"manual"`）
-- ✅ 每只股票必须有 `detailed_analysis` 字段
+- ✅ 字段格式与 `screening_predictions/` 保持一致
 - ❌ 不要把自动选股的结果放这里
 - ❌ 禁止添加/修改字段，除非经过我同意
 - ❌ 禁止使用 `YYYYMMDD` 紧凑格式
