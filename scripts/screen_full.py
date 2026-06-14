@@ -335,7 +335,7 @@ def run_screening(
 
     # 落盘 JSON（始终保存全量配额结果）
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    filename = target.replace("-", "")
+    filename = target
     with open(OUTPUT_DIR / f"{filename}.json", "w") as f:
         json.dump(
             {

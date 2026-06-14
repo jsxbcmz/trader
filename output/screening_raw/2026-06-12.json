@@ -1,0 +1,73 @@
+{
+  "date": "2026-06-12",
+  "market_avg": 1.46,
+  "is_bearish_day": false,
+  "group_counts": {
+    "limit_up": 0,
+    "strong_unsealed": 1,
+    "normal": 0
+  },
+  "results": [
+    {
+      "symbol": "002171",
+      "name": "楚江新材",
+      "industry": "铜",
+      "pattern": "未知",
+      "score": 64.0,
+      "sector_penalty": 0.0,
+      "sector_flags": [],
+      "limit_up_quality": null,
+      "cum_chg_5d": 5.76,
+      "group": "strong_unsealed",
+      "grade": "B",
+      "summary": "命中: 上升波段延续 64分 [B级]",
+      "close": 13.59,
+      "day_change": 5.51,
+      "is_limit_up": false,
+      "vol": 223.19,
+      "avg_vol_30": 93.0,
+      "vol_ratio": 2.4,
+      "turnover_rate": 10.34,
+      "q_score": 22,
+      "q_items": {
+        "翻红力度比": 4,
+        "信号日涨幅": 7,
+        "短趋vs多空": 2,
+        "均线排列": 2,
+        "短趋斜率": 3,
+        "K线形态": 4
+      },
+      "m_score": 18,
+      "m_items": {
+        "DIFF趋势": 10,
+        "MACD柱趋势": 4,
+        "DIFF水平": 4
+      },
+      "s_score": 6,
+      "s_items": {
+        "T日涨幅": 6,
+        "涨幅质量": 0
+      },
+      "p_score": 2.0,
+      "p_items": {
+        "红柱比2/3": 2
+      },
+      "r_penalty": -3.0,
+      "r_items": {
+        "三波追高": -3.0
+      },
+      "raw_total": 51.0,
+      "diff": 0.4105,
+      "dea": 0.2823,
+      "hist": 0.2564,
+      "brick_val": 118.4413,
+      "st_val": 12.3906,
+      "ls_val": 12.2066,
+      "open": 13.1,
+      "high": 13.71,
+      "low": 12.89,
+      "prev_close": 12.88,
+      "source": "auto"
+    }
+  ]
+}
