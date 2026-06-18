@@ -1,0 +1,175 @@
+{
+  "date": "2026-06-17",
+  "next_trading_day": "2026-06-18",
+  "source": "manual",
+  "market": {
+    "index": "上证指数",
+    "close": 4108.08,
+    "day_change": 0.40,
+    "volume": "1.40万亿",
+    "oamv_change": 0.85,
+    "direction": "多头",
+    "tomorrow_outlook": "突破4100后看4130-4150区间，若放量站稳4100则短期多头延续"
+  },
+  "stocks": [
+    {
+      "symbol": "603637",
+      "name": "镇海股份",
+      "source": "manual",
+      "industry": "建筑工程",
+      "pattern": "超跌反弹+倍量长阳",
+      "score": 62.0,
+      "grade": "B",
+      "group": "rebound",
+      "is_limit_up": false,
+      "limit_up_quality": null,
+      "close": 18.27,
+      "day_change": 9.99,
+      "vol_ratio": 0.82,
+      "turnover_rate": 3.84,
+      "macd_diff": 0.0345,
+      "macd_dea": 0.3408,
+      "macd_hist": -0.6126,
+      "macd_direction": "空头(DIFF<DEA)，但DIFF拐头即将金叉",
+      "brick_val": 93.67,
+      "st": 18.41,
+      "ls": 16.24,
+      "cum_chg_5d": 5.67,
+      "pred_direction": "偏多",
+      "confidence": "中高",
+      "didi_signal": "on_board",
+      "key_risks": [
+        "MACD尚未金叉，今日涨幅过大(9.99%)明日可能冲高回落",
+        "量比0.82缩量涨停，封板意愿弱",
+        "距前高22.15仍有21%空间但需放量确认"
+      ],
+      "support_resistance": {
+        "support_primary": 17.00,
+        "support_secondary": 16.10,
+        "resistance_primary": 19.04,
+        "resistance_secondary": 20.79
+      },
+      "detailed_analysis": "[形态]超跌反弹+倍量长阳。从6/1高点22.15连续杀跌至6/16低点16.10，跌幅-27.3%，今日开盘16.66后一路拉升至涨停价18.27收盘（+9.99%），形成底部V型反转大阳线。成交额16.22亿，量比0.82（缩量），换手率3.84%较低，说明抛压不大、筹码稳定。[MACD]DIFF=0.0345, DEA=0.3408, HIST=-0.6126，空头排列但绿柱显著缩短，DIFF已从底部拐头，明日若收阳即可金叉。砖值93.67（中性偏合理），ST=18.41/LS=16.24，价格在通道中上部。[同板块对比]建筑工程板块仅勘设股份(603458)涨停A级76分，镇海今日大涨但非涨停，评分62/B级。勘设为连板突破，镇海为超跌反弹，性质不同。[明日展望]偏多，置信度中高。DIFF即将金叉+底部放量阳线+同板块强势，明日大概率冲高至19-20区域，但量比0.82偏弱需补量。支撑17.00(5日均线)，阻力19.04(前平台)。[滴滴]🚇命中上车点，处于底部V型反转启动位置，买点较好但非最低点。"
+    },
+    {
+      "symbol": "603270",
+      "name": "金帝股份",
+      "source": "manual",
+      "industry": "机械基件",
+      "pattern": "箱体震荡反弹",
+      "score": 50.0,
+      "grade": "C",
+      "group": "strong_unsealed",
+      "is_limit_up": false,
+      "limit_up_quality": null,
+      "close": 30.20,
+      "day_change": 5.37,
+      "vol_ratio": 1.10,
+      "turnover_rate": 11.67,
+      "macd_diff": 0.3290,
+      "macd_dea": 0.3997,
+      "macd_hist": -0.1415,
+      "macd_direction": "空头(DIFF<DEA)，绿柱极度收敛，即将金叉",
+      "brick_val": 79.41,
+      "st": 31.00,
+      "ls": 27.11,
+      "cum_chg_5d": 0.33,
+      "pred_direction": "震荡偏多",
+      "confidence": "中",
+      "didi_signal": "on_board",
+      "key_risks": [
+        "换手率11.67%偏高，筹码不稳定",
+        "MACD尚未金叉，短期方向待确认",
+        "strong_unsealed组评分最低(46C)，板块地位弱",
+        "距前高32.57仅+7.8%，空间有限"
+      ],
+      "support_resistance": {
+        "support_primary": 28.66,
+        "support_secondary": 26.96,
+        "resistance_primary": 30.78,
+        "resistance_secondary": 32.57
+      },
+      "detailed_analysis": "[形态]箱体震荡反弹。5/20见顶31.47后回落至6/4的27.06，随后在27-31区间宽幅震荡近两周。今日开盘29.00后放量拉升至30.78(日内高点)，收30.20(+5.37%)，成交额24.61亿，量比1.10平量，换手率11.67%偏高。日线形成带长上影的实体阳线。[MACD]DIFF=0.3290, DEA=0.3997, HIST=-0.1415，空头排列但绿柱已极度收敛逼近零轴，DIFF在零轴上方拐头，明日大概率金叉。砖值79.41(中性偏低)，ST=31.00/LS=27.11，价格在通道中部。[同板块对比]strong_unsealed组共6只：新亚强69B(+7.06%)、嵘泰股份64B(+5.29%)、雅克科技61B(+7.38%)、和远气体59B(+3.39%)、TCL中环57B(+3.68%)、金帝股份46C(+5.37%)。金帝评分最低但涨幅中等，砖值79.4为组内最低（均值~108），相对安全。[明日展望]震荡偏多，置信度中。DIFF即将金叉+反弹趋势未破+砖值偏低有安全边际，但换手率偏高筹码不稳定，强阻力在30.78-31.00区间。若放量突破30.78则看32.57前高，否则继续箱体震荡。支撑28.66(昨收)。[滴滴]🚇命中上车点，处于MACD金叉前夕+箱体下沿反弹途中，买点尚可。"
+    },
+    {
+      "symbol": "002962",
+      "name": "五方光电",
+      "source": "manual",
+      "industry": "元器件",
+      "pattern": "暴跌后超跌反弹",
+      "score": 45.0,
+      "grade": "C",
+      "group": "rebound",
+      "is_limit_up": false,
+      "limit_up_quality": null,
+      "close": 18.50,
+      "day_change": 3.53,
+      "vol_ratio": 1.07,
+      "turnover_rate": 18.35,
+      "macd_diff": 0.0828,
+      "macd_dea": 0.4792,
+      "macd_hist": -0.7929,
+      "macd_direction": "空头(DIFF<DEA)，绿柱持续放大",
+      "brick_val": 54.66,
+      "st": 20.18,
+      "ls": 16.47,
+      "cum_chg_5d": -3.75,
+      "pred_direction": "震荡偏空",
+      "confidence": "中低",
+      "didi_signal": "on_board",
+      "key_risks": [
+        "换手率18.35%极高，筹码极度不稳定",
+        "MACD绿柱持续放大，空头趋势明显",
+        "砖值54.7偏低，弱势特征",
+        "5日累计-3.75%，短期仍处下降通道",
+        "极高波动率，日内振幅可达10%+"
+      ],
+      "support_resistance": {
+        "support_primary": 17.30,
+        "support_secondary": 16.22,
+        "resistance_primary": 19.22,
+        "resistance_secondary": 20.59
+      },
+      "detailed_analysis": "[形态]暴跌后超跌反弹。前期5/20启动一波拉升，6/5冲高至22.39后连续暴跌，6/12跌至17.30(-22.7%)，近3日在17-19区间企稳反弹。今日开盘17.62后拉升至19.18(日内高点)，收18.50(+3.53%)形成带长上影的小阳线。成交额70.82亿，量比1.07平量，换手率18.35%极高——说明筹码博弈激烈，多空分歧大。[MACD]DIFF=0.0828, DEA=0.4792, HIST=-0.7929，空头排列且绿柱仍在放大，DIFF接近零轴有死叉风险，MACD趋势偏弱。砖值54.66(偏低)，ST=20.18/LS=16.47，价格在通道下部，弱势格局。[同板块对比]元器件板块：骏亚科技53C(+1.91%)、兴瑞科技48C(+2.88%)均为C级弱股，板块整体弱势。五方光电换手率18.35%远超同板块(骏亚6.0%/兴瑞6.9%)，筹码极度活跃但方向不明。[明日展望]震荡偏空，置信度中低。MACD绿柱放大+砖值偏低+极高换手率，短期弱势难改。但DIDI上车信号+底部放量阳线提供短期支撑，可能在17.3-19.2区间震荡。不建议追涨，等MACD金叉+量能萎缩后再考虑。支撑17.30(前低)，阻力19.22(前日收盘)。[滴滴]🚇命中上车点，但处于暴跌后的反弹初期，信号可靠性较低，需二次确认。"
+    }
+  ],
+  "portfolio_advice": {
+    "overall_strategy": "大盘多头突破4100，市场情绪回暖，但三只标的均属超跌反弹型(DIDI上车)，风格偏激进。建议控制总仓位在30%以内，以603637为主、603270为辅配置。",
+    "priority": [
+      {
+        "rank": 1,
+        "symbol": "603637",
+        "name": "镇海股份",
+        "action": "可轻仓介入",
+        "reason": "DIFF即将金叉+底部倍量长阳+换手率低筹码稳+砖值中性+同板块有涨停龙头带动。评分62/B级最高。",
+        "suggested_position": "15-20%",
+        "entry_zone": "17.50-18.00",
+        "stop_loss": 16.10,
+        "target": "19.50-20.50"
+      },
+      {
+        "rank": 2,
+        "symbol": "603270",
+        "name": "金帝股份",
+        "action": "观察或轻仓",
+        "reason": "MACD即将金叉+砖值偏低有安全边际+箱体震荡有规律可循。但换手率偏高+评分组内最低。",
+        "suggested_position": "5-10%",
+        "entry_zone": "28.80-29.50",
+        "stop_loss": 27.50,
+        "target": "31.50-32.50"
+      },
+      {
+        "rank": 3,
+        "symbol": "002962",
+        "name": "五方光电",
+        "action": "暂不参与，观察",
+        "reason": "MACD空头绿柱放大+换手率极高+砖值偏低+5日仍为负收益。DIDI信号可靠度低，等MACD金叉+量能萎缩后再考虑。",
+        "suggested_position": "0%",
+        "entry_zone": "等回调至17.00-17.30企稳",
+        "stop_loss": null,
+        "target": null
+      }
+    ],
+    "risk_reminder": "⚠️ 三只均为超跌反弹+DIDI上车，买在左侧，存在继续下跌风险。大盘虽多头但普跌格局(市场均涨-1%)，个股分化严重。务必严格止损，切忌追高。"
+  }
+}

@@ -153,7 +153,7 @@ def run_screening(date_str: str) -> dict:
         print(f"=== PROGRESS: 全市场选股 [done] {ts()} ({elapsed:.0f}s) {detail} ===")
         grp = result.get("group_counts", {})
         group_detail = f"涨停{grp.get('limit_up', 0)}只 / 强势封板{grp.get('strong_limit', 0)}只 / 普通{grp.get('normal', 0)}只"
-        notify(f"✅ 全市场选股完成（{elapsed:.0f}秒）\n命中 {result['stock_count']} 只\n{group_detail}\n\n📊 市场均涨跌：{result.get('market_avg', 'N/A')}%\n\n🔄 下一步：读取 OAMV + 生成分析报告")
+        notify(f"✅ 全市场选股完成（{elapsed:.0f}秒）\n命中 {result['stock_count']} 只\n{group_detail}\n\n📊 市场均涨跌：{result.get('market_avg', 'N/A')}%\n\n🔄 下一步：生成分析报告…")
     except subprocess.TimeoutExpired:
         elapsed = time.perf_counter() - t0
         result["status"] = "timeout"
@@ -196,7 +196,7 @@ def get_oamv() -> dict:
 
 
 def main():
-    print(f"=== PROGRESS: 数据准备阶段 [start] {ts()} ===")
+    print(f"=== PROGRESS: 数据准备阶段 [start] {ts()} ===\n")
     today = get_today()
     print(f"=== CRON_PREPARE {today} ===\n")
 
@@ -209,6 +209,9 @@ def main():
             "date": today,
         }, ensure_ascii=False))
         return
+
+    # Notify: 流水线启动
+    notify(f"🔄 [{ts()}] 每日选股流水线启动\n\n① 更新日线数据（约30分钟）…")
 
     # Step 1: Data update
     update_result = run_update()
@@ -232,13 +235,29 @@ def main():
         direction = "流入📈" if pct > 0 else "流出📉"
         oamv_msg = f"OAMV 今日{oamv['today_oamv']:.0f}，{direction}（{pct:+.2f}%）"
         print(f"=== PROGRESS: OAMV [{ts()}] 今日{oamv['today_oamv']:.0f} 涨跌{oamv.get('oamv_change_pct', 0):+.2f}% ===\n")
+    # OAMV 通知（数据更新完成已在 run_update 内通知，此处不重复）
+    oamv_notify = f"📊 [{ts()}] {oamv_msg}" if oamv.get("today_oamv") else ""
+    if oamv_notify:
+        notify(oamv_notify)
+    notify(f"⏳ [{ts()}] ② 全市场砖型图选股开始（约20-30分钟）…")
 
     # Step 3: Screening
     screen_result = run_screening(today)
 
     # Final summary (single notification to avoid rate limiting)
     update_info = f"数据更新{update_result.get('updated', 0)}只 / 选股{ screen_result.get('stock_count', 0)}只"
-    print(f"=== PROGRESS: 数据准备阶段 [done] {ts()} {update_info} ===")
+    print(f"=== PROGRESS: 数据准备阶段 [done] {ts()} {update_info} ===\n")
+
+    # Notify: 准备完成
+    grp = screen_result.get("group_counts", {})
+    notify(
+        f"✅ [{ts()}] 数据准备全部完成\n"
+        f"📈 数据更新：{update_result.get('updated', 0)}只（{update_result.get('elapsed_seconds', 0):.0f}秒）\n"
+        f"🎯 选股结果：{screen_result.get('stock_count', 0)}只（{screen_result.get('elapsed_seconds', 0):.0f}秒）\n"
+        f"   涨停{grp.get('limit_up', 0)}只 / 强势封板{grp.get('strong_limit', 0)}只 / 普通{grp.get('normal', 0)}只\n"
+        f"{oamv_msg}\n\n"
+        f"📋 正在生成分析报告…"
+    )
 
     # Step 4: Output final summary JSON for agent
     output = {
