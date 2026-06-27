@@ -53,12 +53,6 @@ enabled_patterns = (
     PatternType.UPTREND_CONTINUE,
 )
 
-pattern_cn = {
-    "N_SHAPE_JUMP": "N型起跳",
-    "SIDEWAYS_JUMP": "横盘起跳",
-    "UPTREND_CONTINUE": "上升波段延续",
-}
-
 
 def get_latest_trade_date(conn: sqlite3.Connection) -> str:
     cur = conn.execute("SELECT MAX(date) FROM stock_daily")
@@ -224,7 +218,7 @@ def run_screening(
                     "symbol": symbol,
                     "name": name,
                     "industry": industry,
-                    "pattern": pattern_cn.get(str(match.matched_pattern), "未知"),
+                    "pattern": str(match.matched_pattern) if match.matched_pattern else "无匹配定式",
                     "score": adjusted_score,
                     "sector_penalty": sec_pen,
                     "sector_flags": sec_flags,
